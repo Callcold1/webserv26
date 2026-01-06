@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>http.md</title>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+
+<style>
+/* https://github.com/microsoft/vscode/blob/master/extensions/markdown-language-features/media/markdown.css */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+body {
+	font-family: var(--vscode-markdown-font-family, -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif);
+	font-size: var(--vscode-markdown-font-size, 14px);
+	padding: 0 26px;
+	line-height: var(--vscode-markdown-line-height, 22px);
+	word-wrap: break-word;
+}
+
+#code-csp-warning {
+	position: fixed;
+	top: 0;
+	right: 0;
+	color: white;
+	margin: 16px;
+	text-align: center;
+	font-size: 12px;
+	font-family: sans-serif;
+	background-color:#444444;
+	cursor: pointer;
+	padding: 6px;
+	box-shadow: 1px 1px 1px rgba(0,0,0,.25);
+}
+
+#code-csp-warning:hover {
+	text-decoration: none;
+	background-color:#007acc;
+	box-shadow: 2px 2px 2px rgba(0,0,0,.25);
+}
+
+body.scrollBeyondLastLine {
+	margin-bottom: calc(100vh - 22px);
+}
+
+body.showEditorSelection .code-line {
+	position: relative;
+}
+
+body.showEditorSelection .code-active-line:before,
+body.showEditorSelection .code-line:hover:before {
+	content: "";
+	display: block;
+	position: absolute;
+	top: 0;
+	left: -12px;
+	height: 100%;
+}
+
+body.showEditorSelection li.code-active-line:before,
+body.showEditorSelection li.code-line:hover:before {
+	left: -30px;
+}
+
+.vscode-light.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.15);
+}
+
+.vscode-light.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.40);
+}
+
+.vscode-light.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-dark.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.4);
+}
+
+.vscode-dark.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.60);
+}
+
+.vscode-dark.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-high-contrast.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 160, 0, 0.7);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 160, 0, 1);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+img {
+	max-width: 100%;
+	max-height: 100%;
+}
+
+a {
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+a:focus,
+input:focus,
+select:focus,
+textarea:focus {
+	outline: 1px solid -webkit-focus-ring-color;
+	outline-offset: -1px;
+}
+
+hr {
+	border: 0;
+	height: 2px;
+	border-bottom: 2px solid;
+}
+
+h1 {
+	padding-bottom: 0.3em;
+	line-height: 1.2;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+}
+
+h1, h2, h3 {
+	font-weight: normal;
+}
+
+table {
+	border-collapse: collapse;
+}
+
+table > thead > tr > th {
+	text-align: left;
+	border-bottom: 1px solid;
+}
+
+table > thead > tr > th,
+table > thead > tr > td,
+table > tbody > tr > th,
+table > tbody > tr > td {
+	padding: 5px 10px;
+}
+
+table > tbody > tr + tr > td {
+	border-top: 1px solid;
+}
+
+blockquote {
+	margin: 0 7px 0 5px;
+	padding: 0 16px 0 10px;
+	border-left-width: 5px;
+	border-left-style: solid;
+}
+
+code {
+	font-family: Menlo, Monaco, Consolas, "Droid Sans Mono", "Courier New", monospace, "Droid Sans Fallback";
+	font-size: 1em;
+	line-height: 1.357em;
+}
+
+body.wordWrap pre {
+	white-space: pre-wrap;
+}
+
+pre:not(.hljs),
+pre.hljs code > div {
+	padding: 16px;
+	border-radius: 3px;
+	overflow: auto;
+}
+
+pre code {
+	color: var(--vscode-editor-foreground);
+	tab-size: 4;
+}
+
+/** Theming */
+
+.vscode-light pre {
+	background-color: rgba(220, 220, 220, 0.4);
+}
+
+.vscode-dark pre {
+	background-color: rgba(10, 10, 10, 0.4);
+}
+
+.vscode-high-contrast pre {
+	background-color: rgb(0, 0, 0);
+}
+
+.vscode-high-contrast h1 {
+	border-color: rgb(0, 0, 0);
+}
+
+.vscode-light table > thead > tr > th {
+	border-color: rgba(0, 0, 0, 0.69);
+}
+
+.vscode-dark table > thead > tr > th {
+	border-color: rgba(255, 255, 255, 0.69);
+}
+
+.vscode-light h1,
+.vscode-light hr,
+.vscode-light table > tbody > tr + tr > td {
+	border-color: rgba(0, 0, 0, 0.18);
+}
+
+.vscode-dark h1,
+.vscode-dark hr,
+.vscode-dark table > tbody > tr + tr > td {
+	border-color: rgba(255, 255, 255, 0.18);
+}
+
+</style>
+
+<style>
+/*
+
+Night Owl for highlight.js (c) Carl Baxter <carl@cbax.tech>
+
+An adaptation of Sarah Drasner's Night Owl VS Code Theme 
+https://github.com/sdras/night-owl-vscode-theme 
+
+Copyright (c) 2018 Sarah Drasner
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+*/
+
+.hljs {
+  display: block;
+  overflow-x: auto;
+  padding: 0.5em;
+  background: #011627;
+  color: #d6deeb;
+}
+
+/* General Purpose */
+.hljs-keyword {
+  color: #c792ea;
+  font-style: italic;
+}
+.hljs-built_in {
+  color: #addb67;
+  font-style: italic;
+}
+.hljs-type {
+  color: #82aaff;
+}
+.hljs-literal {
+  color: #ff5874;
+}
+.hljs-number {
+  color: #F78C6C;
+}
+.hljs-regexp {
+  color: #5ca7e4;
+}
+.hljs-string {
+  color: #ecc48d;
+}
+.hljs-subst {
+  color: #d3423e;
+}
+.hljs-symbol {
+  color: #82aaff;
+}
+.hljs-class {
+  color: #ffcb8b;
+}
+.hljs-function {
+  color: #82AAFF;
+}
+.hljs-title {
+  color: #DCDCAA;
+  font-style: italic;
+}
+.hljs-params {
+  color: #7fdbca;
+}
+
+/* Meta */
+.hljs-comment {
+  color: #637777;
+  font-style: italic;
+}
+.hljs-doctag {
+  color: #7fdbca;
+}
+.hljs-meta {
+  color: #82aaff;
+}
+.hljs-meta-keyword {
+  color: #82aaff;
+}
+.hljs-meta-string {
+  color: #ecc48d;
+}
+
+/* Tags, attributes, config */
+.hljs-section {
+  color: #82b1ff;
+}
+.hljs-tag,
+.hljs-name,
+.hljs-builtin-name {
+  color: #7fdbca;
+}
+.hljs-attr {
+  color: #7fdbca;
+}
+.hljs-attribute {
+  color: #80cbc4;
+}
+.hljs-variable {
+  color: #addb67;
+}
+
+/* Markup */
+.hljs-bullet {
+  color: #d9f5dd;
+}
+.hljs-code {
+  color: #80CBC4;
+}
+.hljs-emphasis {
+  color: #c792ea;
+  font-style: italic;
+}
+.hljs-strong {
+  color: #addb67;
+  font-weight: bold;
+}
+.hljs-formula {
+  color: #c792ea;
+}
+.hljs-link {
+  color: #ff869a;
+}
+.hljs-quote {
+  color: #697098;
+  font-style: italic;
+}
+
+/* CSS */
+.hljs-selector-tag {
+  color: #ff6363;
+}
+
+.hljs-selector-id {
+  color: #fad430;
+}
+
+.hljs-selector-class {
+  color: #addb67;
+  font-style: italic;
+}
+
+.hljs-selector-attr,
+.hljs-selector-pseudo {
+  color: #c792ea;
+  font-style: italic;
+}
+
+/* Templates */
+.hljs-template-tag {
+  color: #c792ea;
+}
+.hljs-template-variable {
+  color: #addb67;
+}
+
+/* diff */
+.hljs-addition {
+  color: #addb67ff;
+  font-style: italic;
+}
+
+.hljs-deletion {
+  color: #EF535090;
+  font-style: italic;
+}
+
+</style>
+
+<style>
+/*
+ * Markdown PDF CSS
+ */
+
+ body {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif, "Meiryo";
+	padding: 0 12px;
+}
+
+pre {
+	background-color: #f8f8f8;
+	border: 1px solid #cccccc;
+	border-radius: 3px;
+	overflow-x: auto;
+	white-space: pre-wrap;
+	overflow-wrap: break-word;
+}
+
+pre:not(.hljs) {
+	padding: 23px;
+	line-height: 19px;
+}
+
+blockquote {
+	background: rgba(127, 127, 127, 0.1);
+	border-color: rgba(0, 122, 204, 0.5);
+}
+
+.emoji {
+	height: 1.4em;
+}
+
+code {
+	font-size: 14px;
+	line-height: 19px;
+}
+
+/* for inline code */
+:not(pre):not(.hljs) > code {
+	color: #0e1bb4; /* Change the old color so it seems less like an error */
+	font-size: inherit;
+}
+
+/* Page Break : use <div class="page"/> to insert page break
+-------------------------------------------------------- */
+.page {
+	page-break-after: always;
+}
+
+</style>
+
+<script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: document.body.classList.contains('vscode-dark') || document.body.classList.contains('vscode-high-contrast')
+          ? 'dark'
+          : 'default'
+    });
+  </script>
+<h1 id="http11-request-parsing-flow-detailed">HTTP/1.1 Request Parsing Flow (Detailed)</h1>
+<p>This document outlines the structured process for parsing HTTP/1.1 requests according to <strong>RFC 9110, RFC 9111, and RFC 9112</strong>.</p>
+<hr>
+<h2 id="%F0%9F%9A%80-http11-request-parsing-flow">🚀 HTTP/1.1 Request Parsing Flow</h2>
+<h3 id="1%EF%B8%8F%E2%83%A3-receive-request"><strong>1️⃣ Receive Request</strong></h3>
+<ul>
+<li>Read incoming bytes from the socket until <strong>CRLF (<code>\r\n</code>)</strong> is detected at the end of the request line.</li>
+<li>Ensure the request does not exceed <strong>server limits</strong> (e.g., header size, total request size).</li>
+</ul>
+<hr>
+<h3 id="2%EF%B8%8F%E2%83%A3-parse-request-line"><strong>2️⃣ Parse Request Line</strong></h3>
+<p>The request line format <strong>must</strong> be:</p>
+<pre class="hljs"><code><div>METHOD SP REQUEST-TARGET SP HTTP-VERSION CRLF
+</div></code></pre>
+<p><strong>Example:</strong></p>
+<pre class="hljs"><code><div>GET /index.html HTTP/1.1\r\n
+</div></code></pre>
+<h4 id="%F0%9F%94%B9-validation-checks">🔹 <strong>Validation Checks:</strong></h4>
+<p>✅ <strong>Method (first word in line):</strong></p>
+<ul>
+<li>Must be a <strong>known and valid HTTP/1.1 method</strong> (case-sensitive).</li>
+<li>Common valid methods: <code>GET</code>, <code>POST</code>, <code>DELETE</code>.</li>
+<li><strong>Invalid method?</strong> → Respond <code>501 Not Implemented</code>.</li>
+</ul>
+<p>✅ <strong>Request Target (second part):</strong></p>
+<ul>
+<li>Defines the resource being requested. <strong>Valid formats include:</strong>
+<ol>
+<li><strong>Absolute Path</strong> (<code>/resource/path</code> or <code>/index.html</code>)</li>
+<li><strong>Absolute URI</strong> (<code>http://example.com/index.html</code>) (used in proxies)</li>
+<li><strong>Asterisk (<code>*</code>)</strong> (Only for <code>OPTIONS</code> method)</li>
+</ol>
+</li>
+<li><strong>Invalid format?</strong> → Respond <code>400 Bad Request</code>.</li>
+</ul>
+<p>✅ <strong>HTTP Version (last part):</strong></p>
+<ul>
+<li>Must be exactly <code>HTTP/1.1</code>.</li>
+<li><strong>Invalid version?</strong> → Respond <code>505 HTTP Version Not Supported</code>.</li>
+</ul>
+<p>🚨 <strong>If any of these fail, reject with <code>400 Bad Request</code>.</strong></p>
+<hr>
+<h3 id="3%EF%B8%8F%E2%83%A3-parse-headers"><strong>3️⃣ Parse Headers</strong></h3>
+<p>Headers <strong>must</strong> follow this format:</p>
+<pre class="hljs"><code><div>Field-Name: Field-Value CRLF
+</div></code></pre>
+<h4 id="%F0%9F%94%B9-validation-checks">🔹 <strong>Validation Checks:</strong></h4>
+<p>✅ <strong>Field-Name:</strong></p>
+<ul>
+<li>Case-insensitive (<code>Content-Type</code> = <code>content-type</code>).</li>
+<li>No spaces or special characters, only letters, numbers, and <code>-</code>.</li>
+<li><strong>Invalid name?</strong> → Respond <code>400 Bad Request</code>.</li>
+</ul>
+<p>✅ <strong>Field-Value:</strong></p>
+<ul>
+<li>No control characters except spaces, <code>\t</code>, or quoted values.</li>
+<li><strong>Malformed values?</strong> → Respond <code>400 Bad Request</code>.</li>
+</ul>
+<p>✅ <strong>Header Line Termination:</strong></p>
+<ul>
+<li>Each header <strong>must</strong> end with <code>CRLF</code>.</li>
+<li>Empty line (<code>CRLF</code>) marks the <strong>end of headers</strong>.</li>
+</ul>
+<p>🚨 <strong>Malformed headers → <code>400 Bad Request</code>.</strong></p>
+<hr>
+<h3 id="4%EF%B8%8F%E2%83%A3-determine-message-body-presence"><strong>4️⃣ Determine Message Body Presence</strong></h3>
+<h4 id="%F0%9F%94%B9-based-on-method">🔹 <strong>Based on Method:</strong></h4>
+<ul>
+<li><strong>GET</strong> → 🚫 <strong>No body allowed</strong> (ignore if present).</li>
+<li><strong>POST/DELETE</strong> → A body <strong>may be present</strong>.</li>
+</ul>
+<h4 id="%F0%9F%94%B9-how-to-determine-body-presence">🔹 <strong>How to Determine Body Presence:</strong></h4>
+<ol>
+<li><code>Content-Length: X</code> → Exact number of bytes expected.</li>
+<li><code>Transfer-Encoding: chunked</code> → Body is chunked (must be processed accordingly).</li>
+<li><strong>Neither header present?</strong> → Assume <strong>no body</strong>.</li>
+</ol>
+<p>🚨 <strong>Invalid Content-Length?</strong> → Respond <code>411 Length Required</code>.</p>
+<hr>
+<h3 id="5%EF%B8%8F%E2%83%A3-parse-message-body-if-present"><strong>5️⃣ Parse Message Body (If Present)</strong></h3>
+<h4 id="%F0%9F%94%B9-based-on-encoding">🔹 <strong>Based on Encoding:</strong></h4>
+<p>✅ <strong>Content-Length Present?</strong></p>
+<ul>
+<li>Read exactly <strong>X bytes</strong> from the socket.</li>
+<li><strong>Less or more bytes received?</strong> → <code>400 Bad Request</code>.</li>
+</ul>
+<p>✅ <strong>Transfer-Encoding: chunked?</strong></p>
+<ul>
+<li>Expect <strong>chunked transfer encoding</strong> format:<pre class="hljs"><code><div>Chunk-Size CRLF
+Chunk-Data CRLF
+</div></code></pre>
+</li>
+<li>Ends when a <strong>zero-length chunk</strong> (<code>0\r\n</code>) is received.</li>
+<li><strong>Malformed chunks?</strong> → <code>400 Bad Request</code>.</li>
+</ul>
+<p>🚨 <strong>If malformed, reject with <code>400 Bad Request</code>.</strong></p>
+<hr>
+<h3 id="6%EF%B8%8F%E2%83%A3-pass-parsed-request-to-application-logic"><strong>6️⃣ Pass Parsed Request to Application Logic</strong></h3>
+<ul>
+<li>Match request <strong>method and target</strong> with application logic.</li>
+<li>Route to the appropriate handler.</li>
+<li>Execute the requested action.</li>
+</ul>
+<hr>
+<h3 id="7%EF%B8%8F%E2%83%A3-generate-and-send-response"><strong>7️⃣ Generate and Send Response</strong></h3>
+<ul>
+<li>Prepare an <strong>HTTP response</strong> based on the request.</li>
+<li>Ensure the response follows:<pre class="hljs"><code><div>HTTP/1.1 STATUS CODE CRLF
+Headers CRLF
+[Optional Body]
+</div></code></pre>
+</li>
+<li>Send data to the client.</li>
+</ul>
+<hr>
+<h3 id="%F0%9F%93%8C-summary-of-error-handling"><strong>📌 Summary of Error Handling:</strong></h3>
+<table>
+<thead>
+<tr>
+<th><strong>Error Type</strong></th>
+<th><strong>Response Code</strong></th>
+<th><strong>Cause</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Invalid HTTP Method</td>
+<td><code>501 Not Implemented</code></td>
+<td>Unrecognized method name.</td>
+</tr>
+<tr>
+<td>Invalid Request Target</td>
+<td><code>400 Bad Request</code></td>
+<td>Malformed or missing URI.</td>
+</tr>
+<tr>
+<td>Invalid HTTP Version</td>
+<td><code>505 HTTP Version Not Supported</code></td>
+<td>Must be <code>HTTP/1.1</code>.</td>
+</tr>
+<tr>
+<td>Malformed Headers</td>
+<td><code>400 Bad Request</code></td>
+<td>Incorrect format or illegal characters.</td>
+</tr>
+<tr>
+<td>Missing Content-Length</td>
+<td><code>411 Length Required</code></td>
+<td>POST/DELETE needs a valid <code>Content-Length</code>.</td>
+</tr>
+<tr>
+<td>Chunked Encoding Error</td>
+<td><code>400 Bad Request</code></td>
+<td>Malformed chunked body.</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h3 id="%F0%9F%9B%A0-final-thoughts"><strong>🛠 Final Thoughts</strong></h3>
+<p>This detailed process ensures that an <strong>HTTP/1.1 server correctly parses incoming requests</strong>, <strong>validates all required components</strong>, and <strong>handles errors properly</strong> before forwarding the request for processing.</p>
+<p>Would you like any specific areas expanded further? 😊</p>
+
+</body>
+</html>

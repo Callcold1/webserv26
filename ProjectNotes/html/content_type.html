@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>content_type.md</title>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+
+<style>
+/* https://github.com/microsoft/vscode/blob/master/extensions/markdown-language-features/media/markdown.css */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+body {
+	font-family: var(--vscode-markdown-font-family, -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif);
+	font-size: var(--vscode-markdown-font-size, 14px);
+	padding: 0 26px;
+	line-height: var(--vscode-markdown-line-height, 22px);
+	word-wrap: break-word;
+}
+
+#code-csp-warning {
+	position: fixed;
+	top: 0;
+	right: 0;
+	color: white;
+	margin: 16px;
+	text-align: center;
+	font-size: 12px;
+	font-family: sans-serif;
+	background-color:#444444;
+	cursor: pointer;
+	padding: 6px;
+	box-shadow: 1px 1px 1px rgba(0,0,0,.25);
+}
+
+#code-csp-warning:hover {
+	text-decoration: none;
+	background-color:#007acc;
+	box-shadow: 2px 2px 2px rgba(0,0,0,.25);
+}
+
+body.scrollBeyondLastLine {
+	margin-bottom: calc(100vh - 22px);
+}
+
+body.showEditorSelection .code-line {
+	position: relative;
+}
+
+body.showEditorSelection .code-active-line:before,
+body.showEditorSelection .code-line:hover:before {
+	content: "";
+	display: block;
+	position: absolute;
+	top: 0;
+	left: -12px;
+	height: 100%;
+}
+
+body.showEditorSelection li.code-active-line:before,
+body.showEditorSelection li.code-line:hover:before {
+	left: -30px;
+}
+
+.vscode-light.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.15);
+}
+
+.vscode-light.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.40);
+}
+
+.vscode-light.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-dark.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.4);
+}
+
+.vscode-dark.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.60);
+}
+
+.vscode-dark.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-high-contrast.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 160, 0, 0.7);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 160, 0, 1);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+img {
+	max-width: 100%;
+	max-height: 100%;
+}
+
+a {
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+a:focus,
+input:focus,
+select:focus,
+textarea:focus {
+	outline: 1px solid -webkit-focus-ring-color;
+	outline-offset: -1px;
+}
+
+hr {
+	border: 0;
+	height: 2px;
+	border-bottom: 2px solid;
+}
+
+h1 {
+	padding-bottom: 0.3em;
+	line-height: 1.2;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+}
+
+h1, h2, h3 {
+	font-weight: normal;
+}
+
+table {
+	border-collapse: collapse;
+}
+
+table > thead > tr > th {
+	text-align: left;
+	border-bottom: 1px solid;
+}
+
+table > thead > tr > th,
+table > thead > tr > td,
+table > tbody > tr > th,
+table > tbody > tr > td {
+	padding: 5px 10px;
+}
+
+table > tbody > tr + tr > td {
+	border-top: 1px solid;
+}
+
+blockquote {
+	margin: 0 7px 0 5px;
+	padding: 0 16px 0 10px;
+	border-left-width: 5px;
+	border-left-style: solid;
+}
+
+code {
+	font-family: Menlo, Monaco, Consolas, "Droid Sans Mono", "Courier New", monospace, "Droid Sans Fallback";
+	font-size: 1em;
+	line-height: 1.357em;
+}
+
+body.wordWrap pre {
+	white-space: pre-wrap;
+}
+
+pre:not(.hljs),
+pre.hljs code > div {
+	padding: 16px;
+	border-radius: 3px;
+	overflow: auto;
+}
+
+pre code {
+	color: var(--vscode-editor-foreground);
+	tab-size: 4;
+}
+
+/** Theming */
+
+.vscode-light pre {
+	background-color: rgba(220, 220, 220, 0.4);
+}
+
+.vscode-dark pre {
+	background-color: rgba(10, 10, 10, 0.4);
+}
+
+.vscode-high-contrast pre {
+	background-color: rgb(0, 0, 0);
+}
+
+.vscode-high-contrast h1 {
+	border-color: rgb(0, 0, 0);
+}
+
+.vscode-light table > thead > tr > th {
+	border-color: rgba(0, 0, 0, 0.69);
+}
+
+.vscode-dark table > thead > tr > th {
+	border-color: rgba(255, 255, 255, 0.69);
+}
+
+.vscode-light h1,
+.vscode-light hr,
+.vscode-light table > tbody > tr + tr > td {
+	border-color: rgba(0, 0, 0, 0.18);
+}
+
+.vscode-dark h1,
+.vscode-dark hr,
+.vscode-dark table > tbody > tr + tr > td {
+	border-color: rgba(255, 255, 255, 0.18);
+}
+
+</style>
+
+<style>
+/*
+
+Night Owl for highlight.js (c) Carl Baxter <carl@cbax.tech>
+
+An adaptation of Sarah Drasner's Night Owl VS Code Theme 
+https://github.com/sdras/night-owl-vscode-theme 
+
+Copyright (c) 2018 Sarah Drasner
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+*/
+
+.hljs {
+  display: block;
+  overflow-x: auto;
+  padding: 0.5em;
+  background: #011627;
+  color: #d6deeb;
+}
+
+/* General Purpose */
+.hljs-keyword {
+  color: #c792ea;
+  font-style: italic;
+}
+.hljs-built_in {
+  color: #addb67;
+  font-style: italic;
+}
+.hljs-type {
+  color: #82aaff;
+}
+.hljs-literal {
+  color: #ff5874;
+}
+.hljs-number {
+  color: #F78C6C;
+}
+.hljs-regexp {
+  color: #5ca7e4;
+}
+.hljs-string {
+  color: #ecc48d;
+}
+.hljs-subst {
+  color: #d3423e;
+}
+.hljs-symbol {
+  color: #82aaff;
+}
+.hljs-class {
+  color: #ffcb8b;
+}
+.hljs-function {
+  color: #82AAFF;
+}
+.hljs-title {
+  color: #DCDCAA;
+  font-style: italic;
+}
+.hljs-params {
+  color: #7fdbca;
+}
+
+/* Meta */
+.hljs-comment {
+  color: #637777;
+  font-style: italic;
+}
+.hljs-doctag {
+  color: #7fdbca;
+}
+.hljs-meta {
+  color: #82aaff;
+}
+.hljs-meta-keyword {
+  color: #82aaff;
+}
+.hljs-meta-string {
+  color: #ecc48d;
+}
+
+/* Tags, attributes, config */
+.hljs-section {
+  color: #82b1ff;
+}
+.hljs-tag,
+.hljs-name,
+.hljs-builtin-name {
+  color: #7fdbca;
+}
+.hljs-attr {
+  color: #7fdbca;
+}
+.hljs-attribute {
+  color: #80cbc4;
+}
+.hljs-variable {
+  color: #addb67;
+}
+
+/* Markup */
+.hljs-bullet {
+  color: #d9f5dd;
+}
+.hljs-code {
+  color: #80CBC4;
+}
+.hljs-emphasis {
+  color: #c792ea;
+  font-style: italic;
+}
+.hljs-strong {
+  color: #addb67;
+  font-weight: bold;
+}
+.hljs-formula {
+  color: #c792ea;
+}
+.hljs-link {
+  color: #ff869a;
+}
+.hljs-quote {
+  color: #697098;
+  font-style: italic;
+}
+
+/* CSS */
+.hljs-selector-tag {
+  color: #ff6363;
+}
+
+.hljs-selector-id {
+  color: #fad430;
+}
+
+.hljs-selector-class {
+  color: #addb67;
+  font-style: italic;
+}
+
+.hljs-selector-attr,
+.hljs-selector-pseudo {
+  color: #c792ea;
+  font-style: italic;
+}
+
+/* Templates */
+.hljs-template-tag {
+  color: #c792ea;
+}
+.hljs-template-variable {
+  color: #addb67;
+}
+
+/* diff */
+.hljs-addition {
+  color: #addb67ff;
+  font-style: italic;
+}
+
+.hljs-deletion {
+  color: #EF535090;
+  font-style: italic;
+}
+
+</style>
+
+<style>
+/*
+ * Markdown PDF CSS
+ */
+
+ body {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif, "Meiryo";
+	padding: 0 12px;
+}
+
+pre {
+	background-color: #f8f8f8;
+	border: 1px solid #cccccc;
+	border-radius: 3px;
+	overflow-x: auto;
+	white-space: pre-wrap;
+	overflow-wrap: break-word;
+}
+
+pre:not(.hljs) {
+	padding: 23px;
+	line-height: 19px;
+}
+
+blockquote {
+	background: rgba(127, 127, 127, 0.1);
+	border-color: rgba(0, 122, 204, 0.5);
+}
+
+.emoji {
+	height: 1.4em;
+}
+
+code {
+	font-size: 14px;
+	line-height: 19px;
+}
+
+/* for inline code */
+:not(pre):not(.hljs) > code {
+	color: #0e1bb4; /* Change the old color so it seems less like an error */
+	font-size: inherit;
+}
+
+/* Page Break : use <div class="page"/> to insert page break
+-------------------------------------------------------- */
+.page {
+	page-break-after: always;
+}
+
+</style>
+
+<script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: document.body.classList.contains('vscode-dark') || document.body.classList.contains('vscode-high-contrast')
+          ? 'dark'
+          : 'default'
+    });
+  </script>
+<h1 id="http-body--content-type">HTTP BODY : CONTENT TYPE</h1>
+<h2 id="1-text-based-formats">1. Text-based formats</h2>
+<ul>
+<li>Content-Type: text/html; charset=UTF-8</li>
+<li>Content-Type: text/plain; charset=ISO-8859-1</li>
+<li>Content-Type: text/css</li>
+<li>Content-Type: text/javascript</li>
+</ul>
+<h2 id="2-image-formats">2. Image formats</h2>
+<p>Content-Type: image/png<br>
+Content-Type: image/jpeg<br>
+Content-Type: image/gif</p>
+<h2 id="3-application-specific-formats">3. Application-specific formats</h2>
+<p>Content-Type: application/json<br>
+Content-Type: application/xml<br>
+Content-Type: application/pdf<br>
+Content-Type: application/octet-stream  (for binary files)</p>
+<h2 id="4-multipartform-data-for-file-uploads-in-post-requests">4. Multipart/form-data (for file uploads in POST requests)</h2>
+<p>Content-Type: multipart/form-data; boundary=----WebKitFormBoundary</p>
+<h2 id="5-form-data-for-url-encoded-form-submissions">5. Form data (for URL-encoded form submissions)</h2>
+<p>Content-Type: application/x-www-form-urlencoded</p>
+<hr>
+<h2 id="usage-in-http-requests">Usage in HTTP Requests</h2>
+<ul>
+<li>In POST/PUT requests, the Content-Type header tells the server how to interpret the request body.</li>
+</ul>
+<blockquote>
+<p>POST <code>/upload</code> <code>HTTP/1.1</code><br>
+Host: <code>example.com</code><br>
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundaryXYZ</p>
+<p>----WebKitFormBoundaryXYZ<br>
+Content-Disposition: form-data; name=&quot;file&quot;; filename=&quot;example.txt&quot;<br>
+Content-Type: text/plain</p>
+<p>(file data)</p>
+</blockquote>
+<h2 id="usage-in-http-responses">Usage in HTTP Responses</h2>
+<ul>
+<li>In responses, the Content-Type tells the browser how to handle the response data.</li>
+</ul>
+<blockquote>
+<p>HTTP/1.1 200 OK<br>
+Content-Type: <code>text/html</code>; charset=UTF-8<br>
+Content-Length: 1234</p>
+<p><code>&lt;html&gt;...&lt;/html&gt;</code></p>
+</blockquote>
+<hr>
+<h2 id="1-chunked-transfer-encoding-with-multipart-data">1. Chunked Transfer Encoding with Multipart Data</h2>
+<p>In HTTP/1.1, chunked transfer encoding allows the server to send a response in chunks without specifying the total Content-Length. When combined with multipart/form-data, the data is split into multiple parts, each with its own headers.<br>
+Example of Chunked Multipart Data (File Upload)</p>
+<h3 id="a-server-response-with-chunked-transfer-encoding-and-multipartform-data-might-look-like-this">A server response with chunked transfer encoding and multipart/form-data might look like this</h3>
+<blockquote>
+<p>HTTP/1.1 200 OK<br>
+Transfer-Encoding: chunked<br>
+Content-Type: multipart/form-data; boundary=----Boundary123</p>
+<p>4\r\n<br>
+----Boundary123\r\n<br>
+24\r\n<br>
+Content-Disposition: form-data; name=&quot;file&quot;; filename=&quot;example.txt&quot;\r\n<br>
+Content-Type: text/plain\r\n<br>
+\r\n<br>
+7\r\n<br>
+Hello, \r\n<br>
+6\r\n<br>
+World!\r\n<br>
+2\r\n<br>
+\r\n\r\n<br>
+4\r\n<br>
+----Boundary123--\r\n<br>
+0\r\n<br>
+\r\n</p>
+</blockquote>
+<h3 id="breakdown-of-the-above-example">Breakdown of the Above Example</h3>
+<pre><code>1. The response uses Transfer-Encoding: chunked.
+2. Each chunk is prefixed with its size in hexadecimal.
+3. The multipart/form-data structure remains, but each part is sent in separate chunks.
+4. 0\r\n\r\n at the end indicates the end of the chunked response.
+</code></pre>
+<h2 id="2-chunked-transfer-encoding-with-plaintext">2. Chunked Transfer Encoding with Plaintext</h2>
+<p>If you’re only dealing with text/plain, the response might look simpler:</p>
+<blockquote>
+<p>HTTP/1.1 200 OK<br>
+Transfer-Encoding: chunked<br>
+Content-Type: text/plain</p>
+<p>7\r\n<br>
+Hello, \r\n<br>
+6\r\n<br>
+World!\r\n<br>
+2\r\n<br>
+\r\n\r\n<br>
+0\r\n<br>
+\r\n</p>
+</blockquote>
+<p>Each chunk contains a length header, followed by the actual data.</p>
+<h2 id="3handling-in-your-web-server">3.Handling in your Web Server</h2>
+<ul>
+<li>If your server receives Transfer-Encoding: chunked, it must read chunks sequentially until the 0 chunk.</li>
+<li>For multipart/form-data, the server must parse the boundary-based structure within the chunked stream.</li>
+<li>If the Content-Type is text/plain, simply concatenate the chunks to reconstruct the message.</li>
+</ul>
+<h2 id="multipart-chunked-transfer-encoding-in-http11">Multipart Chunked Transfer Encoding in HTTP/1.1</h2>
+<h2 id="1-can-multipart-data-be-chunked">1. Can Multipart Data Be Chunked?</h2>
+<p>Yes, <strong>multipart data can be sent using chunked transfer encoding</strong> in HTTP/1.1, though it's uncommon. Some web servers, reverse proxies, and APIs may not fully support it.</p>
+<h2 id="2-multipart--chunked-transfer-encoding">2. Multipart + Chunked Transfer Encoding</h2>
+<h3 id="how-it-works">How It Works</h3>
+<ul>
+<li><code>Transfer-Encoding: chunked</code> means the body is sent in chunks without a predefined <code>Content-Length</code>.</li>
+<li><code>Content-Type: multipart/form-data; boundary=...</code> means the request or response body contains multiple parts, each with headers and separated by a boundary.</li>
+<li>When used together, the boundary-separated parts arrive in chunks.</li>
+</ul>
+<h3 id="example-chunked-multipart-request-file-upload">Example: Chunked Multipart Request (File Upload)</h3>
+<p>A <strong>client</strong> might send a <code>POST</code> request with chunked <code>multipart/form-data</code>:</p>
+<pre class="hljs"><code><div>POST /upload HTTP/1.1
+Host: example.com
+Transfer-Encoding: chunked
+Content-Type: multipart/form-data; boundary=----Boundary123
+
+4\r\n
+----Boundary123\r\n
+1E\r\n
+Content-Disposition: form-data; name=&quot;file&quot;; filename=&quot;example.txt&quot;\r\n
+Content-Type: text/plain\r\n
+\r\n
+7\r\n
+Hello, \r\n
+6\r\n
+World!\r\n
+2\r\n
+\r\n\r\n
+4\r\n
+----Boundary123--\r\n
+0\r\n
+\r\n
+</div></code></pre>
+<h4 id="breakdown">Breakdown</h4>
+<ul>
+<li>Chunks are sent one by one.</li>
+<li>Each <code>multipart</code> boundary part arrives as part of chunked data.</li>
+<li>The final <code>0\r\n\r\n</code> signals the end of the body.</li>
+</ul>
+<h2 id="3-handling-chunked-multipart-in-a-web-server">3. Handling Chunked Multipart in a Web Server</h2>
+<p>Your C++98 web server should:</p>
+<ol>
+<li><strong>Detect <strong>``</strong> in the request.</strong></li>
+<li><strong>Read and decode chunks</strong>:
+<ul>
+<li>Extract chunk size.</li>
+<li>Read the chunked data.</li>
+<li>Stop at <code>0\r\n\r\n</code>.</li>
+</ul>
+</li>
+<li>**Parse **``:
+<ul>
+<li>Identify boundaries.</li>
+<li>Extract headers (<code>Content-Disposition</code>, <code>Content-Type</code>).</li>
+<li>Store file data accordingly.</li>
+</ul>
+</li>
+</ol>
+<h2 id="4-is-it-standard">4. Is It Standard?</h2>
+<ul>
+<li>HTTP/1.1 <strong>allows</strong> <code>multipart/form-data</code> to be sent with <code>Transfer-Encoding: chunked</code>, but <strong>not all servers or clients support it</strong>.</li>
+<li>Many implementations expect <code>Content-Length</code> in <code>multipart/form-data</code> requests.</li>
+</ul>
+<h2 id="5-alternative-approach">5. Alternative Approach</h2>
+<p>If your server doesn’t need to support chunked <code>multipart/form-data</code>, you can require clients to send <code>Content-Length</code> instead.</p>
+<hr>
+
+</body>
+</html>
