@@ -45,10 +45,6 @@
 
 
 
-
-
-
-
 Berners-Lee, et al.         Standards Track                    [Page 49]
 
 
@@ -73,7 +69,7 @@ RFC 3986                   URI Generic Syntax               January 2005
    path-absolute = "/" [ segment-nz *( "/" segment ) ]
    path-noscheme = segment-nz-nc *( "/" segment )
    path-rootless = segment-nz *( "/" segment )
-   path-empty    = 0<pchar>
+   path-empty    = 0<pchar
 
    segment       = *pchar
    segment-nz    = 1*pchar
@@ -91,5 +87,4 @@ RFC 3986                   URI Generic Syntax               January 2005
    unreserved    = ALPHA / DIGIT / "-" / "." / "_" / "~"
    reserved      = gen-delims / sub-delims
    gen-delims    = ":" / "/" / "?" / "#" / "[" / "]" / "@"
-   sub-delims    = "!" / "$" / "&" / "'" / "(" / ")"
-                 / "*" / "+" / "," / ";" / "="
+   sub-delims    = "!" / "$" / "&" / "'" / "(" / ")" / "*" / "+" / "," / ";" / "="
