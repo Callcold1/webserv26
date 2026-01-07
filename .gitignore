@@ -1,0 +1,7 @@
+#ignore mac files
+.DS_Store
+.DS_Store?
+
+#ignore vscode
+.vscode
+.vscode?
