@@ -8,44 +8,46 @@ Server::Server(Config& config){
 
 Server::~Server( void )
 {
+	for(int i = 0; i < NUM_SOCK; i++)
+	{	
+		close(sockets[i]);
+	}
 }
 
 void	Server::createSockets(int ports[]){
-	for(int i = 0; i < 5; i++)
+	for(int i = 0; i < NUM_SOCK; i++)
 	{
-		sock_pair new_pair;
-		new_pair.first = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+		int new_sock_fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 		
-		int flags = fcntl(new_pair.first, F_GETFL, 0);
-		fcntl(new_pair.first, F_SETFL, flags | O_NONBLOCK);
+		int flags = fcntl(new_sock_fd, F_GETFL, 0);
+		fcntl(new_sock_fd, F_SETFL, flags | O_NONBLOCK);
 		
 		
 		struct sockaddr_in address;
 		
-		new_pair.second.sin_family = AF_INET;
-		new_pair.second.sin_port = htons(ports[i]);
-		new_pair.second.sin_addr.s_addr = INADDR_ANY;
+		address.sin_family = AF_INET;
+		address.sin_port = htons(ports[i]);
+		address.sin_addr.s_addr = INADDR_ANY;
 		
-		if (bind(new_pair.first, (struct sockaddr *)&new_pair.second, sizeof(new_pair.second)) < 0) {
+		if (bind(new_sock_fd, (struct sockaddr *)&address, sizeof(address)) < 0) {
 			perror("bind failed");
-			return;
+			return;  // todo: error handling fix
 		}
 		
-		if (listen(new_pair.first, 5) < 0) {
+		if (listen(new_sock_fd, 5) < 0) {
 			perror("listen failed");
-			return;
+			return;  // todo: error handling fix
 		}
-		sockets[i] = new_pair;
+		sockets[i] = new_sock_fd;
 	}
 }
 
-int server(void)
+int server_setup(Server &server)
 {
-	
 	int	clientSocket = 0;
 
 	while (true){
-		clientSocket = accept(server_fd, (struct sockaddr *)&address, &addrlen);
+		clientSocket = accept(server_fd, NULL, NULL);
 		if (clientSocket > 0){
 			while (true){
 			
@@ -64,7 +66,5 @@ int server(void)
 			}
 			close(clientSocket);
 		}
-	} 
-	close(server_fd);
-
+	}
 }

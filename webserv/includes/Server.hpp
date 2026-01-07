@@ -14,8 +14,7 @@
 #include "Config.hpp"
 
 #define MAX_CONN 5
-
-typedef std::pair<int, sockaddr_in> sock_pair;
+#define NUM_SOCK 10
 
 class Server {
 
@@ -27,10 +26,11 @@ class Server {
 		Server&	operator=( const Server& other);
 		~Server(void);
 
+		int get_socket(int index);
 	private:
 
 		void createSockets(int ports[]);
 
-		sock_pair sockets[10];
+		int sockets[NUM_SOCK];
 
 };
