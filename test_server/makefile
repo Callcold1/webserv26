@@ -1,0 +1,44 @@
+# USEFUL IF THE MAKEFILE IS NOT IN THE PROJECT ROOT FOLDER
+PROJECT_ROOT := $(realpath ./)
+
+NAME        := testServer
+
+CXX         := g++
+CXXFLAGS    := -Wall -Werror -Wextra -std=c++98 -g
+
+INCLUDES    :=	-I ./
+#  				-I$(PROJECT_ROOT)/Request/includes \
+# 				-I$(PROJECT_ROOT)/Config/includes \
+
+OBJDIR      := objs
+SRCDIR      := $(PROJECT_ROOT)/srcs
+
+SRCS        := main.cpp
+
+OBJS := $(patsubst %.cpp, $(OBJDIR)/%.o, $(SRCS))
+DEPS := $(patsubst %.cpp, $(OBJDIR)/%.d, $(SRCS))
+
+all: $(NAME)
+
+# LINKING OBJECT FILES TO MAKE EXECUTABLE
+$(NAME): $(OBJS)
+	@$(CXX) $(CXXFLAGS) $(INCLUDES) $(OBJS) -o $(NAME)
+	@$(foreach obj,$(OBJS),echo "Linking object file" $(obj);)
+	@echo "$(NAME) created"
+
+# COMPILING/RECOMPILING OBJECT FILES IF ANY DEPENDENCIES CHANGE
+$(OBJDIR)/%.o: $(SRCDIR)/%.cpp
+	@mkdir -p $(@D)
+	@$(CXX) $(CXXFLAGS) $(INCLUDES) -c -MMD -MP $< -o $@
+
+-include $(DEPS)
+
+clean:
+	@rm -rf $(OBJDIR)
+
+fclean: clean
+	@rm -f $(NAME)
+
+re: fclean all
+
+.PHONY: all clean fclean re

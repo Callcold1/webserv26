@@ -1,0 +1,332 @@
+<!-- https://chatgpt.com/share/695e2387-7180-800f-9f75-8a31922b40b9 -->
+
+# What is a Socket in Linux
+
+In Linux, a **socket** is an **endpoint for communication** that allows processes to send and receive data, either:
+
+* **On the same machine** (inter-process communication), or
+* **Across a network** (client ↔ server communication)
+
+Think of a socket as a **file-like object** that represents a communication channel.
+
+---
+
+You will also sometimes see a socket specified using a host name instead of an IP address, like this:
+
+    <Host Name>:<Port Number>
+
+To use this descriptor, the name must first be resolved to an IP address using DNS.
+For example, you might find a Web site URL like this: <http://www.thisisagreatsite.com:8080>
+
+This tells the Web browser to first resolve the name www.thisisagreatsite.com to an IP address using DNS,
+and then send a request to that address using the non-standard server port 8080, which is occasionally used instead of port 80 since it resembles it.
+
+---
+
+## High-level idea
+
+A socket is:
+
+* Created by a process
+* Bound to an **address** (like IP + port, or a filesystem path)
+* Used to **send/receive bytes**
+* Managed by the kernel
+
+In Linux, sockets are part of the **BSD sockets API**.
+
+---
+
+## Why sockets exist
+
+Sockets abstract:
+
+* The **transport** (TCP, UDP, Unix domain)
+* The **addressing**
+* The **buffering**
+* The **connection state**
+
+So your program just reads and writes bytes, while the kernel handles the hard parts.
+
+---
+
+## Common socket types
+
+### 1. Internet sockets (network)
+
+Used for network communication.
+
+#### TCP (stream socket)
+
+```c
+socket(AF_INET, SOCK_STREAM, 0);
+```
+
+* Reliable
+* Ordered
+* Connection-oriented
+* Used by HTTP, FTP, SSH
+
+#### UDP (datagram socket)
+
+```c
+socket(AF_INET, SOCK_DGRAM, 0);
+```
+
+* Unreliable
+* Message-based
+* No connection
+* Used by DNS, streaming, games
+
+---
+
+### 2. Unix domain sockets (local IPC)
+
+```c
+socket(AF_UNIX, SOCK_STREAM, 0);
+```
+
+* Faster than TCP
+* No networking stack
+* Addressed by filesystem path
+* Used by system services (e.g. Docker, systemd)
+
+---
+
+## Socket lifecycle (server side)
+
+Typical TCP server flow:
+
+```
+socket()    → create socket
+bind()      → attach address (IP + port)
+listen()    → mark as passive
+accept()    → accept incoming connection
+recv()/send() → communicate
+close()     → release socket
+```
+
+Each `accept()` creates a **new socket** for that client.
+
+---
+
+## Client side flow
+
+```
+socket()
+connect()
+send()/recv()
+close()
+```
+
+---
+
+## File descriptor relationship
+
+In Linux:
+
+* A socket is represented by a **file descriptor**
+* You use `read()`, `write()`, `close()`, `poll()`, `epoll()`, etc.
+* But sockets have **extra semantics** (connection state, protocols)
+
+Example:
+
+```c
+int fd = socket(AF_INET, SOCK_STREAM, 0);
+```
+
+Now `fd` behaves like a file, but it’s backed by the network stack.
+
+---
+
+## Kernel perspective (important)
+
+Internally, the kernel manages:
+
+* Send buffer
+* Receive buffer
+* Protocol state (TCP FSM)
+* Routing
+* Retransmissions
+* Flow control
+
+Your program never sees packets directly.
+
+---
+
+## Key properties of a socket
+
+| Property      | Meaning                    |
+| ------------- | -------------------------- |
+| Domain        | AF_INET, AF_INET6, AF_UNIX |
+| Type          | SOCK_STREAM, SOCK_DGRAM    |
+| Protocol      | Usually 0 (auto-select)    |
+| Blocking mode | Blocking / Non-blocking    |
+| FD-based      | Works with poll/epoll      |
+
+---
+
+## In the context of a non-blocking C++98 web server
+
+### Non-blocking behavior (critical)
+
+A socket can be put into **non-blocking mode** using `fcntl()`:
+
+* `recv()` / `send()` **never block**
+* Operations may return immediately with:
+
+  * Partial data
+  * No data at all
+
+Typical return behavior:
+
+* `recv()`:
+
+  * `> 0` → bytes received
+  * `0` → peer closed connection
+  * `-1` → operation would block (e.g. `EAGAIN`)
+
+In our project:
+
+* We **must not loop** on `recv()` or `send()`
+* We **must wait** for readiness via `poll()` / `epoll()`
+* Each socket has an **I/O state** (READING_HEADERS, READING_BODY, WRITING_RESPONSE, etc.)
+
+This forces your server to be a **state machine**.
+
+---
+
+### poll() / epoll() mental model
+
+You never *do I/O directly*.
+
+Instead:
+
+1. Ask the kernel: *“Is this socket readable or writable?”*
+2. The kernel answers via `poll()` / `epoll()`
+3. You perform **exactly one logical I/O step**
+4. Update your connection state
+
+This prevents blocking and ensures scalability.
+
+---
+
+### accept() internals (what really happens)
+
+You have a **listening socket**:
+
+* Created with `socket()`
+* Bound with `bind()`
+* Marked passive with `listen()`
+
+Internally, the kernel maintains:
+
+* A **SYN queue** (half-open connections)
+* An **accept queue** (fully established connections)
+
+When a client connects:
+
+1. TCP handshake completes (SYN → SYN/ACK → ACK)
+2. Kernel creates a **new socket**
+3. That socket is placed in the accept queue
+
+`accept()`:
+
+* Removes one socket from the accept queue
+* Returns a **new file descriptor**
+* The listening socket **remains unchanged**
+
+Important rules:
+
+* The listening socket is only used for `accept()`
+* Client sockets are used for `recv()` / `send()`
+* `accept()` itself must also be non-blocking
+
+If no connection is ready:
+
+* `accept()` returns `-1`
+* You wait again via `poll()`
+
+---
+
+### TCP state machine (simplified but essential)
+
+Each TCP socket internally follows a **finite state machine**:
+
+```
+CLOSED
+  ↓ connect()
+SYN_SENT
+  ↓ handshake
+ESTABLISHED
+  ↓ close() / FIN
+FIN_WAIT / CLOSE_WAIT
+  ↓
+TIME_WAIT
+  ↓
+CLOSED
+```
+
+Key states you must care about:
+
+* **ESTABLISHED**
+
+  * Normal data transfer
+* **CLOSE_WAIT**
+
+  * Peer closed first (recv() returns 0)
+* **FIN_WAIT**
+
+  * You initiated close
+
+In practice:
+
+* `recv() == 0` → peer sent FIN → you must close
+* Writing after FIN → undefined / error
+
+---
+
+### Partial reads & writes (very important)
+
+TCP is a **byte stream**, not message-based.
+
+This means:
+
+* One HTTP request may arrive in **many chunks**
+* One `send()` may write **only part** of your response
+
+Therefore:
+
+* You must buffer incoming data
+* You must track how much of the response is already sent
+
+Example states:
+
+* READ_REQUEST_LINE
+* READ_HEADERS
+* READ_BODY
+* PROCESS_REQUEST
+* WRITE_HEADERS
+* WRITE_BODY
+* DONE
+
+---
+
+### Why we use this architecture for our project
+
+project constraints enforce:
+
+* One `poll()` / event loop
+* No blocking calls
+* No thread-per-client model
+
+This teaches:
+
+* Kernel-level I/O understanding
+* Event-driven programming
+* Real-world server architecture (nginx-style)
+
+---
+
+### One-sentence summary for exams
+
+> A non-blocking socket-based server is an event-driven state machine where the kernel signals readiness, and the program performs minimal, incremental I/O without ever blocking.
