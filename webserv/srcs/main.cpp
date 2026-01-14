@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
+/*   By: jake <jake@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/07 10:25:15 by kmooney           #+#    #+#             */
-/*   Updated: 2026/01/07 16:04:55 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/01/13 17:51:56 by jake             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,8 @@
 
 #include <cstring>
 #include <iostream>
+
+#include "Server.hpp"
 
 /*
 
@@ -28,6 +30,9 @@ close()     → release socket
 
 */
 
-int	main(){
-
+int	main()
+{
+	Server server;
+	
+	server.loop();
 }
