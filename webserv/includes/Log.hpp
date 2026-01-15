@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/14 13:05:00 by kmooney           #+#    #+#             */
-/*   Updated: 2026/01/15 12:42:00 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/01/15 15:05:30 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,8 @@
 #include <ctime>
 
 // LOGS FOLDER PATH
-#define LOG_PATH "./logs/"
+#define LOG_PATH "./logs/current"
+#define LOG_OLD "./logs/old"
 
 // LOG FILE PATHS
 #define LOG_ACCESS 				"access.log"			// FOR FILE ACCESS DETAILS
@@ -83,7 +84,10 @@ private:
 						// LOG FILE MANIPULATION
 		void			openLogFiles(void);
 		void			openLogFile(std::string filename, int& fd);
+		bool			file_exists() const;
 		bool			file_exists(const std::string& filename) const;
+		bool			folderExists(const std::string &path);
+		bool			createLogFolder(void);
 		void			rotate();
 		std::string 	rotatedName(int index) const;
 		void			closeLogFiles(void);
@@ -104,7 +108,5 @@ private:
 };
 
 std::string	itoa(int value);
-bool		folderExists(const std::string &path);
-bool		createLogFolder(void);
 
 #endif

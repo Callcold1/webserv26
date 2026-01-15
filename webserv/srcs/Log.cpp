@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/14 13:35:51 by kmooney           #+#    #+#             */
-/*   Updated: 2026/01/15 12:52:21 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/01/15 15:07:11 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,19 +29,20 @@ Log::~Log(){
 	closeLogFiles();
 }
 
-bool	createLogFolder(void){
+bool	Log::createLogFolder(void){
 
 	mode_t mode = 0755;
 
-	if (folderExists(LOG_PATH))
+	if (folderExists(LOG_PATH)){
 		return true;
+	}
 	
 	if (mkdir(LOG_PATH, mode) != 0)
         return false;						// directory creation failed
     return true;							// directory created
 }
 
-bool	folderExists(const std::string &path)
+bool	Log::folderExists(const std::string &path)
 {
     struct stat info;
 
@@ -80,7 +81,7 @@ void	Log::openLogFile(std::string filename, int& fd){
 	_base_name = filename;
 	_base_path = LOG_PATH + filename;
 
-	if (file_exists(_base_path)){
+	if (file_exists()){
 		rotate();
 	}
 	fd = open(_base_path.c_str(), O_WRONLY | O_CREAT | O_APPEND, 0644);
@@ -91,6 +92,12 @@ bool	Log::file_exists(const std::string& filepath) const{
 	return (access(filepath.c_str(), F_OK) == 0);
 }
 
+// CHECK IF A LOG FILE ALREADY EXISTS
+bool	Log::file_exists() const{
+	return (access(_base_path.c_str(), F_OK) == 0);
+}
+
+
 // INCREASE INDEX OF EXISTING LOG FILES 
 void Log::rotate()
 {
@@ -99,16 +106,16 @@ void Log::rotate()
 	while (file_exists(rotatedName(max)))
 		++max;
 
-	for (int i = max - 1; i >= 1; --i)
+	for (int i = max; i >= 0; --i)
 		rename(rotatedName(i).c_str(), rotatedName(i + 1).c_str());
-	rename(_base_name.c_str(), rotatedName(1).c_str());
+	rename(_base_path.c_str(), rotatedName(1).c_str());
 }
 
 // CREATE LOG FILE NAME (APPENDED WITH INDEX)
 std::string Log::rotatedName(int index) const
 {
 	std::ostringstream oss;
-	oss << _base_name << "." << index;
+	oss << _base_path << "." << index;
 	return oss.str();
 }
 
@@ -125,7 +132,7 @@ int Log::setOutput(int type) {
 	switch (type){
 		case TYPE_ACCESS : {log_fd = _access_fd; break; }
 		case TYPE_CGI : {log_fd = _cgi_fd; break; }
-		case TYPE_CLASS : {log_fd = _cgi_fd; break; }
+		case TYPE_CLASS : {log_fd = _class_fd; break; }
 		case TYPE_CONF : {log_fd = _conf_fd; break; }
 		case TYPE_ERROR : {log_fd = _errors_fd; break; }
 		case TYPE_REQUEST_PARSING : {log_fd = _request_parsing_fd; break; }
