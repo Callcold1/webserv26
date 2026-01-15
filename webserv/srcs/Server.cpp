@@ -4,9 +4,12 @@
 Server::Server()
 {
 	//createSockets(config.ports);
-	int ports[] = {8080, 443, 2020, 2025, 3030};
+	int ports[] = {8080, 2020, 2025, 3030};
 	for (int i = NUM_SOCK; i < NUM_SOCK + MAX_CONN; i++)
+	{
 		sockets[i].fd = -1;
+		sockets[i].events = POLLIN | POLLOUT;
+	}
 	try
 	{
 		createSockets(ports);
@@ -57,6 +60,7 @@ void	Server::createSockets(int ports[])
 		
 		if (bind(new_sock_fd, (struct sockaddr *)&address, sizeof(address)) < 0)
 		{
+			perror("bind");
 			throw(std::runtime_error("bind() failed!"));
 		}
 		
@@ -123,7 +127,7 @@ void Server::client_action()
 	{
 		if (sockets[i].fd != -1 && (sockets[i].revents & POLLIN))
 		{
-			int valread = recv(sockets[i].fd, buffer, BUF_SIZE - 1, 0);
+			size_t valread = recv(sockets[i].fd, buffer, BUF_SIZE - 1, 0);
 			if (valread == 0)
 			{
 				close(sockets[i].fd);
@@ -144,9 +148,10 @@ void Server::client_action()
 			{
 				buffer[valread] = '\0';
 				//send(clients[i].fd, buffer, valread, 0);
+				clients.at(sockets[i].fd).append_read(buffer, valread);
 				std::cout << sockets[i].fd << " said: " << buffer << std::endl;
 			}
-		}
+		} 
 	}
 }
 

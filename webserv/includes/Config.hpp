@@ -10,6 +10,6 @@ class Config {
 		Config&	operator=( const Config& other);
 		~Config(void);
 
-		int ports[];
+		//int ports[];
 
 };

@@ -31,3 +31,10 @@ Client &Client::operator=(const Client &other)
 Client::~Client()
 {
 }
+
+void change_state(enum State state);
+void Client::append_read(char *buffer, size_t len)
+{
+	in_buff.append(buffer, len);
+	pos = in_buff.find("")
+}

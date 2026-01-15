@@ -11,6 +11,7 @@
 #include <map>
 #include <algorithm>
 #include <poll.h>
+#include <cerrno>
 
 #include "Config.hpp"
 #include "Client.hpp"
