@@ -6,14 +6,14 @@ NAME        := webserv
 CXX         := g++
 CXXFLAGS    := -Wall -Werror -Wextra -std=c++98 -g
 
-INCLUDES    :=	-I $(PROJECT_ROOT)/webserv/includes
+INCLUDES    :=	-I $(PROJECT_ROOT)/includes
 #  				-I$(PROJECT_ROOT)/Request/includes \
 # 				-I$(PROJECT_ROOT)/Config/includes \
 
 OBJDIR      := objs
 SRCDIR      := $(PROJECT_ROOT)/srcs
 
-SRCS        := main.cpp
+SRCS        := main.cpp Log.cpp
 
 OBJS := $(patsubst %.cpp, $(OBJDIR)/%.o, $(SRCS))
 DEPS := $(patsubst %.cpp, $(OBJDIR)/%.d, $(SRCS))

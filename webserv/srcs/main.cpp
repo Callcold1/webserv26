@@ -6,14 +6,13 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/07 10:25:15 by kmooney           #+#    #+#             */
-/*   Updated: 2026/01/07 16:04:55 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/01/15 12:43:40 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-
-
 #include <cstring>
 #include <iostream>
+#include "Log.hpp"
 
 /*
 
@@ -29,5 +28,8 @@ close()     → release socket
 */
 
 int	main(){
+
+	Log::instance().log(Log::INFO, Log::TYPE_CONF, "Logging Test");
+	Log::instance().log(Log::INFO, Log::TYPE_CONF, "Logging Test 2");
 
 }
