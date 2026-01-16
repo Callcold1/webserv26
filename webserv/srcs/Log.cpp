@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/14 13:35:51 by kmooney           #+#    #+#             */
-/*   Updated: 2026/01/15 15:07:11 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/01/16 14:18:17 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,7 @@
 #include <sstream>
 
 Log::Log() : _out(&std::cerr){
-	createLogFolder();
+	createLogFolders();
 	openLogFiles();
 	log(INFO, TYPE_CLASS, "Log files opened successfully");
 }
@@ -29,26 +29,51 @@ Log::~Log(){
 	closeLogFiles();
 }
 
-bool	Log::createLogFolder(void){
+bool	Log::createLogFolders(void){
 
-	mode_t mode = 0755;
-
-	if (folderExists(LOG_PATH)){
-		return true;
-	}
-	
-	if (mkdir(LOG_PATH, mode) != 0)
-        return false;						// directory creation failed
-    return true;							// directory created
+	if (!createFolder(LOG_PATH))
+		return false;
+	if (!createFolder(LOG_CURRENT))
+		return false;
+	if (!createFolder(LOG_OLD))
+		return false;
+	return true;
 }
 
-bool	Log::folderExists(const std::string &path)
-{
-    struct stat info;
+bool	Log::createFolder(std::string path){
+	if (path.empty())
+		return false;
 
-    if (stat(path.c_str(), &info) != 0)
-        return false;						// folder doesn't exist
-    return (info.st_mode & S_IFDIR) != 0;	// check if it's a directory
+	std::string current;
+	size_t i = 0;
+
+	if (path[0] == '/')
+	{
+		current = "/";
+		i = 1;
+	}
+	while (i < path.size())
+	{
+		size_t slash = path.find('/', i);
+
+		if (slash == std::string::npos)
+			slash = path.size();
+
+		current += path.substr(i, slash - i);
+
+		struct stat st;
+		if (stat(current.c_str(), &st) != 0)
+		{
+			if (mkdir(current.c_str(), 0755) != 0)
+				return false;
+		}
+		else if (!S_ISDIR(st.st_mode))
+			return false;
+			
+		current += "/";
+		i = slash + 1;
+	}
+	return true;
 }
 
 // OPEN ALL LOG FILES
@@ -79,11 +104,10 @@ void	Log::closeLogFiles(void){
 void	Log::openLogFile(std::string filename, int& fd){
 	
 	_base_name = filename;
-	_base_path = LOG_PATH + filename;
+	_base_path = LOG_CURRENT + filename;
 
-	if (file_exists()){
+	if (file_exists())
 		rotate();
-	}
 	fd = open(_base_path.c_str(), O_WRONLY | O_CREAT | O_APPEND, 0644);
 }
 
@@ -93,20 +117,20 @@ bool	Log::file_exists(const std::string& filepath) const{
 }
 
 // CHECK IF A LOG FILE ALREADY EXISTS
-bool	Log::file_exists() const{
+bool	Log::file_exists(void) const{
 	return (access(_base_path.c_str(), F_OK) == 0);
 }
-
 
 // INCREASE INDEX OF EXISTING LOG FILES 
 void Log::rotate()
 {
+	_old_path = LOG_OLD + _base_name;
 	int max = 1;
 
 	while (file_exists(rotatedName(max)))
 		++max;
 
-	for (int i = max; i >= 0; --i)
+	for (int i = max; i > 0; --i)
 		rename(rotatedName(i).c_str(), rotatedName(i + 1).c_str());
 	rename(_base_path.c_str(), rotatedName(1).c_str());
 }
@@ -115,11 +139,11 @@ void Log::rotate()
 std::string Log::rotatedName(int index) const
 {
 	std::ostringstream oss;
-	oss << _base_path << "." << index;
+	oss << _old_path << "." << index;
 	return oss.str();
 }
 
-// CREATE STATIC INSTANCE OF CLASS
+// STATIC FUNCTION TO ACCESS CLASS
 Log& Log::instance() {
 	static Log instance;
 	return instance;
@@ -148,7 +172,7 @@ void Log::log(LogLevel level, const LogType type, const std::string msg) {
 	int log_fd = setOutput(type);
 
 	std::string log_line = timestamp() + " [" + levelToString(level) + "] "
-                       + " [" + typeToString(type) + "] " + msg + "\n";
+					   + " [" + typeToString(type) + "] " + msg + "\n";
 
 	write(log_fd, log_line.c_str(), log_line.size()); 	// write to file
 	(*_out) << log_line; 								// write to stderr
@@ -159,8 +183,8 @@ void Log::log(LogLevel level, const LogType type, int fd, const std::string msg)
 	int log_fd = setOutput(type);
 	
 	std::string log_line = timestamp() + " [" + levelToString(level) + "] "
-					   + "fd=" + itoa(fd) + " [" + typeToString(type) + "] "
-                       + msg + "\n";
+					   + "fd=" + intToString(fd) + " [" + typeToString(type) + "] "
+					   + msg + "\n";
 
 	write(log_fd, log_line.c_str(), log_line.size()); 	// write to file
 	(*_out) << log_line; 								// write to stderr
@@ -199,9 +223,10 @@ std::string Log::timestamp() {
 	return std::string(buf);
 }
 
-std::string	itoa(int value)
+std::string intToString(int value)
 {
-    char buf[32];
-    std::snprintf(buf, sizeof(buf), "%d", value);  // need to replace
-    return std::string(buf);
+	std::ostringstream oss;
+	oss << value;
+	std::cout << oss.str();
+	return oss.str();
 }
