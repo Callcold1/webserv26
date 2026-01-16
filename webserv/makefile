@@ -13,7 +13,7 @@ INCLUDES    :=	-I $(PROJECT_ROOT)/includes
 OBJDIR      := objs
 SRCDIR      := $(PROJECT_ROOT)/srcs
 
-SRCS        := main.cpp Log.cpp
+SRCS        := main.cpp Log.cpp Config.cpp ConfigParser.cpp
 
 OBJS := $(patsubst %.cpp, $(OBJDIR)/%.o, $(SRCS))
 DEPS := $(patsubst %.cpp, $(OBJDIR)/%.d, $(SRCS))

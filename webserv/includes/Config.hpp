@@ -6,11 +6,12 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/14 09:52:22 by kmooney           #+#    #+#             */
-/*   Updated: 2026/01/14 15:56:38 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/01/16 16:58:58 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
+
 #include <vector>
 #include <map>
 
@@ -78,7 +79,7 @@ class Config {
 	const std::map<int, std::string>& 	getErrorPages() const;
 	const std::vector<std::string>& 	getAllowedMethods() const;
 	const std::vector<location_t>& 		getLocations();
-   	 location_t*						getLocationForTarget(const std::string &target);
+   	location_t*							getLocationForTarget(const std::string &target);
 										
 	 									// Printing
 	std::ostream&						outputPermittedMethods(std::ostream& os);
