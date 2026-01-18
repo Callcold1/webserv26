@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/11 16:04:15 by kmooney           #+#    #+#             */
-/*   Updated: 2026/01/16 16:23:59 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/01/18 17:00:36 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,6 +25,20 @@
 #include <stdint.h>
 #include <sys/stat.h>
 #include <unistd.h>
+
+// PATH STRUCT
+
+struct fileInfo_s
+{
+	bool inaccessible;
+	bool is_dir;
+	bool is_file;
+	bool not_found;
+	__mode_t permissions;
+	std::string path;
+
+	fileInfo_s() : inaccessible(false), is_dir(false), is_file(false), not_found(false), permissions(0), path("") {}
+};
 
 /* CONVERT TO STRING */
 template <typename T>
@@ -61,9 +75,12 @@ std::string							ISO8859_1ToUTF8(const std::string& iso_str);
 int									getFileType(const std::string& str);
 bool								isAccessible(const std::string& path);
 std::string&    					pathAppendToRoot(const std::string& path, const std::string& root);
-std::pair<std::string, std::string>	pathSplit(std::string& path);
+void								getFilePermissions(fileInfo_s* target);
+fileInfo_s*							getFileInfo(std::string& path, std::string& root_dir);
 
 /*	FILEPATH MANIPULATION  */
+void								appendPathToRoot(fileInfo_s* target, std::string& path, std::string& root_dir);
+std::pair<std::string, std::string>	pathSplit(std::string& path);
 std::vector<std::string> 			split_path(std::istringstream &iss);
 std::string 						rebuild_path(std::vector<std::string> segments);
 void 								remove_dot_segments(std::string &str);

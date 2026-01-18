@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/14 09:52:13 by kmooney           #+#    #+#             */
-/*   Updated: 2026/01/16 17:41:10 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/01/18 17:24:08 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,16 +25,6 @@ Config Config::operator=(const Config &other) {
 Config::~Config() {
 }
 
-// Setters
-void Config::setPort(int port) { server_port = port; }
-void Config::setName(std::string name) { server_name = name; }
-void Config::setRootDirConfig(std::string root_dir) { this->root_dir = root_dir; }
-void Config::setMaxBodySize(int max_body_size) { this->max_body_size = max_body_size; }
-void Config::setDefaultFile(std::string default_file) { this->default_file = default_file; }
-void Config::setErrorPage(int error_status, std::string error_page) { error_pages[error_status] = error_page; }
-void Config::setAllowedMethods(const std::vector<std::string> &allowed_methods) { this->allowed_methods = allowed_methods; }
-void Config::addRoute(Route *route) { routes.push_back(route); }
-
 // Getters
 int Config::getPort() const { return server_port; }
 std::string Config::getName() const { return server_name; }
@@ -43,11 +33,11 @@ int Config::getMaxBodySize() const { return max_body_size; }
 std::string Config::getDefaultFile() const { return default_file; }
 const std::map<int, std::string> &Config::getErrorPages() const { return error_pages; }
 
-// Get Route for Target
-Route *Config::getRouteForTarget(const std::string &target) {
-    for (size_t i = 0; i < routes.size(); i++) {
-        if (routes[i]->containsTarget(target))
-            return routes[i];
+// Get Location for Target
+location_t *Config::getLocationForTarget(const std::string &target) {
+    for (size_t i = 0; i < location.size(); i++) {
+        if (location[i]->containsTarget(target))
+            return location[i];
     }
     return NULL;
 }
@@ -73,27 +63,27 @@ void Config::printConfig() const {
     for (size_t i = 0; i < allowed_methods.size(); i++)
         std::cout << allowed_methods[i] << (i + 1 < allowed_methods.size() ? ", " : "\n");
 
-    std::cout << "\nRoutes:\n";
+    std::cout << "\nLocations:\n";
     
-    if (routes.empty()) {
-        std::cout << "  No routes found!\n";
+    if (location.empty()) {
+        std::cout << "  No location found!\n";
     }
 
-    for (size_t i = 0; i < routes.size(); i++) {
-        std::cout << "  Route " << i + 1 << ":\n";
-        if (routes[i]) {
-            routes[i]->printRoute();
+    for (size_t i = 0; i < location.size(); i++) {
+        std::cout << "  Location " << i + 1 << ":\n";
+        if (location[i]) {
+            location[i]->printLocation();
         } else {
-            std::cout << "  Route is NULL\n";
+            std::cout << "  Location is NULL\n";
         }
     }
 }
 
 void Config::freeConfig() {
-    for (size_t i = 0; i < routes.size(); i++) {
-        delete routes[i];
+    for (size_t i = 0; i < location.size(); i++) {
+        delete location[i];
     }
-    routes.clear();
+    location.clear();
 }
 
 std::ostream&	Config::outputPermittedMethods(std::ostream& os){
@@ -103,23 +93,60 @@ std::ostream&	Config::outputPermittedMethods(std::ostream& os){
 	return os;
 }
 
-std::ostream& Config::outputRoutes(std::ostream& os){
-	for (size_t i = 0; i < routes.size(); i++) {
+std::ostream& Config::outputLocations(std::ostream& os){
+	for (size_t i = 0; i < location.size(); i++) {
 		os << std::endl;
-        os << "Route " << i + 1 << "\n======\n";
-        if (routes[i]) {
-            routes[i]->printRoute(os);
+        os << "Location " << i + 1 << "\n======\n";
+        if (location[i]) {
+            location[i]->printLocation(os);
         } else {
-            os << "  Route is NULL\n";
+            os << "  Location is NULL\n";
         }
     }
 	os << std::endl;
 	return os;
 }
 
+
+/*
+>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<
+>>>>>>		PRINT CONFIG INFO 		<<<<<<
+>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<
+*/
+
+// PRINT LOCATION INFO FOR ALL SERVERS
+
 std::ostream& operator<<(std::ostream& os, Config* config){
 	config->outputPermittedMethods(os);
-	config->outputRoutes(os);
+	for (int i = 0; i < config->_servers.size(), i++){
+		for (int j = 0; j < config->_servers->locations[i].size(), j++) {
+			config->printLocation(os, config->_servers->locations[j]);
+		}
+	}
 	return os;
 }
 
+// PRINT LOCATION INFO FOR SINGLE LOCATION (From output stream)
+std::ostream&	Config::printLocation(std::ostream &os, location_t& location)
+{
+	os << "Path: " << location._path << "\n"
+	   << "Root Dir: " << location._root_dir << "\n"
+	   << "Index File: " << location._index_file << "\n"
+	   << "Autoindex: " << (location._autoindex ? "On" : "Off") << "\n"
+	   << "Redirect Status: " << location._redirect_status << "\n"
+	   << "Redirect URL: " << location._redirect_url << "\n";
+	printLocation(os, location);
+	//printPermittedMethods(os);
+	return os;
+}
+
+// PRINT LOCATION INFO FOR SINGLE LOCATION (Without output stream)
+void	Config::printLocation(location_t& location)
+{
+	std::cout << "Path: " << location._path << "\n"
+			  << "Root Dir: " << location._root_dir << "\n"
+			  << "Index File: " << location._index_file << "\n"
+			  << "Autoindex: " << (location._autoindex ? "On" : "Off") << "\n"
+			  << "Redirect Status: " << location._redirect_status << "\n"
+			  << "Redirect URL: " << location._redirect_url << "\n";
+}

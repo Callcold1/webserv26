@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/16 15:33:48 by kmooney           #+#    #+#             */
-/*   Updated: 2026/01/16 16:33:05 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/01/18 17:20:53 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -346,11 +346,48 @@ bool isAccessible(const std::string &path)
 	return access(path.c_str(), R_OK) == 0;
 }
 
+void	getFilePermissions(fileInfo_s* fileinfo){
+	struct stat fileStat;
+	
+	if (stat(fileinfo->path.c_str(), &fileStat) == 0)
+	{
+		fileinfo->is_dir = S_ISDIR(fileStat.st_mode);
+		fileinfo->is_file = S_ISREG(fileStat.st_mode);
+		fileinfo->permissions = fileStat.st_mode;
+	}
+	else if(errno == ENOENT)
+		fileinfo->not_found = true;
+	else if(errno == EACCES)
+		fileinfo->inaccessible = true;
+}
+
+fileInfo_s* getFileInfo(std::string& path, std::string& root_dir){
+
+	fileInfo_s* fileinfo = new fileInfo_s;
+
+	appendPathToRoot(fileinfo, path, root_dir);
+	getFilePermissions(fileinfo);
+	/* 
+		Need to decide if we throw error if path inaccessible or not found
+		 or just log it?
+	*/
+	return;
+}
+
 /*
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<
 >>>>>>	  FILEPATH MANIPULATION		<<<<<<
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<
 */
+
+std::string	appendPathToRoot(fileInfo_s& fileinfo, std::string& path, std::string& root_dir){
+	
+	if (root_dir[root_dir.size() - 1] == '/')
+		trimEndChar(root_dir, '/');
+	if (path[0] == '/')
+		trimLeadingChar(path, '/');
+	fileinfo->path = root_dir + '/' + path;
+}
 
 std::vector<std::string> split_path(std::istringstream &iss)
 {
@@ -556,6 +593,20 @@ bool	iterate(const Container& container, Func f) {
 >>>>>>		PRINTING OPERATIONS			<<<<<<
 >>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<
 */
+
+// Print fileInfo_s
+std::ostream&	printFileInfo(std::ostream &os, fileInfo_s* fileinfo)
+{
+	os << "File Inaccessible: " << fileinfo->inaccessible << std::endl;
+	os << "File Is Directory: " << fileinfo->is_dir << std::endl;
+	os << "File Is File: " << fileinfo->is_file << std::endl;
+	os << "File Not Found: " << fileinfo->not_found << std::endl;
+	os << "File Appended Path: " << fileinfo->path << std::endl;
+	os << "File Permissions: "
+	<< std::oct << std::setfill('0') << std::setw(4) << (fileinfo->permissions & 0777) 
+	<< std::dec << std::setfill(' ') << std::setw(0) << std::endl;
+	return os;
+}
 
 void printStrMap(const std::map<std::string, std::string> &data)
 {

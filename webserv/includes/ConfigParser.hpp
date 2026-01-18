@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/16 15:18:33 by kmooney           #+#    #+#             */
-/*   Updated: 2026/01/16 17:41:51 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/01/18 17:17:58 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,13 @@
 #include "utility_functions.hpp"
 #include <fstream>
 #include <sstream>
+
+enum config_parser_state{
+	CONFIG_PARSER_GLOBAL,
+	CONFIG_PARSER_SERVER,
+	CONFIG_PARSER_LOCATION,
+	CONFIG_PARSER_COMPLETE
+};
 
 class ConfigParser
 {
@@ -38,11 +45,13 @@ class ConfigParser
 		template<typename T>
 		T							parseValue(const std::string &line);
 		
-		void						parseGlobalAttributes(Config* config, std::ifstream& stream);
+		static void					parseGlobalAttributes(config_parser_state& state, Config& config, std::ifstream& stream);
+		static void					parseServer(config_parser_state& state, Config& config, std::ifstream& stream);
+		static void					parseLocation(config_parser_state& state, Config& config, std::ifstream& file);
+		
 		std::vector<std::string>	parseMethods(const std::string &line);
 
-		void						parseServerBlock(Config* config, std::ifstream& stream);
 		
-		void						parseLocation(Config* config, std::ifstream& file, std::string& oldLine);
 		std::string 				parseLocationPath(const std::string &line);
+
 };
