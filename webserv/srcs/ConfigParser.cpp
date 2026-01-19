@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/16 15:18:30 by kmooney           #+#    #+#             */
-/*   Updated: 2026/01/18 17:18:30 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/01/19 10:13:40 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,7 +23,7 @@ ConfigParser& ConfigParser::operator=(const ConfigParser &other) {
     return *this;
 }
 
-Config* ConfigParser::parseConfigFile(std::string& filename)
+Config& ConfigParser::parseConfigFile(std::string& filename)
 {
 	std::ifstream stream(filename.c_str());
 
@@ -32,41 +32,73 @@ Config* ConfigParser::parseConfigFile(std::string& filename)
 
 	config_parser_state state = CONFIG_PARSER_GLOBAL;
 	Config& config = new Config[];
-	
 	std::string line;
+
 	while (true){
-
-		switch (state){
-			case CONFIG_PARSER_GLOBAL 	: { parseGlobalAttributes(state, config, stream); continue;}
-			case CONFIG_PARSER_SERVER 	: { parseServer(state, config, stream); continue;}
-			case CONFIG_PARSER_LOCATION : { parseLocation(state, config, stream); continue;}
-			case CONFIG_PARSER_COMPLETE : break;
-			default 					: break;
-		}
-	}
 		
-}
-
-void	ConfigParser::parseGlobalAttributes(config_parser_state& state, Config& config, std::ifstream& stream){
-
-			while (true) {
-
 		std::getline(stream, line);
 		trimWS(line);
+		
+		switch (state){
+			case CONFIG_PARSER_GLOBAL 	: {parseGlobalAttributes(state, config, line); continue;}
+			case CONFIG_PARSER_SERVER 	: {parseServerBlock(state, config, line); continue;}
+			case CONFIG_PARSER_LOCATION : {parseLocationBlock(state, config, line); continue;}
+			case CONFIG_PARSER_COMPLETE : break;
+			default 					: throw std::exception(); break;
+		}
+	}
+	return config;
+}
+
+/*
+	Global attributes are : 
+
+	server behaviour
+		- timeout (read/write)
+		- keepalive_timeout
+		- client max body size
+		- max connections (e.g. 1024)
+		- log format
+	
+	server resources
+		- index (can be overridden in server block and location block)
+		- root (can be overridden in server block and location block)
+		- error_pages
+	
+	log_format - format of logs (going too far?)
+	log definitions - logs to be kept - Usually global or server level)
+	default_type (MIME)
+	character sets
+
+*/
+void	ConfigParser::parseGlobalAttributes(config_parser_state& state, Config& config, std::string& line){
+
+	while (state == CONFIG_PARSER_GLOBAL) {
+
 		if (line.empty() || line[0] == '#')
 			continue;
 		if ( line == "server {" || line == "server{" || line == "Server {" || line == "Server{")
-			parseServer(config, stream);
-		else if (line.find("listen") == 0)
-			config[idx].setPort(parseValue<int>(line));  // Access via pointer
+			state == CONFIG_PARSER_SERVER;
+		
+	return config;
+}
+
+void	ConfigParser::parseServerBlock(config_parser_state& state, Config& config, std::ifstream& stream){
+	ServerBlock* server_block = new ServerBlock;
+	std::string line;
+	
+	while (state == CONFIG_PARSER_SERVER) {
+		std::getline(stream, line);
+if (line.find("listen") == 0)
+			config.setPort(parseValue<int>(line));  // Access via pointer
 		else if (line.find("server_name") == 0)
-			config[idx].setName(parseValue<std::string>(line));  // Access via pointer
+			config.setName(parseValue<std::string>(line));  // Access via pointer
 		else if (line.find("root") == 0 && !currentRoute)
-			config[idx].setRootDirConfig(parseValue<std::string>(line));  // Access via pointer
+			config.setRootDirConfig(parseValue<std::string>(line));  // Access via pointer
 		else if (line.find("client_max_body_size") == 0)
-			config[idx].setMaxBodySize(parseValue<int>(line));  // Access via pointer
+			config.setMaxBodySize(parseValue<int>(line));  // Access via pointer
 		else if (line.find("index") == 0 && !currentRoute)
-			config[idx].setDefaultFile(parseValue<std::string>(line));  // Access via pointer
+			config.setDefaultFile(parseValue<std::string>(line));  // Access via pointer
 		else if (line.find("error_page") == 0)
 		{
 			std::istringstream iss(line);
@@ -74,7 +106,7 @@ void	ConfigParser::parseGlobalAttributes(config_parser_state& state, Config& con
 			int error_code;
 			std::string error_page;
 			iss >> key >> error_code >> error_page;
-			config[idx].setErrorPage(error_code, error_page);  // Access via pointer
+			config.setErrorPage(error_code, error_page);  // Access via pointer
 		}
 		else if (line.find("allow_methods") == 0)
 		{
@@ -84,29 +116,25 @@ void	ConfigParser::parseGlobalAttributes(config_parser_state& state, Config& con
 			else
 				config[idx].setAllowedMethods(methods);  // Access via pointer
 		} else if (line.find("location") == 0)
-			parseLocation(config[idx], file, line);  // Pass pointer to parseLocation
+				parseLocation(config[idx], file, line);  // Pass pointer to parseLocation
 	}
 	if (currentRoute)
 		config[idx].addRoute(currentRoute);  // Access via pointer	
-	file.close();
-	return config;
-}
-
-
-void	ConfigParser::parseServer(config_parser_state& state, Config& config, std::ifstream& stream){
-	server_t* server = new server_t;
-	std::string line;
-	
-	while (true) {
-		std::getline(stream, line);
-
 		if (line == "}")
+			CONFIG_PARSER_GLOBAL;
 	}
 }
 
-void	ConfigParser::parseLocation(config_parser_state& state, Config& config, std::ifstream& stream){
+void	ConfigParser::parseLocationBlock(config_parser_state& state, Config& config, std::ifstream& stream){
 	location_t* location = new location_t;
+	std::string line;
+	
+	while (state == CONFIG_PARSER_LOCATION) {
+		std::getline(stream, line);
 
+		if (line == "}")
+			state == CONFIG_PARSER_SERVER;
+	}
 	std::string line;
 
 }
@@ -275,4 +303,14 @@ void ConfigParser::setRouteTarget()
 		 or just log it?
 	*/
 	return;
+}
+
+template<typename T>
+T ConfigParser::parseValue(const std::string &line)
+{
+	std::istringstream iss(line);
+	std::string key;
+	T value;
+	iss >> key >> value;
+	return value;
 }

@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/07 10:25:15 by kmooney           #+#    #+#             */
-/*   Updated: 2026/01/16 17:16:37 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/01/19 09:08:07 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,7 +38,7 @@ int	main(int argc, char** argv){
 
 	try {
 		//ConfigParser cp(config_path); // if this doesn't work try "./webserv/default.conf"
-		Config* config = ConfigParser::parseConfigFile(config_path);
+		Config& config = ConfigParser::parseConfigFile(config_path);
 	}
 
 	catch (std::exception* e){

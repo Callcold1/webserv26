@@ -6,11 +6,9 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/16 15:18:33 by kmooney           #+#    #+#             */
-/*   Updated: 2026/01/18 17:17:58 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/01/19 10:13:41 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
-
-#pragma once
 
 #include "Config.hpp"
 #include "utility_functions.hpp"
@@ -36,7 +34,7 @@ class ConfigParser
 									/* COPY ASSIGNMENT */
 		ConfigParser&				operator=(const ConfigParser& other);
 
-		static Config*				parseConfigFile(std::string& filename);
+		static Config&				parseConfigFile(std::string& filename);
 	
 	private:
 									/* COPY CONSTRUCTOR */
@@ -45,13 +43,11 @@ class ConfigParser
 		template<typename T>
 		T							parseValue(const std::string &line);
 		
-		static void					parseGlobalAttributes(config_parser_state& state, Config& config, std::ifstream& stream);
-		static void					parseServer(config_parser_state& state, Config& config, std::ifstream& stream);
-		static void					parseLocation(config_parser_state& state, Config& config, std::ifstream& file);
+		static void					parseGlobalAttributes(config_parser_state& state, Config& config, std::string& line);
+		static void					parseServerBlock(config_parser_state& state, Config& config, std::string& line);
+		static void					parseLocationBlock(config_parser_state& state, Config& config, std::string& line);
 		
 		std::vector<std::string>	parseMethods(const std::string &line);
-
-		
 		std::string 				parseLocationPath(const std::string &line);
 
 };

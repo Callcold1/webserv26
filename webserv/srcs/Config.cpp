@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/14 09:52:13 by kmooney           #+#    #+#             */
-/*   Updated: 2026/01/18 17:24:08 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/01/19 10:13:50 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,7 +26,7 @@ Config::~Config() {
 }
 
 // Getters
-int Config::getPort() const { return server_port; }
+int Config::getPort() const { return _global_port; }
 std::string Config::getName() const { return server_name; }
 std::string Config::getRootDirConfig() const { return root_dir; }
 int Config::getMaxBodySize() const { return max_body_size; }
@@ -44,7 +44,7 @@ location_t *Config::getLocationForTarget(const std::string &target) {
 
 // Utility Functions
 int Config::initialisedCheck() {
-    if (server_port == 0 || root_dir.empty()) return 0;
+    if (_global_port == 0 || root_dir.empty()) return 0;
     return 1;
 }
 
@@ -149,4 +149,11 @@ void	Config::printLocation(location_t& location)
 			  << "Autoindex: " << (location._autoindex ? "On" : "Off") << "\n"
 			  << "Redirect Status: " << location._redirect_status << "\n"
 			  << "Redirect URL: " << location._redirect_url << "\n";
+}
+
+// SETTERS
+void	Config::setPort(int port){
+	if (port <= 0 || port > 65535)
+        throw std::exception("Invalid port");
+	 _global_port = port; 
 }

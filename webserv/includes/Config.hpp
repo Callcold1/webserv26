@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/14 09:52:22 by kmooney           #+#    #+#             */
-/*   Updated: 2026/01/18 17:24:10 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/01/19 10:13:47 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,25 +33,15 @@ typedef struct location_s {
 
 } location_t;
 
-// SERVER STRUCT
-typedef struct server_s {
-
-	std::map<int, std::string>			_error_pages;
-	std::vector<location_t> 			_locations;				// Vector of location structs
-	std::string 						_name;					// Server name
-	int 								_port;					// Port that server will listen on
-	std::string 						_root_dir;				// Root directory for server
-	std::vector<std::string>			_server_methods;			// Methods permitted for all locations on server (can be superceded by location_methods)
-
-} server_t;
-
 class Config {
 	private:
 
 	std::string 						_default_config; 		// Default config file	-> defined above in DEFAULT_CONF
-	std::map<int, std::string> 			_error_pages;			// Default server error pages
-	long long							_max_body;				// Max acceptable body size in bytes
+	std::map<int, std::string> 			_global_error_pages;			// Default server error pages
+	long long							_global_max_body;				// Max acceptable body size in bytes
 	std::vector<server_t>				_servers;				// Vector of servers
+	int 								_global_port;					// Port that server will listen on
+
 
 	public:
 
@@ -81,7 +71,7 @@ class Config {
 	void 								setGlobalMethods(const std::vector<std::string> &allowed_methods) { this->allowed_methods = allowed_methods; } // setAllowedMethods
 		
 	//Server attributes		
-	void 								setPort(int port) { server_port = port; }
+	void 								setPort(int port) { _global_port = port;  }
 	void 								setName(std::string name) { server_name = name; }
 	void 								setRootDirConfig(std::string root_dir) { this->root_dir = root_dir; }
 	void 								setErrorPage(int error_status, std::string error_page) { error_pages[error_status] = error_page; }
