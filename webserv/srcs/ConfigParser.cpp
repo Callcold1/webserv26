@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/16 15:18:30 by kmooney           #+#    #+#             */
-/*   Updated: 2026/01/19 10:13:40 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/01/19 13:57:22 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,11 +40,12 @@ Config& ConfigParser::parseConfigFile(std::string& filename)
 		trimWS(line);
 		
 		switch (state){
-			case CONFIG_PARSER_GLOBAL 	: {parseGlobalAttributes(state, config, line); continue;}
-			case CONFIG_PARSER_SERVER 	: {parseServerBlock(state, config, line); continue;}
-			case CONFIG_PARSER_LOCATION : {parseLocationBlock(state, config, line); continue;}
-			case CONFIG_PARSER_COMPLETE : break;
-			default 					: throw std::exception(); break;
+			case CONFIG_PARSER_GLOBAL 		: {parseGlobalAttributes(state, config, line); continue;}
+			case CONFIG_PARSER_SERVER 		: {parseServerBlock(state, config, line); continue;}
+			case CONFIG_PARSER_LOCATION 	: {parseLocationBlock(state, config, line); continue;}
+			case CONFIG_PARSER_VALIDATION 	: {parseLocationBlock(state, config, line); continue;}
+			case CONFIG_PARSER_COMPLETE 	: break;
+			default 						: throw std::exception(); break;
 		}
 	}
 	return config;

@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/14 09:52:13 by kmooney           #+#    #+#             */
-/*   Updated: 2026/01/19 10:13:50 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/01/19 13:57:25 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,16 +25,18 @@ Config Config::operator=(const Config &other) {
 Config::~Config() {
 }
 
-// Getters
-int Config::getPort() const { return _global_port; }
-std::string Config::getName() const { return server_name; }
-std::string Config::getRootDirConfig() const { return root_dir; }
-int Config::getMaxBodySize() const { return max_body_size; }
-std::string Config::getDefaultFile() const { return default_file; }
-const std::map<int, std::string> &Config::getErrorPages() const { return error_pages; }
+// GETTERS
+int	Config::getNumberOfServers(void) {
+	return _servers.size();
+}
+
+// std::string Config::getRootDirConfig() const { return root_dir; }
+// int Config::getMaxBodySize() const { return max_body_size; }
+// std::string Config::getDefaultFile() const { return default_file; }
+// const std::map<int, std::string> &Config::getErrorPages() const { return error_pages; }
 
 // Get Location for Target
-location_t *Config::getLocationForTarget(const std::string &target) {
+ConfigLocation *Config::getLocationForTarget(const std::string &target) {
     for (size_t i = 0; i < location.size(); i++) {
         if (location[i]->containsTarget(target))
             return location[i];
@@ -107,6 +109,17 @@ std::ostream& Config::outputLocations(std::ostream& os){
 	return os;
 }
 
+/*
+>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<
+>>>>>>		GETTERS 		<<<<<<
+>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<
+*/
+
+/*
+>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<
+>>>>>>		SETTERS 		<<<<<<
+>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<
+*/
 
 /*
 >>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<
@@ -114,46 +127,30 @@ std::ostream& Config::outputLocations(std::ostream& os){
 >>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<
 */
 
-// PRINT LOCATION INFO FOR ALL SERVERS
-
+// PRINT ALL CONFIG INFO
 std::ostream& operator<<(std::ostream& os, Config* config){
-	config->outputPermittedMethods(os);
-	for (int i = 0; i < config->_servers.size(), i++){
-		for (int j = 0; j < config->_servers->locations[i].size(), j++) {
-			config->printLocation(os, config->_servers->locations[j]);
-		}
-	}
-	return os;
-}
-
-// PRINT LOCATION INFO FOR SINGLE LOCATION (From output stream)
-std::ostream&	Config::printLocation(std::ostream &os, location_t& location)
-{
-	os << "Path: " << location._path << "\n"
-	   << "Root Dir: " << location._root_dir << "\n"
-	   << "Index File: " << location._index_file << "\n"
-	   << "Autoindex: " << (location._autoindex ? "On" : "Off") << "\n"
-	   << "Redirect Status: " << location._redirect_status << "\n"
-	   << "Redirect URL: " << location._redirect_url << "\n";
+	os << "Path: " << location.getPath() << "\n"
+	   << "Root Dir: " << location.getRootDir() << "\n"
+	   << "Index File: " << location.getIndex() << "\n"
+	   << "Autoindex: " << location.getAutoIndex() << "\n"
+	   << "Redirect Status: " << location.getRedirectStatus() << "\n"
+	   << "Redirect URL: " << location.getRedirectURL() << "\n";
 	printLocation(os, location);
 	//printPermittedMethods(os);
 	return os;
 }
 
-// PRINT LOCATION INFO FOR SINGLE LOCATION (Without output stream)
-void	Config::printLocation(location_t& location)
-{
-	std::cout << "Path: " << location._path << "\n"
-			  << "Root Dir: " << location._root_dir << "\n"
-			  << "Index File: " << location._index_file << "\n"
-			  << "Autoindex: " << (location._autoindex ? "On" : "Off") << "\n"
-			  << "Redirect Status: " << location._redirect_status << "\n"
-			  << "Redirect URL: " << location._redirect_url << "\n";
+std::ostream& operator<<(std::ostream& os, Config* config){
+	
+	config->outputPermittedMethods(os);
+	int server_count = config->getNumberOfServers();
+	
+	for (int i = 0; i < server_count; i++){
+		os << config->_servers[i];
+	}
+	return os;
 }
 
-// SETTERS
-void	Config::setPort(int port){
-	if (port <= 0 || port > 65535)
-        throw std::exception("Invalid port");
-	 _global_port = port; 
-}
+//for (int j = 0; j < config->_servers->locations[i].size(), j++) {
+//	config->printLocation(os, config->_servers->locations[j]);
+//}

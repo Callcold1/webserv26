@@ -6,77 +6,71 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/14 09:52:22 by kmooney           #+#    #+#             */
-/*   Updated: 2026/01/19 10:13:47 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/01/19 13:57:24 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
 
-#include <vector>
-#include <map>
+#include <algorithm>
+#include <ctime>
 #include <iostream>
+#include <map>
+#include <vector>
+
+#include "ConfigServer.hpp"
+#include "ConfigLocation.hpp"
 
 // DEFAULT CONFIGURATION FILE
 #define DEFAULT_CONF 	"../default.conf"
-
-// LOCATION STRUCT
-typedef struct location_s {
-
-	bool								_autoindex;				// Indicates if the location has autoindex ()
-	std::string							_index_file;
-	std::vector<std::string>			_location_methods;
-	std::string 						_name;
-	std::string							_path;
-	int									_redirect_status;
-	std::string							_redirect_url;		
-	std::string							_root_dir;		// Root directory for location
-
-} location_t;
 
 class Config {
 	private:
 
 	std::string 						_default_config; 		// Default config file	-> defined above in DEFAULT_CONF
-	std::map<int, std::string> 			_global_error_pages;			// Default server error pages
-	long long							_global_max_body;				// Max acceptable body size in bytes
-	std::vector<server_t>				_servers;				// Vector of servers
-	int 								_global_port;					// Port that server will listen on
-
+	std::map<int, std::string> 			_error_pages;			// Map of error pages to generate
+	std::vector<std::string>			_log_names;				// Vector of log names to be generated
+	long long							_max_body;				// Max acceptable body size in bytes
+	int									_max_connections; 		// (e.g. 1024)
+	std::vector<ConfigServer>			_servers;				// Vector of servers
+	struct tm							_timeout_rw;			// Length of time before rw timeout
+	struct tm							_timeout_ka;			// Length of time before keep-alive timeout
 
 	public:
 
 										// Constructors/Destructor/Copy
 										Config();
 										Config(const Config &other);
-										Config operator=(const Config &another);
+										Config operator=(const Config &other);
 										~Config();
 										
 										// Getters
-	int									getPort() const;
-	std::string 						getName() const;
-	std::string 						getRootDirConfig() const;
-	int 								getMaxBodySize() const;
-	std::string 						getDefaultFile() const;
-	const std::map<int, std::string>& 	getErrorPages() const;
-	const std::vector<std::string>& 	getAllowedMethods() const;
-	const std::vector<location_t>& 		getLocations();
-   	location_t*							getLocationForTarget(const std::string &target);
-										
-	// Setters
+   	// ConfigLocation*					getLocationForTarget(const std::string &target);
+	
+	// SETTERS
 
-	//Global attributes
-	void 								setMaxBodySize(int max_body_size) { this->_max_body = max_body_size; }
-	void 								setDefaultFile(std::string default_file) { this->default_file = default_file; }
-	void 								setErrorPage(int error_status, std::string error_page) { error_pages[error_status] = error_page; }
-	void 								setGlobalMethods(const std::vector<std::string> &allowed_methods) { this->allowed_methods = allowed_methods; } // setAllowedMethods
-		
-	//Server attributes		
-	void 								setPort(int port) { _global_port = port;  }
-	void 								setName(std::string name) { server_name = name; }
-	void 								setRootDirConfig(std::string root_dir) { this->root_dir = root_dir; }
-	void 								setErrorPage(int error_status, std::string error_page) { error_pages[error_status] = error_page; }
-	void 								setServerMethods(const std::vector<std::string> &allowed_methods) { this->allowed_methods = allowed_methods; } //setAllowedMethods
-	void 								addLocation(location_t *route) { location.push_back(route); }
+	void 								setDefaultFile(void) { _default_config = DEFAULT_CONF; }
+	void 								setErrorPage(int error_status, std::string error_page) { _error_pages[error_status] = error_page; }
+	void 								setMaxBodySize(int max_body_size) { _max_body = max_body_size; }
+	
+	// GETTERS
+	void 								getDefaultFile(void) { _default_config = DEFAULT_CONF; }
+	void 								getErrorPage(int error_status, std::string error_page) { _error_pages[error_status] = error_page; }
+	long long							getMaxBodySize(int max_body_size) { _max_body = max_body_size; } // Max body size in bytes
+	int									getNumberOfServers(void);
+	std::string 						getRootDir() const;
+	
+	// QUERIES USED BY SERVER CLASS 
+	const ConfigServer&					getServer(const std::string& name); // Return ConfigServer corresponding to given name
+
+	// Validation
+	
+	// Check config file is accessible
+	// Check server name isn't duplicated? Check at higher level (in Config)
+	// Check port is in range 1000 - 65xxx
+	// Check root dir is valid and accessible
+	// Check error_pages are valid errors and are accessible
+
 
 	//Location attributes
 	 									// Printing
@@ -88,8 +82,8 @@ class Config {
 	void 								printConfig() const;
 	void 								freeConfig();
 
-	std::ostream&						printLocation(std::ostream &os, location_t& location);
-	void								printLocation(location_t& location);
+	std::ostream&						printLocation(std::ostream &os, ConfigLocation& location);
+	void								printLocation(ConfigLocation& location);
 };
 
-std::ostream& operator<<(std::ostream& os, Config* config);
+std::ostream&	operator<<(std::ostream& os, Config* config);

@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/16 15:18:33 by kmooney           #+#    #+#             */
-/*   Updated: 2026/01/19 10:13:41 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/01/19 13:57:21 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,7 @@ enum config_parser_state{
 	CONFIG_PARSER_GLOBAL,
 	CONFIG_PARSER_SERVER,
 	CONFIG_PARSER_LOCATION,
+	CONFIG_PARSER_VALIDATION,
 	CONFIG_PARSER_COMPLETE
 };
 
@@ -27,6 +28,7 @@ class ConfigParser
 	public:
 									/* CONSTRUCTORS */
 									ConfigParser( void );
+									ConfigParser( const ConfigParser& other );
 
 									/* DESTRUCTORS */
 									~ConfigParser( void );
@@ -37,6 +39,7 @@ class ConfigParser
 		static Config&				parseConfigFile(std::string& filename);
 	
 	private:
+
 									/* COPY CONSTRUCTOR */
 									ConfigParser(const ConfigParser& other);
 
@@ -49,5 +52,7 @@ class ConfigParser
 		
 		std::vector<std::string>	parseMethods(const std::string &line);
 		std::string 				parseLocationPath(const std::string &line);
+
+									// Validation
 
 };
