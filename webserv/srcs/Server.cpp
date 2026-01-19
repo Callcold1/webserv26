@@ -119,7 +119,7 @@ void Server::conn_new_clients()
 	}
 }
 
-void Server::client_action()
+void Server::client_read()
 {
 	char buffer[BUF_SIZE];
 
@@ -127,7 +127,7 @@ void Server::client_action()
 	{
 		if (sockets[i].fd != -1 && (sockets[i].revents & POLLIN))
 		{
-			size_t valread = recv(sockets[i].fd, buffer, BUF_SIZE - 1, 0);
+			ssize_t valread = recv(sockets[i].fd, buffer, BUF_SIZE - 1, 0);
 			if (valread == 0)
 			{
 				close(sockets[i].fd);
@@ -135,7 +135,7 @@ void Server::client_action()
 				sockets[i].fd = -1;
 				std::cout << "Client disconnected" << std::endl;
 			}
-			else if (valread < 0)
+			else if (valread == -1)
 			{
 				if (errno == EAGAIN || errno == EWOULDBLOCK)
 					continue;
@@ -155,11 +155,47 @@ void Server::client_action()
 	}
 }
 
+void Server::client_write()
+{
+	std::string msg;
+
+	for (int i = NUM_SOCK; i < NUM_SOCK + MAX_CONN; i++)
+	{
+		if (sockets[i].fd != -1 && (sockets[i].revents & POLLOUT)) 
+		{
+			std::cout << "aaaaa\n";
+			if ((msg = clients.at(sockets[i].fd).get_msg()) != "")
+			{
+				std::cout << "sendign \n";
+				send(sockets[i].fd, msg.c_str(), msg.size(), 0);
+				clients.at(sockets[i].fd).clear_out_buff();
+			}
+
+		}
+	}
+}
+
+void Server::update_poll_events()
+{
+	for (int i = NUM_SOCK; i < NUM_SOCK + MAX_CONN; i++)
+    {
+        int fd = sockets[i].fd;
+        if (fd == -1)
+            continue;
+
+        if (clients.at(fd).has_output)
+            sockets[i].events |= POLLOUT;
+        else
+            sockets[i].events &= ~POLLOUT;
+    }
+}
+
 int Server::loop()
 {
 
 	while (true)
 	{
+		update_poll_events();
 		int activity = poll(sockets, NUM_SOCK + MAX_CONN, -1);
 		if (activity == -1)
 		{
@@ -170,7 +206,8 @@ int Server::loop()
 			//handling new client connections:
 			Server::conn_new_clients();
 			//handling client actions:
-			Server::client_action();
+			Server::client_read();
+			Server::client_write();
 		}
 	}
 }

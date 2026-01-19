@@ -34,7 +34,10 @@ class Server {
 		//int get_socket(int index);
 		int loop();
 		void conn_new_clients();
-		void client_action();
+		void client_read();
+		void client_write();
+
+		void update_poll_events();
 	private:
 
 		void createSockets(int ports[]);
