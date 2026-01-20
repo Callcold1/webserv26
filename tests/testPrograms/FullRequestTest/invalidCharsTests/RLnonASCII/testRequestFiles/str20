@@ -1,0 +1,9 @@
+POST /badtrailer HTTP/1.1
+Host: h
+Transfer-Encoding: chunked
+
+3
+foo
+0
+InvalidHeader
+

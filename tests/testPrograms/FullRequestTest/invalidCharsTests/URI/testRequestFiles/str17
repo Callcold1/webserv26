@@ -1,0 +1,6 @@
+POST ftp://example.com/<> HTTP/1.1
+Host: blah
+Transfer-Encoding: chunked
+
+0
+

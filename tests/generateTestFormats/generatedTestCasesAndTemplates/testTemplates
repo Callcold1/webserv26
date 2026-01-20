@@ -1,0 +1,200 @@
+/*
+	1. The template below (TEMPLATE TEST_PROFILE ) can be copied and the **NUMBER** replaced with a number (e.g. 3)
+
+		The template fields can be altered to reflect the request message that is being used for testing
+
+		e.g. for the request message :
+		
+			"GET /hello%20world HTTP/1.1\r\nHost: example.com\r\n\r\n"
+
+		The template should be altered to : 
+
+				testProfile* test3 = new testProfile;
+				test3->request_str = "GET /hello%20world HTTP/1.1\r\n";
+				test3->method = "GET";
+				test3->version = "HTTP/1.1";
+				test3->uri_str = "/hello%20world";
+				test3->uri.uri_type = ORIGIN_FORM;
+				test3->uri.port_int = 80;
+				test3->uri.auth = "";
+				test3->uri.frag = "";
+				test3->uri.host = "";
+				test3->uri.pass = "";
+				test3->uri.path = "/hello%20world";
+				test3->uri.port = "";
+				test3->uri.query = "";
+				test3->uri.scheme = "";
+				test3->uri.user = "";
+				test3->errNum = 200;
+				test3->errMess = "Parsing Complete";
+				test3->p_state = P_DONE;
+				test3->body = "";
+				test3->hasBody = false;
+				test3->isChunked = false;
+		
+		The corresponding test functions should also be added to the same function 
+
+			e.g if test3->add(compare_request_str,"Request String ");
+	
+		Once the template has been completed, it can be pasted into the appropriate test file
+	
+			testfile = tests/testPrograms/xxx/xxxx/testCases.cpp
+	
+		# Note that new test functions can be created and added to the testFunctions cpp and hpp files (tests/testPrograms/testMain/testFunctions.hpp or cpp)
+		# Not all fields from the template are required - the values, and corresponding test functions can be added/removed as required
+	
+
+	2: A char array should also be generated and should be pasted into the function in the test file
+		
+			"void populateTestStringsVector(std::vector<std::string>& strings);" 
+		
+		To generate the char array paste the entire request string into the main in file : 
+
+			"tests/generateTestFormats/generateRawHttpCharArrays/createCharArray.cpp"
+
+		Example
+		-------
+		"GET /hello%20world HTTP/1.1\r\nHost: example.com\r\n\r\n"
+
+	 	will generate a character array of 
+
+				const char raw_str3[ ] = {'G','E','T',' ','/','h','e','l','l','o','%','2','0','w','o','r','l','d',' ','H','T','T','P','/','1','.','1','\r','\n','H','o','s','t',':',' ','e','x','a','m','p','l','e','.','c','o','m','\r','\n','\r','\n'};
+		
+		The output of tests/generateTestFormats/generateRawHttpCharArrays/createCharArray.cpp should be pasted into the 
+		function in the testfile (tests/testPrograms/xxx/xxxx/testCases.cpp) as follows : 
+
+			void	populateTestStringsVector(std::vector<std::string>& strings){
+
+				const char raw_str3[ ] = {'G','E','T',' ','/','h','e','l','l','o','%','2','0','w','o','r','l','d',' ','H','T','T','P','/','1','.','1','\r','\n','H','o','s','t',':',' ','e','x','a','m','p','l','e','.','c','o','m','\r','\n','\r','\n'};
+			
+				const std::string str3(raw_str3, sizeof(raw_str3));
+				strings.push_back(str3);
+			}
+
+
+	3: The testProfile should be pasted into the following function in the same test file (tests/testPrograms/xxx/xxxx/testCases.cpp) : 
+		
+		void	testProfileCreation(std::vector<testProfile *>& testProfiles){
+	
+			testProfile* test3 = new testProfile;
+				test3->request_str = "GET /hello%20world HTTP/1.1\r\n";
+				test3->method = "GET";
+				test3->version = "HTTP/1.1";
+				test3->uri_str = "/hello%20world";
+				test3->uri.uri_type = ORIGIN_FORM;
+				test3->uri.port_int = 80;
+				test3->uri.auth = "";
+				test3->uri.frag = "";
+				test3->uri.host = "";
+				test3->uri.pass = "";
+				test3->uri.path = "/hello%20world";
+				test3->uri.port = "";
+				test3->uri.query = "";
+				test3->uri.scheme = "";
+				test3->uri.user = "";
+				test3->errNum = 200;
+				test3->errMess = "Parsing Complete";
+				test3->p_state = P_DONE;
+				test3->body = "";
+				test3->hasBody = false;
+				test3->isChunked = false;
+
+			test3->add(compare_request_str,"Request String ");
+			test3->add(compare_request_method, "Method ");
+			test3->add(compare_uri_str,"URI String ");
+			test3->add(compare_version,"Version ");
+		
+			//URI ADD FUNCTIONS
+			test3->add(compare_uri_type,"URI Type ");
+			test3->add(compare_uri_port_int,"URI Port int ");
+			test3->add(compare_uri_auth,"URI auth ");
+			test3->add(compare_uri_frag,"URI frag ");
+			test3->add(compare_uri_host,"URI host ");
+			test3->add(compare_uri_pass,"URI pass ");
+			test3->add(compare_uri_path,"URI path ");
+			test3->add(compare_uri_port,"URI port string ");
+			test3->add(compare_uri_query,"URI query ");
+			test3->add(compare_uri_scheme,"URI scheme ");
+			test3->add(compare_uri_user,"URI user ");
+
+			//URI ERROR FUNCTIONS
+			test3->add(compare_errNum,"errNum ");
+			test3->add(compare_errMess,"errMess ");
+
+			//URI PARSE STATE/OUTCOME FUNCTION
+			test3->add(compare_p_state,"p_state ");
+
+			// ADD TO TEST VECTOR
+			testProfiles.push_back(test3);
+		}
+
+		testProfile* test = new testProfile;
+*/
+
+TEMPLATE TEST_PROFILE 
+
+	testProfile* test = new testProfile;
+
+	test**NUMBER**->request_str = "";
+	test**NUMBER**->method = "";
+	test**NUMBER**->version = "";
+	test**NUMBER**->uri_str = "";
+	test**NUMBER**->uri.uri_type = ; // enum uri_types
+	test**NUMBER**->uri.port_int = 80; // int (default 80)
+	test**NUMBER**->uri.auth = "";
+	test**NUMBER**->uri.frag = "";
+	test**NUMBER**->uri.host = "";
+	test**NUMBER**->uri.pass = "";
+	test**NUMBER**->uri.path = "";
+	test**NUMBER**->uri.port = "";
+	test**NUMBER**->uri.query = "";
+	test**NUMBER**->uri.scheme = "http";
+	test**NUMBER**->uri.user = "";
+
+	// ERROR NUMBER/STRING
+	test**NUMBER**->errNum = 400;
+	test**NUMBER**->errMess = "";
+
+	// FINAL PARSING STATE
+	test**NUMBER**->p_state = P_DONE;
+	
+	//BODY
+	test**NUMBER**->body = "";
+	test**NUMBER**->hasBody = false;
+	test**NUMBER**->isChunked = false;
+	
+	//RL ADD FUNCTIONS
+	test**NUMBER**->add(compare_request_str,"Request String ");
+	test**NUMBER**->add(compare_request_method, "Method ");
+	test**NUMBER**->add(compare_uri_str,"URI String ");
+	test**NUMBER**->add(compare_version,"Version ");
+
+	//URI ADD FUNCTIONS
+	test**NUMBER**->add(compare_uri_type,"URI Type ");
+	test**NUMBER**->add(compare_uri_port_int,"URI Port int ");
+	test**NUMBER**->add(compare_uri_auth,"URI auth ");
+	test**NUMBER**->add(compare_uri_frag,"URI frag ");
+	test**NUMBER**->add(compare_uri_host,"URI host ");
+	test**NUMBER**->add(compare_uri_pass,"URI pass ");
+	test**NUMBER**->add(compare_uri_path,"URI path ");
+	test**NUMBER**->add(compare_uri_port,"URI port string ");
+	test**NUMBER**->add(compare_uri_query,"URI query ");
+	test**NUMBER**->add(compare_uri_scheme,"URI scheme ");
+	test**NUMBER**->add(compare_uri_user,"URI user ");
+
+
+	//URI ERROR FUNCTIONS
+	test**NUMBER**->add(compare_errNum,"errNum ");
+	test**NUMBER**->add(compare_errMess,"errMess ");
+
+	//URI PARSE STATE/OUTCOME FUNCTION
+	test**NUMBER**->add(compare_p_state,"p_state ");
+
+	//	URI PARSE STATE/OUTCOME FUNCTION
+	test**NUMBER**->add(compare_body,"body ");
+	test**NUMBER**->add(compare_hasBody,"hasBody ");
+	test**NUMBER**->add(compare_isChunked,"isChunked ");
+
+	// ADD TO TEST VECTOR
+	testProfiles.push_back(test**NUMBER**);
+

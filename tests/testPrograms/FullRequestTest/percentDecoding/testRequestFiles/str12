@@ -1,0 +1,3 @@
+GET /api?key=123%26mode=edit HTTP/1.1
+Host: api.com
+

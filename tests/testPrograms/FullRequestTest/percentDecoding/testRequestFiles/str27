@@ -1,0 +1,4 @@
+GET / HTTP/1.1
+X-Header: test%0D%0AMalicious: injected
+Host: evil.com
+

@@ -1,0 +1,8 @@
+POST /bad4 HTTP/1.1
+Host: bug
+Transfer-Encoding: chunked
+
+5
+hel
+0
+

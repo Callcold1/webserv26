@@ -1,0 +1,3 @@
+GET /some%20thing% HTTP/1.1
+Host: error.com
+

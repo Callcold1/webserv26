@@ -1,0 +1,110 @@
+
+fd  = 3
+========
+
+Expected Result : Valid Message 
+
+Test String  : POST /log HTTP/1.1\r\nHost: myhost.com\r\nTransfer-Encoding: chunked\r\n\r\n3\r\nabc\r\n3\r\ndef\r\n0\r\nTrailer-Header: value\r\n\r\n
+
+Status               : P ERROR
+Method               : POST
+URI string           : /log
+Version              : HTTP/1.1
+Header               : host
+  Value              : myhost.com
+
+Header               : transfer-encoding
+  Value              : chunked
+
+Body                 : abcdef
+
+ErrMess              : Malformed Body : Invalid Characters at end of chunking
+ErrNum               : 400
+
+Unparsed Length      : 2
+Unparsed Data        : \r\n
+
+Request String  [32m[OK]
+[0mParsed          : POST /log HTTP/1.1
+Expected        : POST /log HTTP/1.1
+
+Method          [32m[OK]
+[0mParsed          : POST
+Expected        : POST
+
+Version         [32m[OK]
+[0mParsed          : HTTP/1.1
+Expected        : HTTP/1.1
+
+URI String      [32m[OK]
+[0mParsed          : /log
+Expected        : /log
+
+URI Type        [32m[OK]
+[0mParsed          : 3
+Expected        : 3
+
+URI Port int    [32m[OK]
+[0mParsed          : 80
+Expected        : 80
+
+URI auth        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI frag        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI host        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI pass        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI path        [32m[OK]
+[0mParsed          : /log
+Expected        : /log
+
+URI port string [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI query       [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI scheme      [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI user        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+errNum          [31m[FAILED]
+[0mParsed          : 400
+Expected        : 200
+
+errMess         [31m[FAILED]
+[0mParsed          : Malformed Body : Invalid Characters at end of chunking
+Expected        : Parsing Complete
+
+p_state         [31m[FAILED]
+[0mParsed          : 3
+Expected        : 2
+
+body            [32m[OK]
+[0mParsed          : abcdef
+Expected        : abcdef
+
+hasBody         [32m[OK]
+[0mParsed          : 1
+Expected        : 1
+
+isChunked       [32m[OK]
+[0mParsed          : 1
+Expected        : 1
+

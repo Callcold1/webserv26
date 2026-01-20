@@ -1,0 +1,3 @@
+GET /file%00name HTTP/1.1
+Host: null.com
+

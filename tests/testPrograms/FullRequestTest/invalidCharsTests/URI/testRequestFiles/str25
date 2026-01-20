@@ -1,0 +1,6 @@
+POST http://example.com/{}test HTTP/1.1
+Host: mysite.org
+Transfer-Encoding: chunked
+
+0
+

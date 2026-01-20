@@ -1,0 +1,3 @@
+GET /folder%2Ffile HTTP/1.1
+Host: test.com
+

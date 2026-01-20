@@ -1,0 +1,7 @@
+POST /trailer HTTP/1.1
+Host: host.com
+Transfer-Encoding: chunked
+
+0
+X-Debug: true
+

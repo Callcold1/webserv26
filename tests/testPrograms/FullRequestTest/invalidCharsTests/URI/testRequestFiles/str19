@@ -1,0 +1,6 @@
+POST http://example.com/path?query=te{}st HTTP/1.1
+Host: server
+Transfer-Encoding: chunked
+
+0
+

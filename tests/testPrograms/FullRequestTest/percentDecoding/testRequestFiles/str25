@@ -1,0 +1,4 @@
+GET /bad%0
+%0A HTTP/1.1
+Host: split.com
+

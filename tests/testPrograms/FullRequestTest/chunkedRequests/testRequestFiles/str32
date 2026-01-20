@@ -1,0 +1,7 @@
+POST /trail HTTP/1.1
+Host: site
+Transfer-Encoding: chunked
+
+2
+ok
+X-Bad: oops

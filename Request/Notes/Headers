@@ -1,0 +1,97 @@
+HEADERS WE SHOULD INCLUDE AND WHY
+
+Mandatory
+=========
+Host:
+Connection:
+
+If message has body (Either or - not both!) : 
+	Content-Length
+		or 
+	Transfer Encoding
+
+Optional
+========
+Expect  : (if sending content the client might want to confirm the request is serveable before sending data)
+	
+	e.g. Expect: 100-continue (respond with 100 continue, or 401 (Unauthorized) or 405 (Method Not Allowed),)
+
+
+User-Agent : The "User-Agent" header field contains information about the user agent originating the request, which is often used by servers to help identify the scope of reported interoperability problems, to work around or tailor responses to avoid particular user agent limitations, and for analytics regarding browser or operating system use.
+ 	 User-Agent = product *( RWS ( product / comment ) )
+		product         = token ["/" product-version]
+  			product-version = token
+ 
+		e.g. User-Agent: CERN-LineMode/2.15 libwww/2.17b3
+
+
+Headers List
+============
+
+Accept 						permanent 	12.5.1 		INCLUDE
+Accept-Charset 				deprecated 	12.5.2 		NO
+Accept-Encoding 			permanent 	12.5.3 		INCLUDE
+Accept-Language 			permanent 	12.5.4 		
+Accept-Ranges 				permanent 	14.3		INCLUDE
+
+Allow 						permanent 	10.2.1		INCLUDE
+
+Authentication-Info 		permanent 	11.6.3 		MAYBE
+Authorization 				permanent 	11.6.2 		MAYBE
+
+Connection 					permanent 	7.6.1		INCLUDE
+
+Content-Encoding 			permanent 	8.4 		INCLUDE
+Content-Language 			permanent 	8.5 		MAYBE
+Content-Length 				permanent 	8.6 		INCLUDE
+Content-Location 			permanent 	8.7 		INCLUDE	
+Content-Range 				permanent 	14.4 		INCLUDE	
+Content-Type 				permanent 	8.3 		INCLUDE
+Date 						permanent 	6.6.1 		INCLUDE
+ETag 						permanent 	8.8.3 		INCLUDE
+Expect 						permanent 	10.1.1 		INCLUDE
+From 						permanent 	10.1.2 		DON'T INCLUDE (USUALLY FOR MAIL)
+Host 						permanent 	7.2 		INCLUDE
+If-Match 					permanent 	13.1.1 		INCLUDE
+If-Modified-Since 			permanent 	13.1.3 		INCLUDE
+If-None-Match 				permanent 	13.1.2 		INCLUDE
+If-Range 					permanent 	13.1.5 		INCLUDE
+If-Unmodified-Since 		permanent 	13.1.4 		INCLUDE
+Last-Modified 				permanent 	8.8.2 		INCLUDE
+Location 					permanent 	10.2.2 		INCLUDE
+Max-Forwards 				permanent 	7.6.2 			
+Proxy-Authenticate 			permanent 	11.7.1 		DON'T INCLUDE
+Proxy-Authentication-Info 	permanent 	11.7.3 		DON'T INCLUDE
+Proxy-Authorization 		permanent 	11.7.2 		DON'T INCLUDE
+Range 						permanent 	14.2 		INCLUDE
+Referer 					permanent 	10.1.3 		
+Retry-After 				permanent 	10.2.3 		INCLUDE
+Server 						permanent 	10.2.4 		DON'T INCLUDE
+TE 							permanent 	10.1.4 		INCLUDE
+Trailer 					permanent 	6.6.2 		INCLUDE
+Upgrade 					permanent 	7.8 		DON'T INCLUDE
+User-Agent 					permanent 	10.1.5 		INCLUDE
+Vary 						permanent 	12.5.5 		INCLUDE
+Via 						permanent 	7.6.3 		
+WWW-Authenticate 			permanent 	11.6.1 	
+* 							permanent 	12.5.5 	(reserved)
+
+
+ABNF
+====
+
+	field Name 		= field-name = token
+
+	field-value    	= *field-content
+		field-content  	= field-vchar [ 1*( SP / HTAB / field-vchar ) field-vchar ]
+			field-vchar    	= VCHAR / obs-text
+				obs-text       	= %x80-FF
+
+	parameters      = *( OWS ";" OWS [ parameter ] )
+		parameter       = parameter-name "=" parameter-value
+			parameter-name  = token
+			parameter-value = ( token / quoted-string )
+	
+	quoted-string  = DQUOTE *( qdtext / quoted-pair ) DQUOTE
+		qdtext         = HTAB / SP / %x21 / %x23-5B / %x5D-7E / obs-text
+		quoted-pair    = "\" ( HTAB / SP / VCHAR / obs-text )

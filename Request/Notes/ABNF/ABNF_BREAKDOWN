@@ -1,0 +1,70 @@
+Request Line
+	Method 
+		method = token
+
+	URI
+
+		Scheme
+		Userinfo
+		Path
+		Query
+		Fragment
+
+	Version
+
+
+Fields (Header/Trailer)
+=======================
+
+	Key [ field-name     = token] Field names are case-insensitive and ought to be registered within the "Hypertext Transfer Protocol (HTTP) Field Name Registry";
+	
+	Value [ field-value    = *field-content
+  				field-content  = field-vchar [ 1*( SP / HTAB / field-vchar ) field-vchar ]
+  						field-vchar    = VCHAR / obs-text (i.e. %x21-7E or 33 - 126)
+ 							obs-text       = %x80-FF (i.e. 128-255)]
+			[In simple terms a value can contain  33 <= c <= 126 && 128 <= c <= 255 and are space separated]
+
+			Parameter
+			Parameter Key
+			Parameter Value
+
+Field Value RUles
+
+1. A field value does not include leading or trailing whitespace [When a specific version of HTTP allows such whitespace to appear in a message, a field parsing implementation MUST exclude such whitespace prior to evaluating the field value]
+2. Field values are usually constrained to the range of US-ASCII characters [USASCII]. 
+3. Fields needing a greater range of characters can use an encoding, such as the one defined in [RFC8187 - https://www.rfc-editor.org/rfc/rfc8187.html : It can be applied to any HTTP header field that uses the common "parameter" ("name=value") syntax]
+		[RFC8187 use RFC6365 - https://www.rfc-editor.org/rfc/rfc6365 to define "character encoding scheme" : AKA "character encoding", "charset", and "coded character set" : This is different from the MIME definition of "character encoding scheme"]
+4. CR, LF, or NUL within a field value MUST either be rejected or replaced with SP
+5. Field values containing other CTL characters are also invalid [ recipients MAY retain such characters when they appear within a safe context (e.g., an application-specific quoted string that will not be processed by any downstream HTTP parser) ]
+6. Fields that only anticipate a single member as the field value are referred to as "singleton fields"
+7. Fields that allow multiple members as the field value are referred to as "list-based fields"
+8. Fields that expect to contain a comma within a member, such as within an HTTP-date or URI-reference element, ought to be defined with delimiters around that element to distinguish any comma within that data from potential list separators.
+     [ Example-URIs: "http://example.com/a.html,foo", "http://without-a-comma.example.com/"]
+Example-Dates: "Sat, 04 May 1996", "Wed, 14 Sep 2005"
+
+Fields are sent and received within the header and trailer sections of messages 
+
+Field sections are composed of any number of "field lines", each with a "field name" and a "field line value"
+	
+	if (Field name count == 1 in a section) 
+		"field value" = "field line value"
+	else if (field name > 1)
+		"field value" = "field line value 1" + "," + "field line value 2" ...
+
+Field Limits : No limits (ad hoc limitations on individual lengths are found in practice, often depending on the specific fields semantics)
+
+Header Rules (RFC9110 5)
+1. Host and Connection fields ought to be recognized by all HTTP implementations whether or not they advertise conformance with HTTP/1.1
+2. (Other) recipients SHOULD ignore unrecognized header and trailer fields
+3. Senders MUST NOT generate multiple field lines with the same name in a message unless fields definition allows multiple field line values to be recombined
+4. Field value order must be preserved
+5. A server MUST NOT apply a request to the target resource until it receives the entire request header section
+
+
+Body
+	Chunk Size
+	Chunk
+
+	Plain Text
+
+	Multipart [[RFC7578 - https://www.rfc-editor.org/rfc/rfc7578]]

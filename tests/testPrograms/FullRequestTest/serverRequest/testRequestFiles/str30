@@ -1,0 +1,3 @@
+DELETE /item/123 http/1.1
+Host: api.example.com
+

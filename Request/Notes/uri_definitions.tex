@@ -1,0 +1,161 @@
+The definitions of "URI-reference", "absolute-URI", "relative-part", "authority", "port", "host", "path-abempty", "segment", and "query" 
+are adopted from the URI generic syntax.
+
+An "absolute-path" rule is defined for protocol elements that can contain a non-empty path component.
+(This rule differs slightly from the path-abempty rule of RFC 3986, which allows for an empty path, 
+and path-absolute rule, which does not allow paths that begin with "//".) A "partial-URI" rule is defined for 
+protocol elements that can contain a relative URI but not a fragment component.
+
+  URI-reference = <URI-reference, see [URI], Section 4.1>
+  absolute-URI  = <absolute-URI, see [URI], Section 4.3>
+  relative-part = <relative-part, see [URI], Section 4.2>
+  authority     = <authority, see [URI], Section 3.2>
+  uri-host      = <host, see [URI], Section 3.2.2>
+  port          = <port, see [URI], Section 3.2.3>
+  path-abempty  = <path-abempty, see [URI], Section 3.3>
+  segment       = <segment, see [URI], Section 3.3>
+  query         = <query, see [URI], Section 3.4>
+
+  absolute-path = 1*( "/" segment )
+  partial-URI   = relative-part [ "?" query ]
+
+  hier-part		= "//" authority path-abempty
+				/ path-absolute
+                / path-rootless
+                / path-empty
+
+IP ADDDRESS
+===========
+IPv6address   =                            6( h16 ":" ) ls32
+                 /                       "::" 5( h16 ":" ) ls32
+                 / [               h16 ] "::" 4( h16 ":" ) ls32
+                 / [ *1( h16 ":" ) h16 ] "::" 3( h16 ":" ) ls32
+                 / [ *2( h16 ":" ) h16 ] "::" 2( h16 ":" ) ls32
+                 / [ *3( h16 ":" ) h16 ] "::"    h16 ":"   ls32
+                 / [ *4( h16 ":" ) h16 ] "::"              ls32
+                 / [ *5( h16 ":" ) h16 ] "::"              h16
+                 / [ *6( h16 ":" ) h16 ] "::"
+
+   h16           = 1*4HEXDIG
+   ls32          = ( h16 ":" h16 ) / IPv4address
+   IPv4address   = dec-octet "." dec-octet "." dec-octet "." dec-octet
+
+   dec-octet     = DIGIT                 ; 0-9
+                 / %x31-39 DIGIT         ; 10-99
+                 / "1" 2DIGIT            ; 100-199
+                 / "2" %x30-34 DIGIT     ; 200-249
+                 / "25" %x30-35          ; 250-255
+
+URI-reference = URI / relative-ref
+===================================
+1: URI-reference = scheme ":" hier-part [ "?" query ] [ "#" fragment ]
+		 
+2: URI-reference = relative-ref  = relative-part [ "?" query ] [ "#" fragment ]
+		 	   
+	relative-part = "//" authority path-abempty
+    	            / path-absolute
+        	        / path-noscheme
+            		/ path-empty
+
+Each protocol element in HTTP that allows a URI reference will indicate in its ABNF production 
+      
+      1) whether the element allows any form of reference (URI-reference), 
+      2) only a URI in absolute form (absolute-URI),
+      3) only the path and optional query components (partial-URI)
+      4) some combination of the above. 
+  
+Unless otherwise indicated, URI references are parsed relative to the target URI (Section 7.1). 
+
+It is RECOMMENDED that all senders and recipients support, at a minimum, URIs with lengths of 8000 octets in protocol elements. 
+Note that this implies some structures and on-wire representations (for example, the request line in HTTP/1.1) will necessarily be larger in some cases.
+
+Absolute-path : defined for protocol elements that can contain a non-empty path component
+  Elements that can contain a non-empty path component :
+
+
+
+
+
+URI RULES
+=========
+1. A sender MUST NOT generate an "http" URI with an empty host identifier : A recipient that processes such a URI reference MUST reject it as invalid.
+    i.e. URI = "http://" or "http:///abdc" 
+2. If the port is equal to the default port for a scheme, the normal form is to omit the port subcomponent.When not being used as the target of an OPTIONS request, 
+    an empty path component is equivalent to an absolute path of "/", so the normal form is to provide a path of "/" instead.
+3. The scheme and host are case-insensitive (normally provided in lowercase); 
+4. All other components are compared in a case-sensitive manner.
+5. Characters other than those in the "reserved" set are equivalent to their percent-encoded octets: 
+    the normal form is to not encode them (see Sections 2.1 and 2.2 of [URI]).
+
+scheme      = ALPHA *( ALPHA / DIGIT / "+" / "-" / "." )
+authority   = [ userinfo "@" ] host [ ":" port ] 
+  userinfo = *( unreserved / pct-encoded / sub-delims / ":" )
+  host        = IP-literal / IPv4address / reg-name
+      IP-literal = "[" ( IPv6address / IPvFuture  ) "]"
+      IPvFuture  = "v" 1*HEXDIG "." 1*( unreserved / sub-delims / ":" )
+      reg-name    = *( unreserved / pct-encoded / sub-delims )
+      port        = *DIGIT
+  
+path          = path-abempty    ; begins with "/" or is empty
+                    / path-absolute   ; begins with "/" but not "//"
+                    / path-noscheme   ; begins with a non-colon segment
+                    / path-rootless   ; begins with a segment
+                    / path-empty      ; zero characters
+  
+  path-abempty  = *( "/" segment )  [ANY NUMBER OF /PCHAR/PCHAR]
+  path-absolute = "/" [ segment-nz *( "/" segment ) ]
+  path-noscheme = segment-nz-nc *( "/" segment )
+  path-rootless = segment-nz *( "/" segment )
+  path-empty    = 0<pchar>
+
+  segment       = *pchar
+  segment-nz    = 1*pchar
+  segment-nz-nc = 1*( unreserved / pct-encoded / sub-delims / "@" )
+                ; non-zero-length segment without any colon ":"
+
+  pchar         = unreserved / pct-encoded / sub-delims / ":" / "@"
+
+query       = *( pchar / "/" / "?" )
+ fragment    = *( pchar / "/" / "?" )
+
+
+
+  URI REFERENCE
+  =============
+  URI-reference = URI / relative-ref
+    if not a URI (i.e "recognised-scheme:") then URI-reference is a relative-reference (AKA target URI)
+
+    relative-ref  = relative-part [ "?" query ] [ "#" fragment ]
+
+    relative-part = "//" authority path-abempty
+                  / path-absolute
+                  / path-noscheme
+                  / path-empty
+
+        A relative reference that begins with two slash characters is termed a network-path reference; : such references are rarely used.  
+        A relative reference that begins with a single slash character is termed an absolute-path reference.
+        A relative reference that does not begin with a slash character is termed a relative-path reference.  
+       
+        A path segment that contains a colon character (e.g., "this:that") cannot be used as the first segment 
+          of a relative-path reference, as it would be mistaken for a scheme name. 
+        Such a segment must be preceded by a dot-segment (e.g., "./this:that") to make a relative-path reference
+
+URI form
+=========
+request-target = origin-form
+                 / absolute-form
+                 / authority-form
+                 / asterisk-form
+
+asterisk-form  = "*"													e.g. OPTIONS * HTTP/1.1
+absolute-form = absolute-URI										
+absolute-URI 	[absolute-URI  = scheme ":" hier-part [ "?" query ]] 	e.g GET http://www.example.org/pub/WWW/TheProject.html HTTP/1.1
+absolute-path 	[absolute-path = 1*( "/" segment )]						
+authority-form	[uri-host ":" port]										e.g. www.example.com:80
+origin-form   	[absolute-path [ "?" query ]]							e.g. /search?q=openai+http HTTP/1.1							
+
+Target URI 
+===========
+The target URI is the request-target when the request-target is in absolute-form. 
+
+target URI is [absolute-URI  = scheme ":" hier-part [ "?" query ]]

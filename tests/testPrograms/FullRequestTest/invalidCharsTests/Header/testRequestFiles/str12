@@ -1,0 +1,6 @@
+POST http://?query=bad HTTP/1.1
+Host: x.y.z
+Transfer-Encoding: chunked
+
+0
+

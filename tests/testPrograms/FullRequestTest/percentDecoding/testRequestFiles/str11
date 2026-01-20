@@ -1,0 +1,4 @@
+GET /home HTTP/1.1
+Host: test.com
+User-Agent: MyAgent%2F1.0
+

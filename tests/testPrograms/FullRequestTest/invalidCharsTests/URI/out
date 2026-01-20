@@ -1,0 +1,924 @@
+fd  = 3
+========
+Test Outcome : missing host
+
+Test String  : POST http://user@:80 HTTP/1.1\r\nHost: api.test\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\n
+
+Status               : P ERROR
+Method               : POST
+
+URI string           : http://user@:80
+
+  URI scheme           : http
+  URI auth             : user@:80
+  URI user             : user
+  URI pass             : 
+  URI host             : 
+  URI port             : 80
+  URI path             : 
+  URI query            : 
+  URI frag             : 
+
+Version              : HTTP/1.1
+Body                 : 
+
+ErrMess              : Malformed Request Line : Missing Host Element 
+ErrNum               : 400
+
+Unparsed Length      : 29
+Unparsed Data        : Host: api.test\r\nTransfer-Enco
+
+fd  = 4
+========
+Test Outcome : missing scheme
+
+Test String  : POST ://example.com HTTP/1.1\r\nHost: js.server\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\n
+
+Status               : P ERROR
+Method               : POST
+
+URI string           : ://example.com
+
+  URI scheme           : 
+  URI auth             : example.com
+  URI user             : 
+  URI pass             : 
+  URI host             : example.com
+  URI port             : 
+  URI path             : 
+  URI query            : 
+  URI frag             : 
+
+Version              : HTTP/1.1
+Body                 : 
+
+ErrMess              : Malformed Request Line : Scheme element missing from Absolute Form URI
+ErrNum               : 400
+
+Unparsed Length      : 0
+Unparsed Data        : 
+
+fd  = 5
+========
+Test Outcome : port out of range
+
+Test String  : POST http://example.com:999999 HTTP/1.1\r\nHost: hostname\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\n
+
+Status               : P ERROR
+Method               : POST
+
+URI string           : http://example.com:999999
+
+  URI scheme           : http
+  URI auth             : example.com:999999
+  URI user             : 
+  URI pass             : 
+  URI host             : example.com
+  URI port             : 999999
+  URI path             : 
+  URI query            : 
+  URI frag             : 
+
+Version              : HTTP/1.1
+Body                 : 
+
+ErrMess              : Malformed Request : Invalid Port Number
+ErrNum               : 400
+
+Unparsed Length      : 19
+Unparsed Data        : Host: hostname\r\nTra
+
+fd  = 6
+========
+Test Outcome : missing `//`
+
+Test String  : POST http:example.com HTTP/1.1\r\nHost: cfg.svc\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\n
+
+Status               : P ERROR
+Method               : POST
+
+URI string           : http:example.com
+
+  URI scheme           : 
+  URI auth             : 
+  URI user             : 
+  URI pass             : 
+  URI host             : 
+  URI port             : 
+  URI path             : 
+  URI query            : 
+  URI frag             : 
+
+Version              : 
+Body                 : 
+
+ErrMess              : Malformed Request Line : No authority or path in URI 
+ErrNum               : 400
+
+Unparsed Length      : 28
+Unparsed Data        : Host: cfg.svc\r\nTransfer-Enco
+
+fd  = 7
+========
+Test Outcome : quote in path
+
+Test String  : POST http://example.com/te\"st HTTP/1.1\r\nHost: data.org\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\n
+
+Status               : P ERROR
+Method               : POST
+
+URI string           : http://example.com/te\"st
+
+  URI scheme           : http
+  URI auth             : example.com
+  URI user             : 
+  URI pass             : 
+  URI host             : example.com
+  URI port             : 
+  URI path             : /
+  URI query            : 
+  URI frag             : 
+
+Version              : HTTP/1.1
+Body                 : 
+
+ErrMess              : Malformed Request Line : Invalid characters in Path element
+ErrNum               : 400
+
+Unparsed Length      : 19
+Unparsed Data        : Host: data.org\r\nTra
+
+fd  = 8
+========
+Test Outcome : space in host
+
+Test String  : POST http://exa mple.com HTTP/1.1\r\nHost: bad.com\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\n
+
+Status               : P ERROR
+Method               : 
+
+URI string           : 
+
+  URI scheme           : 
+  URI auth             : 
+  URI user             : 
+  URI pass             : 
+  URI host             : 
+  URI port             : 
+  URI path             : 
+  URI query            : 
+  URI frag             : 
+
+Version              : 
+Body                 : 
+
+ErrMess              : Malformed Request Line : too many parameters in request line
+ErrNum               : 400
+
+Unparsed Length      : 25
+Unparsed Data        : Host: bad.com\r\nTransfer-E
+
+fd  = 9
+========
+Test Outcome : caret in path
+
+Test String  : POST http://example.com/pa^th HTTP/1.1\r\nHost: test.net\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\n
+
+Status               : P ERROR
+Method               : POST
+
+URI string           : http://example.com/pa^th
+
+  URI scheme           : http
+  URI auth             : example.com
+  URI user             : 
+  URI pass             : 
+  URI host             : example.com
+  URI port             : 
+  URI path             : /
+  URI query            : 
+  URI frag             : 
+
+Version              : HTTP/1.1
+Body                 : 
+
+ErrMess              : Malformed Request Line : Invalid characters in Path element
+ErrNum               : 400
+
+Unparsed Length      : 20
+Unparsed Data        : Host: test.net\r\nTran
+
+fd  = 10
+========
+Test Outcome : empty fragment
+
+Test String  : POST http://example.com/test# HTTP/1.1\r\nHost: test.org\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\n
+
+Status               : P ERROR
+Method               : POST
+
+URI string           : http://example.com/test#
+
+  URI scheme           : http
+  URI auth             : example.com
+  URI user             : 
+  URI pass             : 
+  URI host             : example.com
+  URI port             : 
+  URI path             : /test
+  URI query            : 
+  URI frag             : 
+
+Version              : HTTP/1.1
+Header               : host
+  Value              : test.org
+
+Header               : transfer-encoding
+  Value              : chunked
+
+Body                 : 
+
+ErrMess              : Malformed Body : Invalid chunk size
+ErrNum               : 400
+
+Unparsed Length      : 4
+Unparsed Data        : 0\r\n\r
+
+fd  = 11
+========
+Test Outcome : misplaced query/fragment
+
+Test String  : POST http://example.com?# HTTP/1.1\r\nHost: a.b.c\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\n
+
+Status               : P ERROR
+Method               : POST
+
+URI string           : http://example.com?#
+
+  URI scheme           : http
+  URI auth             : example.com
+  URI user             : 
+  URI pass             : 
+  URI host             : example.com
+  URI port             : 
+  URI path             : 
+  URI query            : 
+  URI frag             : 
+
+Version              : HTTP/1.1
+Header               : host
+  Value              : a.b.c
+
+Header               : transfer-encoding
+  Value              : chunked
+
+Body                 : 
+
+ErrMess              : Malformed Body : Invalid chunk size
+ErrNum               : 400
+
+Unparsed Length      : 5
+Unparsed Data        : 0\r\n\r\n
+
+fd  = 12
+========
+Test Outcome : missing authority
+
+Test String  : POST http://?query=bad HTTP/1.1\r\nHost: x.y.z\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\n
+
+Status               : P ERROR
+Method               : POST
+
+URI string           : http://?query=bad
+
+  URI scheme           : http
+  URI auth             : 
+  URI user             : 
+  URI pass             : 
+  URI host             : 
+  URI port             : 
+  URI path             : 
+  URI query            : query=bad
+  URI frag             : query=bad
+
+Version              : HTTP/1.1
+Body                 : 
+
+ErrMess              : Malformed Request Line : No authority or server component in URI
+ErrNum               : 400
+
+Unparsed Length      : 27
+Unparsed Data        : Host: x.y.z\r\nTransfer-Encod
+
+fd  = 13
+========
+Test Outcome : illegal pipe in path
+
+Test String  : POST http://example.com/pa|th HTTP/1.1\r\nHost: my.site\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\n
+
+Status               : P ERROR
+Method               : POST
+
+URI string           : http://example.com/pa|th
+
+  URI scheme           : http
+  URI auth             : example.com
+  URI user             : 
+  URI pass             : 
+  URI host             : example.com
+  URI port             : 
+  URI path             : /
+  URI query            : 
+  URI frag             : 
+
+Version              : HTTP/1.1
+Body                 : 
+
+ErrMess              : Malformed Request Line : Invalid characters in Path element
+ErrNum               : 400
+
+Unparsed Length      : 20
+Unparsed Data        : Host: my.site\r\nTrans
+
+fd  = 14
+========
+Test Outcome : multiple ports
+
+Test String  : POST http://example.com:80:90 HTTP/1.1\r\nHost: abc\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\n
+
+Status               : P ERROR
+Method               : POST
+
+URI string           : http://example.com:80:90
+
+  URI scheme           : http
+  URI auth             : example.com:80:90
+  URI user             : 
+  URI pass             : 
+  URI host             : example.com
+  URI port             : 
+  URI path             : 
+  URI query            : 
+  URI frag             : 
+
+Version              : HTTP/1.1
+Body                 : 
+
+ErrMess              : Malformed Request Line : Invalid characters in Port element
+ErrNum               : 400
+
+Unparsed Length      : 20
+Unparsed Data        : Host: abc\r\nTransfer-
+
+fd  = 15
+========
+Test Outcome : empty port
+
+Test String  : POST http://example.com:/path HTTP/1.1\r\nHost: test.org\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\n
+
+Status               : P ERROR
+Method               : POST
+
+URI string           : http://example.com:/path
+
+  URI scheme           : http
+  URI auth             : example.com:
+  URI user             : 
+  URI pass             : 
+  URI host             : example.com
+  URI port             : 
+  URI path             : /path
+  URI query            : 
+  URI frag             : 
+
+Version              : HTTP/1.1
+Header               : host
+  Value              : test.org
+
+Header               : transfer-encoding
+  Value              : chunked
+
+Body                 : 
+
+ErrMess              : Malformed Body : Invalid chunk size
+ErrNum               : 400
+
+Unparsed Length      : 4
+Unparsed Data        : 0\r\n\r
+
+fd  = 16
+========
+Test Outcome : invalid percent-encoding
+
+Test String  : POST http://example.com/%G1 HTTP/1.1\r\nHost: example\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\n
+
+Status               : P ERROR
+Method               : POST
+
+URI string           : http://example.com/%G1
+
+  URI scheme           : http
+  URI auth             : example.com
+  URI user             : 
+  URI pass             : 
+  URI host             : example.com
+  URI port             : 
+  URI path             : /%G1
+  URI query            : 
+  URI frag             : 
+
+Version              : HTTP/1.1
+Body                 : 
+
+ErrMess              : Malformed Request Line : Invalid Percent Encoding (Path) 
+ErrNum               : 400
+
+Unparsed Length      : 22
+Unparsed Data        : Host: example\r\nTransfe
+
+fd  = 17
+========
+Test Outcome : illegal in FTP too
+
+Test String  : POST ftp://example.com/<> HTTP/1.1\r\nHost: blah\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\n
+
+Status               : P ERROR
+Method               : POST
+
+URI string           : ftp://example.com/<>
+
+  URI scheme           : ftp
+  URI auth             : example.com
+  URI user             : 
+  URI pass             : 
+  URI host             : example.com
+  URI port             : 
+  URI path             : /
+  URI query            : 
+  URI frag             : 
+
+Version              : HTTP/1.1
+Body                 : 
+
+ErrMess              : Malformed Request Line : Invalid characters in Path element
+ErrNum               : 400
+
+Unparsed Length      : 24
+Unparsed Data        : Host: blah\r\nTransfer-Enc
+
+fd  = 18
+========
+Test Outcome : invalid double query
+
+Test String  : POST http://example.com//?? HTTP/1.1\r\nHost: doc.local\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\n
+
+Status               : P ERROR
+Method               : POST
+
+URI string           : http://example.com//??
+
+  URI scheme           : http
+  URI auth             : example.com
+  URI user             : 
+  URI pass             : 
+  URI host             : example.com
+  URI port             : 
+  URI path             : //
+  URI query            : ?
+  URI frag             : ?
+
+Version              : HTTP/1.1
+Header               : host
+  Value              : doc.local
+
+Header               : transfer-encoding
+  Value              : chunked
+
+Body                 : 
+
+ErrMess              : Malformed Body : Invalid chunk size
+ErrNum               : 400
+
+Unparsed Length      : 5
+Unparsed Data        : 0\r\n\r\n
+
+fd  = 19
+========
+Test Outcome : curly braces in query
+
+Test String  : POST http://example.com/path?query=te{}st HTTP/1.1\r\nHost: server\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\n
+
+Status               : P ERROR
+Method               : POST
+
+URI string           : http://example.com/path?query=te{}st
+
+  URI scheme           : http
+  URI auth             : example.com
+  URI user             : 
+  URI pass             : 
+  URI host             : example.com
+  URI port             : 
+  URI path             : /path
+  URI query            : 
+  URI frag             : 
+
+Version              : 
+Body                 : 
+
+ErrMess              : Malformed Request Line : Invalid characters in Query element
+ErrNum               : 400
+
+Unparsed Length      : 8
+Unparsed Data        : Host: se
+
+fd  = 20
+========
+Test Outcome : pipe again
+
+Test String  : POST http://exa|mple.com HTTP/1.1\r\nHost: api.server\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\n
+
+Status               : P ERROR
+Method               : POST
+
+URI string           : http://exa|mple.com
+
+  URI scheme           : http
+  URI auth             : exa|mple.com
+  URI user             : 
+  URI pass             : 
+  URI host             : 
+  URI port             : 
+  URI path             : 
+  URI query            : 
+  URI frag             : 
+
+Version              : HTTP/1.1
+Body                 : 
+
+ErrMess              : Malformed Request Line : Invalid characters in Host element 
+ErrNum               : 400
+
+Unparsed Length      : 25
+Unparsed Data        : Host: api.server\r\nTransfe
+
+fd  = 21
+========
+Test Outcome : brackets in hostname
+
+Test String  : POST http://[example.com] HTTP/1.1\r\nHost: web\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\n
+
+Status               : P ERROR
+Method               : POST
+
+URI string           : http://[example.com]
+
+  URI scheme           : http
+  URI auth             : [example.com]
+  URI user             : 
+  URI pass             : 
+  URI host             : 
+  URI port             : 
+  URI path             : 
+  URI query            : 
+  URI frag             : 
+
+Version              : HTTP/1.1
+Body                 : 
+
+ErrMess              : Malformed Request Line : Invalid characters in Host element 
+ErrNum               : 400
+
+Unparsed Length      : 24
+Unparsed Data        : Host: web\r\nTransfer-Enco
+
+fd  = 22
+========
+Test Outcome : missing host
+
+Test String  : POST http:///abc HTTP/1.1\r\nHost: site.example\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\n
+
+Status               : P ERROR
+Method               : POST
+
+URI string           : http:///abc
+
+  URI scheme           : http
+  URI auth             : 
+  URI user             : 
+  URI pass             : 
+  URI host             : 
+  URI port             : 
+  URI path             : /abc
+  URI query            : 
+  URI frag             : 
+
+Version              : HTTP/1.1
+Body                 : 
+
+ErrMess              : Malformed Request Line : No authority or server component in URI
+ErrNum               : 400
+
+Unparsed Length      : 3
+Unparsed Data        : Hos
+
+fd  = 23
+========
+Test Outcome : unescaped space
+
+Test String  : POST http://example.com/invalid space HTTP/1.1\r\nHost: site.com\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\n
+
+Status               : P ERROR
+Method               : 
+
+URI string           : 
+
+  URI scheme           : 
+  URI auth             : 
+  URI user             : 
+  URI pass             : 
+  URI host             : 
+  URI port             : 
+  URI path             : 
+  URI query            : 
+  URI frag             : 
+
+Version              : 
+Body                 : 
+
+ErrMess              : Malformed Request Line : too many parameters in request line
+ErrNum               : 400
+
+Unparsed Length      : 12
+Unparsed Data        : Host: site.c
+
+fd  = 24
+========
+Test Outcome : illegal angle brackets
+
+Test String  : POST http://example.com/<> HTTP/1.1\r\nHost: host.com\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\n
+
+Status               : P ERROR
+Method               : POST
+
+URI string           : http://example.com/<>
+
+  URI scheme           : http
+  URI auth             : example.com
+  URI user             : 
+  URI pass             : 
+  URI host             : example.com
+  URI port             : 
+  URI path             : /
+  URI query            : 
+  URI frag             : 
+
+Version              : HTTP/1.1
+Body                 : 
+
+ErrMess              : Malformed Request Line : Invalid characters in Path element
+ErrNum               : 400
+
+Unparsed Length      : 23
+Unparsed Data        : Host: host.com\r\nTransfe
+
+fd  = 25
+========
+Test Outcome : illegal curly braces
+
+Test String  : POST http://example.com/{}test HTTP/1.1\r\nHost: mysite.org\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\n
+
+Status               : P ERROR
+Method               : POST
+
+URI string           : http://example.com/{}test
+
+  URI scheme           : http
+  URI auth             : example.com
+  URI user             : 
+  URI pass             : 
+  URI host             : example.com
+  URI port             : 
+  URI path             : /
+  URI query            : 
+  URI frag             : 
+
+Version              : HTTP/1.1
+Body                 : 
+
+ErrMess              : Malformed Request Line : Invalid characters in Path element
+ErrNum               : 400
+
+Unparsed Length      : 19
+Unparsed Data        : Host: mysite.org\r\nT
+
+fd  = 26
+========
+Test Outcome : illegal path characters
+
+Test String  : POST http://example.com/test<path> HTTP/1.1\r\nHost: query.test\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\n
+
+Status               : P ERROR
+Method               : POST
+
+URI string           : http://example.com/test<path>
+
+  URI scheme           : http
+  URI auth             : example.com
+  URI user             : 
+  URI pass             : 
+  URI host             : example.com
+  URI port             : 
+  URI path             : /
+  URI query            : 
+  URI frag             : 
+
+Version              : HTTP/1.1
+Body                 : 
+
+ErrMess              : Malformed Request Line : Invalid characters in Path element
+ErrNum               : 400
+
+Unparsed Length      : 15
+Unparsed Data        : Host: query.tes
+
+fd  = 27
+========
+Test Outcome : incomplete percent-encoding
+
+Test String  : POST http://example.com/% HTTP/1.1\r\nHost: example.com\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\n
+
+Status               : P ERROR
+Method               : POST
+
+URI string           : http://example.com/%
+
+  URI scheme           : http
+  URI auth             : example.com
+  URI user             : 
+  URI pass             : 
+  URI host             : example.com
+  URI port             : 
+  URI path             : /%
+  URI query            : 
+  URI frag             : 
+
+Version              : HTTP/1.1
+Body                 : 
+
+ErrMess              : Malformed Request Line : Invalid Percent Encoding (Path) 
+ErrNum               : 400
+
+Unparsed Length      : 24
+Unparsed Data        : Host: example.com\r\nTrans
+
+fd  = 28
+========
+Test Outcome : invalid hex in percent
+
+Test String  : POST http://example.com/%ZZ HTTP/1.1\r\nHost: www.test.net\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\n
+
+Status               : P ERROR
+Method               : POST
+
+URI string           : http://example.com/%ZZ
+
+  URI scheme           : http
+  URI auth             : example.com
+  URI user             : 
+  URI pass             : 
+  URI host             : example.com
+  URI port             : 
+  URI path             : /%ZZ
+  URI query            : 
+  URI frag             : 
+
+Version              : HTTP/1.1
+Body                 : 
+
+ErrMess              : Malformed Request Line : Invalid Percent Encoding (Path) 
+ErrNum               : 400
+
+Unparsed Length      : 22
+Unparsed Data        : Host: www.test.net\r\nTr
+
+fd  = 29
+========
+Test Outcome : malformed IPv6 address
+
+Test String  : POST http://[::1 HTTP/1.1\r\nHost: abc.com\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\n
+
+Status               : P ERROR
+Method               : POST
+
+URI string           : http://[::1
+
+  URI scheme           : http
+  URI auth             : [::1
+  URI user             : 
+  URI pass             : 
+  URI host             : 
+  URI port             : 
+  URI path             : 
+  URI query            : 
+  URI frag             : 
+
+Version              : HTTP/1.1
+Body                 : 
+
+ErrMess              : Malformed Request Line : Invalid characters in Host element 
+ErrNum               : 400
+
+Unparsed Length      : 3
+Unparsed Data        : Hos
+
+fd  = 30
+========
+Test Outcome : illegal pipe character
+
+Test String  : POST http://example.com/test|file HTTP/1.1\r\nHost: demo.site\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\n
+
+Status               : P ERROR
+Method               : POST
+
+URI string           : http://example.com/test|file
+
+  URI scheme           : http
+  URI auth             : example.com
+  URI user             : 
+  URI pass             : 
+  URI host             : example.com
+  URI port             : 
+  URI path             : /
+  URI query            : 
+  URI frag             : 
+
+Version              : HTTP/1.1
+Body                 : 
+
+ErrMess              : Malformed Request Line : Invalid characters in Path element
+ErrNum               : 400
+
+Unparsed Length      : 16
+Unparsed Data        : Host: demo.site\r
+
+fd  = 31
+========
+Test Outcome : backslash instead of slash
+
+Test String  : POST http://example.com/test\\path HTTP/1.1\r\nHost: file.server\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\n
+
+Status               : P ERROR
+Method               : POST
+
+URI string           : http://example.com/test\\path
+
+  URI scheme           : http
+  URI auth             : example.com
+  URI user             : 
+  URI pass             : 
+  URI host             : example.com
+  URI port             : 
+  URI path             : /
+  URI query            : 
+  URI frag             : 
+
+Version              : HTTP/1.1
+Body                 : 
+
+ErrMess              : Malformed Request Line : Invalid characters in Path element
+ErrNum               : 400
+
+Unparsed Length      : 15
+Unparsed Data        : Host: file.serv
+
+fd  = 32
+========
+Test Outcome : invalid port (non-numeric)
+
+Test String  : POST http://example.com:abc HTTP/1.1\r\nHost: search.tool\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\n
+
+Status               : P ERROR
+Method               : POST
+
+URI string           : http://example.com:abc
+
+  URI scheme           : http
+  URI auth             : example.com:abc
+  URI user             : 
+  URI pass             : 
+  URI host             : example.com
+  URI port             : 
+  URI path             : 
+  URI query            : 
+  URI frag             : 
+
+Version              : HTTP/1.1
+Body                 : 
+
+ErrMess              : Malformed Request Line : Invalid characters in Port element
+ErrNum               : 400
+
+Unparsed Length      : 22
+Unparsed Data        : Host: search.tool\r\nTra
+

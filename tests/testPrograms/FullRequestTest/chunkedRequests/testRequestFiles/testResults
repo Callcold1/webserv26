@@ -1,0 +1,3302 @@
+
+fd  = 3
+========
+
+Test Outcome : Valid - simple chunked request
+
+Test String  : POST /upload HTTP/1.1\r\nHost: example.com\r\nTransfer-Encoding: chunked\r\n\r\n4\r\nWiki\r\n5\r\npedia\r\n0\r\n\r\n
+
+Status               : P DONE
+Method               : POST
+URI string           : /upload
+Version              : HTTP/1.1
+Header               : host
+  Value              : example.com
+
+Header               : transfer-encoding
+  Value              : chunked
+
+Body                 : Wikipedia
+
+ErrMess              : Parsing Complete
+ErrNum               : 200
+
+Unparsed Length      : 0
+Unparsed Data        : 
+
+Request String  [32m[OK]
+[0mParsed          : POST /upload HTTP/1.1
+Expected        : POST /upload HTTP/1.1
+
+Method          [32m[OK]
+[0mParsed          : POST
+Expected        : POST
+
+Version         [32m[OK]
+[0mParsed          : HTTP/1.1
+Expected        : HTTP/1.1
+
+URI String      [32m[OK]
+[0mParsed          : /upload
+Expected        : /upload
+
+URI Type        [32m[OK]
+[0mParsed          : 3
+Expected        : 3
+
+URI Port int    [32m[OK]
+[0mParsed          : 80
+Expected        : 80
+
+URI auth        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI frag        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI host        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI pass        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI path        [32m[OK]
+[0mParsed          : /upload
+Expected        : /upload
+
+URI port string [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI query       [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI scheme      [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI user        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+errNum          [32m[OK]
+[0mParsed          : 200
+Expected        : 200
+
+errMess         [32m[OK]
+[0mParsed          : Parsing Complete
+Expected        : Parsing Complete
+
+p_state         [32m[OK]
+[0mParsed          : 2
+Expected        : 2
+
+body            [32m[OK]
+[0mParsed          : Wikipedia
+Expected        : Wikipedia
+
+hasBody         [32m[OK]
+[0mParsed          : 1
+Expected        : 1
+
+isChunked       [32m[OK]
+[0mParsed          : 1
+Expected        : 1
+
+
+fd  = 4
+========
+
+Test Outcome : Valid - empty body
+
+Test String  : POST /empty HTTP/1.1\r\nHost: test.com\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\n
+
+Status               : P DONE
+Method               : POST
+URI string           : /empty
+Version              : HTTP/1.1
+Header               : host
+  Value              : test.com
+
+Header               : transfer-encoding
+  Value              : chunked
+
+Body                 : 
+
+ErrMess              : Parsing Complete
+ErrNum               : 200
+
+Unparsed Length      : 0
+Unparsed Data        : 
+
+Request String  [32m[OK]
+[0mParsed          : POST /empty HTTP/1.1
+Expected        : POST /empty HTTP/1.1
+
+Method          [32m[OK]
+[0mParsed          : POST
+Expected        : POST
+
+Version         [32m[OK]
+[0mParsed          : HTTP/1.1
+Expected        : HTTP/1.1
+
+URI String      [32m[OK]
+[0mParsed          : /empty
+Expected        : /empty
+
+URI Type        [32m[OK]
+[0mParsed          : 3
+Expected        : 3
+
+URI Port int    [32m[OK]
+[0mParsed          : 80
+Expected        : 80
+
+URI auth        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI frag        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI host        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI pass        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI path        [32m[OK]
+[0mParsed          : /empty
+Expected        : /empty
+
+URI port string [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI query       [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI scheme      [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI user        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+errNum          [32m[OK]
+[0mParsed          : 200
+Expected        : 200
+
+errMess         [32m[OK]
+[0mParsed          : Parsing Complete
+Expected        : Parsing Complete
+
+p_state         [32m[OK]
+[0mParsed          : 2
+Expected        : 2
+
+body            [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+hasBody         [32m[OK]
+[0mParsed          : 1
+Expected        : 1
+
+isChunked       [32m[OK]
+[0mParsed          : 1
+Expected        : 1
+
+
+fd  = 5
+========
+
+Test Outcome : Valid - chunk extensions
+
+Test String  : POST /data HTTP/1.1\r\nHost: server.com\r\nTransfer-Encoding: chunked\r\n\r\nA;ext=value\r\nHelloWorld\r\n0\r\n\r\n
+
+Status               : P DONE
+Method               : POST
+URI string           : /data
+Version              : HTTP/1.1
+Header               : host
+  Value              : server.com
+
+Header               : transfer-encoding
+  Value              : chunked
+
+Body                 : HelloWorld
+
+ErrMess              : Parsing Complete
+ErrNum               : 200
+
+Unparsed Length      : 0
+Unparsed Data        : 
+
+Request String  [32m[OK]
+[0mParsed          : POST /data HTTP/1.1
+Expected        : POST /data HTTP/1.1
+
+Method          [32m[OK]
+[0mParsed          : POST
+Expected        : POST
+
+Version         [32m[OK]
+[0mParsed          : HTTP/1.1
+Expected        : HTTP/1.1
+
+URI String      [32m[OK]
+[0mParsed          : /data
+Expected        : /data
+
+URI Type        [32m[OK]
+[0mParsed          : 3
+Expected        : 3
+
+URI Port int    [32m[OK]
+[0mParsed          : 80
+Expected        : 80
+
+URI auth        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI frag        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI host        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI pass        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI path        [32m[OK]
+[0mParsed          : /data
+Expected        : /data
+
+URI port string [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI query       [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI scheme      [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI user        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+errNum          [32m[OK]
+[0mParsed          : 200
+Expected        : 200
+
+errMess         [32m[OK]
+[0mParsed          : Parsing Complete
+Expected        : Parsing Complete
+
+p_state         [32m[OK]
+[0mParsed          : 2
+Expected        : 2
+
+body            [32m[OK]
+[0mParsed          : HelloWorld
+Expected        : HelloWorld
+
+hasBody         [32m[OK]
+[0mParsed          : 1
+Expected        : 1
+
+isChunked       [32m[OK]
+[0mParsed          : 1
+Expected        : 1
+
+
+fd  = 6
+========
+
+Test Outcome : Valid - trailing headers
+
+Test String  : POST /log HTTP/1.1\r\nHost: myhost.com\r\nTransfer-Encoding: chunked\r\n\r\n3\r\nabc\r\n3\r\ndef\r\n0\r\nTrailer-Header: value\r\n\r\n
+
+Status               : P DONE
+Method               : POST
+URI string           : /log
+Version              : HTTP/1.1
+Header               : host
+  Value              : myhost.com
+
+Header               : transfer-encoding
+  Value              : chunked
+
+Body                 : abcdef
+
+ErrMess              : Parsing Complete
+ErrNum               : 200
+
+Unparsed Length      : 0
+Unparsed Data        : 
+
+Request String  [32m[OK]
+[0mParsed          : POST /log HTTP/1.1
+Expected        : POST /log HTTP/1.1
+
+Method          [32m[OK]
+[0mParsed          : POST
+Expected        : POST
+
+Version         [32m[OK]
+[0mParsed          : HTTP/1.1
+Expected        : HTTP/1.1
+
+URI String      [32m[OK]
+[0mParsed          : /log
+Expected        : /log
+
+URI Type        [32m[OK]
+[0mParsed          : 3
+Expected        : 3
+
+URI Port int    [32m[OK]
+[0mParsed          : 80
+Expected        : 80
+
+URI auth        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI frag        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI host        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI pass        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI path        [32m[OK]
+[0mParsed          : /log
+Expected        : /log
+
+URI port string [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI query       [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI scheme      [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI user        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+errNum          [32m[OK]
+[0mParsed          : 200
+Expected        : 200
+
+errMess         [32m[OK]
+[0mParsed          : Parsing Complete
+Expected        : Parsing Complete
+
+p_state         [32m[OK]
+[0mParsed          : 2
+Expected        : 2
+
+body            [32m[OK]
+[0mParsed          : abcdef
+Expected        : abcdef
+
+hasBody         [32m[OK]
+[0mParsed          : 1
+Expected        : 1
+
+isChunked       [32m[OK]
+[0mParsed          : 1
+Expected        : 1
+
+
+fd  = 7
+========
+
+Test Outcome : Valid - multiple small chunks
+
+Test String  : POST /small HTTP/1.1\r\nHost: test.org\r\nTransfer-Encoding: chunked\r\n\r\n1\r\na\r\n1\r\nb\r\n1\r\nc\r\n0\r\n\r\n
+
+Status               : P DONE
+Method               : POST
+URI string           : /small
+Version              : HTTP/1.1
+Header               : host
+  Value              : test.org
+
+Header               : transfer-encoding
+  Value              : chunked
+
+Body                 : abc
+
+ErrMess              : Parsing Complete
+ErrNum               : 200
+
+Unparsed Length      : 0
+Unparsed Data        : 
+
+Request String  [32m[OK]
+[0mParsed          : POST /small HTTP/1.1
+Expected        : POST /small HTTP/1.1
+
+Method          [32m[OK]
+[0mParsed          : POST
+Expected        : POST
+
+Version         [32m[OK]
+[0mParsed          : HTTP/1.1
+Expected        : HTTP/1.1
+
+URI String      [32m[OK]
+[0mParsed          : /small
+Expected        : /small
+
+URI Type        [32m[OK]
+[0mParsed          : 3
+Expected        : 3
+
+URI Port int    [32m[OK]
+[0mParsed          : 80
+Expected        : 80
+
+URI auth        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI frag        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI host        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI pass        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI path        [32m[OK]
+[0mParsed          : /small
+Expected        : /small
+
+URI port string [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI query       [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI scheme      [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI user        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+errNum          [32m[OK]
+[0mParsed          : 200
+Expected        : 200
+
+errMess         [32m[OK]
+[0mParsed          : Parsing Complete
+Expected        : Parsing Complete
+
+p_state         [32m[OK]
+[0mParsed          : 2
+Expected        : 2
+
+body            [32m[OK]
+[0mParsed          : abc
+Expected        : abc
+
+hasBody         [32m[OK]
+[0mParsed          : 1
+Expected        : 1
+
+isChunked       [32m[OK]
+[0mParsed          : 1
+Expected        : 1
+
+
+fd  = 8
+========
+
+Test Outcome : Invalid - no final 0-sized chunk
+
+Test String  : POST /bad HTTP/1.1\r\nHost: badhost\r\nTransfer-Encoding: chunked\r\n\r\n5\r\nhello\r\n
+
+Status               : P ERROR
+Method               : POST
+URI string           : /bad
+Version              : HTTP/1.1
+Header               : host
+  Value              : badhost
+
+Header               : transfer-encoding
+  Value              : chunked
+
+Body                 : hello
+
+ErrMess              : Read Size of Zero : Incomplete message
+ErrNum               : 400
+
+Unparsed Length      : 0
+Unparsed Data        : 
+
+Request String  [32m[OK]
+[0mParsed          : POST /bad HTTP/1.1
+Expected        : POST /bad HTTP/1.1
+
+Method          [32m[OK]
+[0mParsed          : POST
+Expected        : POST
+
+Version         [32m[OK]
+[0mParsed          : HTTP/1.1
+Expected        : HTTP/1.1
+
+URI String      [32m[OK]
+[0mParsed          : /bad
+Expected        : /bad
+
+URI Type        [32m[OK]
+[0mParsed          : 3
+Expected        : 3
+
+URI Port int    [32m[OK]
+[0mParsed          : 80
+Expected        : 80
+
+URI auth        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI frag        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI host        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI pass        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI path        [32m[OK]
+[0mParsed          : /bad
+Expected        : /bad
+
+URI port string [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI query       [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI scheme      [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI user        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+errNum          [32m[OK]
+[0mParsed          : 400
+Expected        : 400
+
+errMess         [32m[OK]
+[0mParsed          : Read Size of Zero : Incomplete message
+Expected        : Read Size of Zero : Incomplete message
+
+p_state         [32m[OK]
+[0mParsed          : 3
+Expected        : 3
+
+body            [32m[OK]
+[0mParsed          : hello
+Expected        : hello
+
+hasBody         [32m[OK]
+[0mParsed          : 1
+Expected        : 1
+
+isChunked       [32m[OK]
+[0mParsed          : 1
+Expected        : 1
+
+
+fd  = 9
+========
+
+Test Outcome : Invalid - chunk size not in hex
+
+Test String  : POST /bad2 HTTP/1.1\r\nHost: test\r\nTransfer-Encoding: chunked\r\n\r\nZZ\r\nfail\r\n0\r\n\r\n
+
+Status               : P ERROR
+Method               : POST
+URI string           : /bad2
+Version              : HTTP/1.1
+Header               : host
+  Value              : test
+
+Header               : transfer-encoding
+  Value              : chunked
+
+Body                 : 
+
+ErrMess              : Malformed Body : Invalid chunk size
+ErrNum               : 400
+
+Unparsed Length      : 11
+Unparsed Data        : fail\r\n0\r\n\r\n
+
+Request String  [32m[OK]
+[0mParsed          : POST /bad2 HTTP/1.1
+Expected        : POST /bad2 HTTP/1.1
+
+Method          [32m[OK]
+[0mParsed          : POST
+Expected        : POST
+
+Version         [32m[OK]
+[0mParsed          : HTTP/1.1
+Expected        : HTTP/1.1
+
+URI String      [32m[OK]
+[0mParsed          : /bad2
+Expected        : /bad2
+
+URI Type        [32m[OK]
+[0mParsed          : 3
+Expected        : 3
+
+URI Port int    [32m[OK]
+[0mParsed          : 80
+Expected        : 80
+
+URI auth        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI frag        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI host        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI pass        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI path        [32m[OK]
+[0mParsed          : /bad2
+Expected        : /bad2
+
+URI port string [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI query       [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI scheme      [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI user        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+errNum          [32m[OK]
+[0mParsed          : 400
+Expected        : 400
+
+errMess         [32m[OK]
+[0mParsed          : Malformed Body : Invalid chunk size
+Expected        : Malformed Body : Invalid chunk size
+
+p_state         [32m[OK]
+[0mParsed          : 3
+Expected        : 3
+
+body            [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+hasBody         [32m[OK]
+[0mParsed          : 1
+Expected        : 1
+
+isChunked       [32m[OK]
+[0mParsed          : 1
+Expected        : 1
+
+
+fd  = 10
+========
+
+Test Outcome : Invalid - no 
+ after chunk size
+
+Test String  : POST /bad3 HTTP/1.1\r\nHost: err\r\nTransfer-Encoding: chunked\r\n\r\n4hello\r\n0\r\n\r\n
+
+Status               : P ERROR
+Method               : POST
+URI string           : /bad3
+Version              : HTTP/1.1
+Header               : host
+  Value              : err
+
+Header               : transfer-encoding
+  Value              : chunked
+
+Body                 : 
+
+ErrMess              : Malformed Body : Invalid chunk size
+ErrNum               : 400
+
+Unparsed Length      : 5
+Unparsed Data        : 0\r\n\r\n
+
+Request String  [32m[OK]
+[0mParsed          : POST /bad3 HTTP/1.1
+Expected        : POST /bad3 HTTP/1.1
+
+Method          [32m[OK]
+[0mParsed          : POST
+Expected        : POST
+
+Version         [32m[OK]
+[0mParsed          : HTTP/1.1
+Expected        : HTTP/1.1
+
+URI String      [32m[OK]
+[0mParsed          : /bad3
+Expected        : /bad3
+
+URI Type        [32m[OK]
+[0mParsed          : 3
+Expected        : 3
+
+URI Port int    [32m[OK]
+[0mParsed          : 80
+Expected        : 80
+
+URI auth        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI frag        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI host        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI pass        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI path        [32m[OK]
+[0mParsed          : /bad3
+Expected        : /bad3
+
+URI port string [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI query       [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI scheme      [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI user        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+errNum          [32m[OK]
+[0mParsed          : 400
+Expected        : 400
+
+errMess         [32m[OK]
+[0mParsed          : Malformed Body : Invalid chunk size
+Expected        : Malformed Body : Invalid chunk size
+
+p_state         [32m[OK]
+[0mParsed          : 3
+Expected        : 3
+
+body            [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+hasBody         [32m[OK]
+[0mParsed          : 1
+Expected        : 1
+
+isChunked       [32m[OK]
+[0mParsed          : 1
+Expected        : 1
+
+
+fd  = 11
+========
+
+Test Outcome : Invalid - incomplete chunk data
+
+Test String  : POST /bad4 HTTP/1.1\r\nHost: bug\r\nTransfer-Encoding: chunked\r\n\r\n5\r\nhel\r\n0\r\n\r\n
+
+Status               : P ERROR
+Method               : POST
+URI string           : /bad4
+Version              : HTTP/1.1
+Header               : host
+  Value              : bug
+
+Header               : transfer-encoding
+  Value              : chunked
+
+Body                 : 
+
+ErrMess              : Malformed Body : Invalid chunk termination
+ErrNum               : 400
+
+Unparsed Length      : 10
+Unparsed Data        : hel\r\n0\r\n\r\n
+
+Request String  [32m[OK]
+[0mParsed          : POST /bad4 HTTP/1.1
+Expected        : POST /bad4 HTTP/1.1
+
+Method          [32m[OK]
+[0mParsed          : POST
+Expected        : POST
+
+Version         [32m[OK]
+[0mParsed          : HTTP/1.1
+Expected        : HTTP/1.1
+
+URI String      [32m[OK]
+[0mParsed          : /bad4
+Expected        : /bad4
+
+URI Type        [32m[OK]
+[0mParsed          : 3
+Expected        : 3
+
+URI Port int    [32m[OK]
+[0mParsed          : 80
+Expected        : 80
+
+URI auth        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI frag        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI host        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI pass        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI path        [32m[OK]
+[0mParsed          : /bad4
+Expected        : /bad4
+
+URI port string [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI query       [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI scheme      [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI user        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+errNum          [32m[OK]
+[0mParsed          : 400
+Expected        : 400
+
+errMess         [32m[OK]
+[0mParsed          : Malformed Body : Invalid chunk termination
+Expected        : Malformed Body : Invalid chunk termination
+
+p_state         [32m[OK]
+[0mParsed          : 3
+Expected        : 3
+
+body            [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+hasBody         [32m[OK]
+[0mParsed          : 1
+Expected        : 1
+
+isChunked       [32m[OK]
+[0mParsed          : 1
+Expected        : 1
+
+
+fd  = 12
+========
+
+Test Outcome : Invalid - no Transfer-Encoding
+
+Test String  : POST /bad5 HTTP/1.1\r\nHost: test\r\n\r\n4\r\ndata\r\n0\r\n\r\n
+
+Status               : P ERROR
+Method               : POST
+URI string           : /bad5
+Version              : HTTP/1.1
+Header               : host
+  Value              : test
+
+Body                 : 
+
+ErrMess              : Malformed Request : Headers : content-length or transfer-encoding required for request type
+ErrNum               : 400
+
+Unparsed Length      : 14
+Unparsed Data        : 4\r\ndata\r\n0\r\n\r\n
+
+Request String  [32m[OK]
+[0mParsed          : POST /bad5 HTTP/1.1
+Expected        : POST /bad5 HTTP/1.1
+
+Method          [32m[OK]
+[0mParsed          : POST
+Expected        : POST
+
+Version         [32m[OK]
+[0mParsed          : HTTP/1.1
+Expected        : HTTP/1.1
+
+URI String      [32m[OK]
+[0mParsed          : /bad5
+Expected        : /bad5
+
+URI Type        [32m[OK]
+[0mParsed          : 3
+Expected        : 3
+
+URI Port int    [32m[OK]
+[0mParsed          : 80
+Expected        : 80
+
+URI auth        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI frag        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI host        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI pass        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI path        [32m[OK]
+[0mParsed          : /bad5
+Expected        : /bad5
+
+URI port string [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI query       [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI scheme      [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI user        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+errNum          [32m[OK]
+[0mParsed          : 400
+Expected        : 400
+
+errMess         [32m[OK]
+[0mParsed          : Malformed Request : Headers : content-length or transfer-encoding required for request type
+Expected        : Malformed Request : Headers : content-length or transfer-encoding required for request type
+
+p_state         [32m[OK]
+[0mParsed          : 3
+Expected        : 3
+
+body            [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+hasBody         [32m[OK]
+[0mParsed          : 0
+Expected        : 0
+
+isChunked       [32m[OK]
+[0mParsed          : 0
+Expected        : 0
+
+
+fd  = 13
+========
+
+Test Outcome : Valid - uppercase hex
+
+Test String  : POST /upper HTTP/1.1\r\nHost: site.com\r\nTransfer-Encoding: chunked\r\n\r\nA\r\n0123456789\r\n0\r\n\r\n
+
+Status               : P DONE
+Method               : POST
+URI string           : /upper
+Version              : HTTP/1.1
+Header               : host
+  Value              : site.com
+
+Header               : transfer-encoding
+  Value              : chunked
+
+Body                 : 0123456789
+
+ErrMess              : Parsing Complete
+ErrNum               : 200
+
+Unparsed Length      : 0
+Unparsed Data        : 
+
+Request String  [32m[OK]
+[0mParsed          : POST /upper HTTP/1.1
+Expected        : POST /upper HTTP/1.1
+
+Method          [32m[OK]
+[0mParsed          : POST
+Expected        : POST
+
+Version         [32m[OK]
+[0mParsed          : HTTP/1.1
+Expected        : HTTP/1.1
+
+URI String      [32m[OK]
+[0mParsed          : /upper
+Expected        : /upper
+
+URI Type        [32m[OK]
+[0mParsed          : 3
+Expected        : 3
+
+URI Port int    [32m[OK]
+[0mParsed          : 80
+Expected        : 80
+
+URI auth        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI frag        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI host        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI pass        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI path        [32m[OK]
+[0mParsed          : /upper
+Expected        : /upper
+
+URI port string [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI query       [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI scheme      [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI user        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+errNum          [32m[OK]
+[0mParsed          : 200
+Expected        : 200
+
+errMess         [32m[OK]
+[0mParsed          : Parsing Complete
+Expected        : Parsing Complete
+
+p_state         [32m[OK]
+[0mParsed          : 2
+Expected        : 2
+
+body            [32m[OK]
+[0mParsed          : 0123456789
+Expected        : 0123456789
+
+hasBody         [32m[OK]
+[0mParsed          : 1
+Expected        : 1
+
+isChunked       [32m[OK]
+[0mParsed          : 1
+Expected        : 1
+
+
+fd  = 14
+========
+
+Test Outcome : Valid - chunk size zero with trailer
+
+Test String  : POST /trailer HTTP/1.1\r\nHost: host.com\r\nTransfer-Encoding: chunked\r\n\r\n0\r\nX-Debug: true\r\n\r\n
+
+Status               : P DONE
+Method               : POST
+URI string           : /trailer
+Version              : HTTP/1.1
+Header               : host
+  Value              : host.com
+
+Header               : transfer-encoding
+  Value              : chunked
+
+Body                 : 
+
+ErrMess              : Parsing Complete
+ErrNum               : 200
+
+Unparsed Length      : 0
+Unparsed Data        : 
+
+Request String  [32m[OK]
+[0mParsed          : POST /trailer HTTP/1.1
+Expected        : POST /trailer HTTP/1.1
+
+Method          [32m[OK]
+[0mParsed          : POST
+Expected        : POST
+
+Version         [32m[OK]
+[0mParsed          : HTTP/1.1
+Expected        : HTTP/1.1
+
+URI String      [32m[OK]
+[0mParsed          : /trailer
+Expected        : /trailer
+
+URI Type        [32m[OK]
+[0mParsed          : 3
+Expected        : 3
+
+URI Port int    [32m[OK]
+[0mParsed          : 80
+Expected        : 80
+
+URI auth        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI frag        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI host        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI pass        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI path        [32m[OK]
+[0mParsed          : /trailer
+Expected        : /trailer
+
+URI port string [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI query       [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI scheme      [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI user        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+errNum          [32m[OK]
+[0mParsed          : 200
+Expected        : 200
+
+errMess         [32m[OK]
+[0mParsed          : Parsing Complete
+Expected        : Parsing Complete
+
+p_state         [32m[OK]
+[0mParsed          : 2
+Expected        : 2
+
+body            [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+hasBody         [32m[OK]
+[0mParsed          : 1
+Expected        : 1
+
+isChunked       [32m[OK]
+[0mParsed          : 1
+Expected        : 1
+
+
+fd  = 15
+========
+
+Test Outcome : Valid - with CRLF inside data
+
+Test String  : POST /crlf HTTP/1.1\r\nHost: data\r\nTransfer-Encoding: chunked\r\n\r\nC\r\nLine1\r\nLine2\r\n0\r\n\r\n
+
+Status               : P DONE
+Method               : POST
+URI string           : /crlf
+Version              : HTTP/1.1
+Header               : host
+  Value              : data
+
+Header               : transfer-encoding
+  Value              : chunked
+
+Body                 : Line1\r\nLine2
+
+ErrMess              : Parsing Complete
+ErrNum               : 200
+
+Unparsed Length      : 0
+Unparsed Data        : 
+
+Request String  [32m[OK]
+[0mParsed          : POST /crlf HTTP/1.1
+Expected        : POST /crlf HTTP/1.1
+
+Method          [32m[OK]
+[0mParsed          : POST
+Expected        : POST
+
+Version         [32m[OK]
+[0mParsed          : HTTP/1.1
+Expected        : HTTP/1.1
+
+URI String      [32m[OK]
+[0mParsed          : /crlf
+Expected        : /crlf
+
+URI Type        [32m[OK]
+[0mParsed          : 3
+Expected        : 3
+
+URI Port int    [32m[OK]
+[0mParsed          : 80
+Expected        : 80
+
+URI auth        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI frag        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI host        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI pass        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI path        [32m[OK]
+[0mParsed          : /crlf
+Expected        : /crlf
+
+URI port string [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI query       [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI scheme      [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI user        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+errNum          [32m[OK]
+[0mParsed          : 200
+Expected        : 200
+
+errMess         [32m[OK]
+[0mParsed          : Parsing Complete
+Expected        : Parsing Complete
+
+p_state         [32m[OK]
+[0mParsed          : 2
+Expected        : 2
+
+body            [32m[OK]
+[0mParsed          : Line1
+Line2
+Expected        : Line1
+Line2
+
+hasBody         [32m[OK]
+[0mParsed          : 1
+Expected        : 1
+
+isChunked       [32m[OK]
+[0mParsed          : 1
+Expected        : 1
+
+
+fd  = 16
+========
+
+Test Outcome : Valid - large chunk
+
+Test String  : POST /big HTTP/1.1\r\nHost: x\r\nTransfer-Encoding: chunked\r\n\r\n10\r\n0123456789ABCDEF\r\n0\r\n\r\n
+
+Status               : P DONE
+Method               : POST
+URI string           : /big
+Version              : HTTP/1.1
+Header               : host
+  Value              : x
+
+Header               : transfer-encoding
+  Value              : chunked
+
+Body                 : 0123456789ABCDEF
+
+ErrMess              : Parsing Complete
+ErrNum               : 200
+
+Unparsed Length      : 0
+Unparsed Data        : 
+
+Request String  [32m[OK]
+[0mParsed          : POST /big HTTP/1.1
+Expected        : POST /big HTTP/1.1
+
+Method          [32m[OK]
+[0mParsed          : POST
+Expected        : POST
+
+Version         [32m[OK]
+[0mParsed          : HTTP/1.1
+Expected        : HTTP/1.1
+
+URI String      [32m[OK]
+[0mParsed          : /big
+Expected        : /big
+
+URI Type        [32m[OK]
+[0mParsed          : 3
+Expected        : 3
+
+URI Port int    [32m[OK]
+[0mParsed          : 80
+Expected        : 80
+
+URI auth        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI frag        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI host        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI pass        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI path        [32m[OK]
+[0mParsed          : /big
+Expected        : /big
+
+URI port string [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI query       [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI scheme      [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI user        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+errNum          [32m[OK]
+[0mParsed          : 200
+Expected        : 200
+
+errMess         [32m[OK]
+[0mParsed          : Parsing Complete
+Expected        : Parsing Complete
+
+p_state         [32m[OK]
+[0mParsed          : 2
+Expected        : 2
+
+body            [32m[OK]
+[0mParsed          : 0123456789ABCDEF
+Expected        : 0123456789ABCDEF
+
+hasBody         [32m[OK]
+[0mParsed          : 1
+Expected        : 1
+
+isChunked       [32m[OK]
+[0mParsed          : 1
+Expected        : 1
+
+
+fd  = 17
+========
+
+Test Outcome : Valid - minimal chunk + trailer
+
+Test String  : POST /t HTTP/1.1\r\nHost: t.com\r\nTransfer-Encoding: chunked\r\n\r\n1\r\nx\r\n0\r\nT:1\r\n\r\n
+
+Status               : P DONE
+Method               : POST
+URI string           : /t
+Version              : HTTP/1.1
+Header               : host
+  Value              : t.com
+
+Header               : transfer-encoding
+  Value              : chunked
+
+Body                 : x
+
+ErrMess              : Parsing Complete
+ErrNum               : 200
+
+Unparsed Length      : 0
+Unparsed Data        : 
+
+Request String  [32m[OK]
+[0mParsed          : POST /t HTTP/1.1
+Expected        : POST /t HTTP/1.1
+
+Method          [32m[OK]
+[0mParsed          : POST
+Expected        : POST
+
+Version         [32m[OK]
+[0mParsed          : HTTP/1.1
+Expected        : HTTP/1.1
+
+URI String      [32m[OK]
+[0mParsed          : /t
+Expected        : /t
+
+URI Type        [32m[OK]
+[0mParsed          : 3
+Expected        : 3
+
+URI Port int    [32m[OK]
+[0mParsed          : 80
+Expected        : 80
+
+URI auth        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI frag        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI host        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI pass        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI path        [32m[OK]
+[0mParsed          : /t
+Expected        : /t
+
+URI port string [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI query       [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI scheme      [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI user        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+errNum          [32m[OK]
+[0mParsed          : 200
+Expected        : 200
+
+errMess         [32m[OK]
+[0mParsed          : Parsing Complete
+Expected        : Parsing Complete
+
+p_state         [32m[OK]
+[0mParsed          : 2
+Expected        : 2
+
+body            [32m[OK]
+[0mParsed          : x
+Expected        : x
+
+hasBody         [32m[OK]
+[0mParsed          : 1
+Expected        : 1
+
+isChunked       [32m[OK]
+[0mParsed          : 1
+Expected        : 1
+
+
+fd  = 18
+========
+
+Test Outcome : Invalid - negative chunk size
+
+Test String  : POST /neg HTTP/1.1\r\nHost: bad\r\nTransfer-Encoding: chunked\r\n\r\n-5\r\nnope\r\n0\r\n\r\n
+
+Status               : P ERROR
+Method               : POST
+URI string           : /neg
+Version              : HTTP/1.1
+Header               : host
+  Value              : bad
+
+Header               : transfer-encoding
+  Value              : chunked
+
+Body                 : 
+
+ErrMess              : Malformed Body : Invalid chunk size
+ErrNum               : 400
+
+Unparsed Length      : 11
+Unparsed Data        : nope\r\n0\r\n\r\n
+
+Request String  [32m[OK]
+[0mParsed          : POST /neg HTTP/1.1
+Expected        : POST /neg HTTP/1.1
+
+Method          [32m[OK]
+[0mParsed          : POST
+Expected        : POST
+
+Version         [32m[OK]
+[0mParsed          : HTTP/1.1
+Expected        : HTTP/1.1
+
+URI String      [32m[OK]
+[0mParsed          : /neg
+Expected        : /neg
+
+URI Type        [32m[OK]
+[0mParsed          : 3
+Expected        : 3
+
+URI Port int    [32m[OK]
+[0mParsed          : 80
+Expected        : 80
+
+URI auth        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI frag        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI host        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI pass        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI path        [32m[OK]
+[0mParsed          : /neg
+Expected        : /neg
+
+URI port string [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI query       [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI scheme      [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI user        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+errNum          [32m[OK]
+[0mParsed          : 400
+Expected        : 400
+
+errMess         [32m[OK]
+[0mParsed          : Malformed Body : Invalid chunk size
+Expected        : Malformed Body : Invalid chunk size
+
+p_state         [32m[OK]
+[0mParsed          : 3
+Expected        : 3
+
+body            [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+hasBody         [32m[OK]
+[0mParsed          : 1
+Expected        : 1
+
+isChunked       [32m[OK]
+[0mParsed          : 1
+Expected        : 1
+
+
+fd  = 19
+========
+
+Test Outcome : Invalid - missing chunk data
+
+Test String  : POST /nodata HTTP/1.1\r\nHost: h\r\nTransfer-Encoding: chunked\r\n\r\n3\r\n\r\n0\r\n\r\n
+
+Status               : P ERROR
+Method               : POST
+URI string           : /nodata
+Version              : HTTP/1.1
+Header               : host
+  Value              : h
+
+Header               : transfer-encoding
+  Value              : chunked
+
+Body                 : \r\n0
+
+ErrMess              : Malformed Body : Invalid chunk size
+ErrNum               : 400
+
+Unparsed Length      : 0
+Unparsed Data        : 
+
+Request String  [32m[OK]
+[0mParsed          : POST /nodata HTTP/1.1
+Expected        : POST /nodata HTTP/1.1
+
+Method          [32m[OK]
+[0mParsed          : POST
+Expected        : POST
+
+Version         [32m[OK]
+[0mParsed          : HTTP/1.1
+Expected        : HTTP/1.1
+
+URI String      [32m[OK]
+[0mParsed          : /nodata
+Expected        : /nodata
+
+URI Type        [32m[OK]
+[0mParsed          : 3
+Expected        : 3
+
+URI Port int    [32m[OK]
+[0mParsed          : 80
+Expected        : 80
+
+URI auth        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI frag        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI host        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI pass        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI path        [32m[OK]
+[0mParsed          : /nodata
+Expected        : /nodata
+
+URI port string [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI query       [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI scheme      [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI user        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+errNum          [32m[OK]
+[0mParsed          : 400
+Expected        : 400
+
+errMess         [32m[OK]
+[0mParsed          : Malformed Body : Invalid chunk size
+Expected        : Malformed Body : Invalid chunk size
+
+p_state         [32m[OK]
+[0mParsed          : 3
+Expected        : 3
+
+body            [32m[OK]
+[0mParsed          : 
+0
+Expected        : 
+0
+
+hasBody         [32m[OK]
+[0mParsed          : 1
+Expected        : 1
+
+isChunked       [32m[OK]
+[0mParsed          : 1
+Expected        : 1
+
+
+fd  = 20
+========
+
+Test Outcome : Invalid - malformed trailer
+
+Test String  : POST /badtrailer HTTP/1.1\r\nHost: h\r\nTransfer-Encoding: chunked\r\n\r\n3\r\nfoo\r\n0\r\nInvalidHeader\r\n\r\n
+
+Status               : P DONE
+Method               : POST
+URI string           : /badtrailer
+Version              : HTTP/1.1
+Header               : host
+  Value              : h
+
+Header               : transfer-encoding
+  Value              : chunked
+
+Body                 : foo
+
+ErrMess              : Parsing Complete
+ErrNum               : 200
+
+Unparsed Length      : 0
+Unparsed Data        : 
+
+Request String  [32m[OK]
+[0mParsed          : POST /badtrailer HTTP/1.1
+Expected        : POST /badtrailer HTTP/1.1
+
+Method          [32m[OK]
+[0mParsed          : POST
+Expected        : POST
+
+Version         [32m[OK]
+[0mParsed          : HTTP/1.1
+Expected        : HTTP/1.1
+
+URI String      [32m[OK]
+[0mParsed          : /badtrailer
+Expected        : /badtrailer
+
+URI Type        [32m[OK]
+[0mParsed          : 3
+Expected        : 3
+
+URI Port int    [32m[OK]
+[0mParsed          : 80
+Expected        : 80
+
+URI auth        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI frag        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI host        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI pass        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI path        [32m[OK]
+[0mParsed          : /badtrailer
+Expected        : /badtrailer
+
+URI port string [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI query       [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI scheme      [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI user        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+errNum          [31m[FAILED]
+[0mParsed          : 200
+Expected        : 400
+
+errMess         [31m[FAILED]
+[0mParsed          : Parsing Complete
+Expected        : Malformed Trailer : Invalid name
+
+p_state         [31m[FAILED]
+[0mParsed          : 2
+Expected        : 3
+
+body            [32m[OK]
+[0mParsed          : foo
+Expected        : foo
+
+hasBody         [32m[OK]
+[0mParsed          : 1
+Expected        : 1
+
+isChunked       [32m[OK]
+[0mParsed          : 1
+Expected        : 1
+
+
+fd  = 21
+========
+
+Test Outcome : Invalid - space in chunk size
+
+Test String  : POST /space HTTP/1.1\r\nHost: host\r\nTransfer-Encoding: chunked\r\n\r\n3 \r\nabc\r\n0\r\n\r\n
+
+Status               : P ERROR
+Method               : POST
+URI string           : /space
+Version              : HTTP/1.1
+Header               : host
+  Value              : host
+
+Header               : transfer-encoding
+  Value              : chunked
+
+Body                 : 
+
+ErrMess              : Malformed Body : Invalid chunk size
+ErrNum               : 400
+
+Unparsed Length      : 10
+Unparsed Data        : abc\r\n0\r\n\r\n
+
+Request String  [32m[OK]
+[0mParsed          : POST /space HTTP/1.1
+Expected        : POST /space HTTP/1.1
+
+Method          [32m[OK]
+[0mParsed          : POST
+Expected        : POST
+
+Version         [32m[OK]
+[0mParsed          : HTTP/1.1
+Expected        : HTTP/1.1
+
+URI String      [32m[OK]
+[0mParsed          : /space
+Expected        : /space
+
+URI Type        [32m[OK]
+[0mParsed          : 3
+Expected        : 3
+
+URI Port int    [32m[OK]
+[0mParsed          : 80
+Expected        : 80
+
+URI auth        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI frag        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI host        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI pass        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI path        [32m[OK]
+[0mParsed          : /space
+Expected        : /space
+
+URI port string [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI query       [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI scheme      [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI user        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+errNum          [32m[OK]
+[0mParsed          : 400
+Expected        : 400
+
+errMess         [32m[OK]
+[0mParsed          : Malformed Body : Invalid chunk size
+Expected        : Malformed Body : Invalid chunk size
+
+p_state         [32m[OK]
+[0mParsed          : 3
+Expected        : 3
+
+body            [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+hasBody         [32m[OK]
+[0mParsed          : 1
+Expected        : 1
+
+isChunked       [32m[OK]
+[0mParsed          : 1
+Expected        : 1
+
+
+fd  = 22
+========
+
+Test Outcome : Invalid - junk after final zero
+
+Test String  : POST /junk HTTP/1.1\r\nHost: host\r\nTransfer-Encoding: chunked\r\n\r\n1\r\nx\r\n0\r\n\r\nGARBAGE
+
+Status               : P DONE
+Method               : POST
+URI string           : /junk
+Version              : HTTP/1.1
+Header               : host
+  Value              : host
+
+Header               : transfer-encoding
+  Value              : chunked
+
+Body                 : x
+
+ErrMess              : Parsing Complete
+ErrNum               : 200
+
+Unparsed Length      : 7
+Unparsed Data        : GARBAGE
+
+Request String  [32m[OK]
+[0mParsed          : POST /junk HTTP/1.1
+Expected        : POST /junk HTTP/1.1
+
+Method          [32m[OK]
+[0mParsed          : POST
+Expected        : POST
+
+Version         [32m[OK]
+[0mParsed          : HTTP/1.1
+Expected        : HTTP/1.1
+
+URI String      [32m[OK]
+[0mParsed          : /junk
+Expected        : /junk
+
+URI Type        [32m[OK]
+[0mParsed          : 3
+Expected        : 3
+
+URI Port int    [32m[OK]
+[0mParsed          : 80
+Expected        : 80
+
+URI auth        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI frag        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI host        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI pass        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI path        [32m[OK]
+[0mParsed          : /junk
+Expected        : /junk
+
+URI port string [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI query       [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI scheme      [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI user        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+errNum          [32m[OK]
+[0mParsed          : 200
+Expected        : 200
+
+errMess         [32m[OK]
+[0mParsed          : Parsing Complete
+Expected        : Parsing Complete
+
+p_state         [32m[OK]
+[0mParsed          : 2
+Expected        : 2
+
+body            [32m[OK]
+[0mParsed          : x
+Expected        : x
+
+hasBody         [32m[OK]
+[0mParsed          : 1
+Expected        : 1
+
+isChunked       [32m[OK]
+[0mParsed          : 1
+Expected        : 1
+
+
+fd  = 23
+========
+
+Test Outcome : Valid - case-insensitive TE
+
+Test String  : POST /cased HTTP/1.1\r\nHost: site\r\nTransfer-Encoding: Chunked\r\n\r\n2\r\nhi\r\n0\r\n\r\n
+
+Status               : P DONE
+Method               : POST
+URI string           : /cased
+Version              : HTTP/1.1
+Header               : host
+  Value              : site
+
+Header               : transfer-encoding
+  Value              : Chunked
+
+Body                 : hi
+
+ErrMess              : Parsing Complete
+ErrNum               : 200
+
+Unparsed Length      : 0
+Unparsed Data        : 
+
+Request String  [32m[OK]
+[0mParsed          : POST /cased HTTP/1.1
+Expected        : POST /cased HTTP/1.1
+
+Method          [32m[OK]
+[0mParsed          : POST
+Expected        : POST
+
+Version         [32m[OK]
+[0mParsed          : HTTP/1.1
+Expected        : HTTP/1.1
+
+URI String      [32m[OK]
+[0mParsed          : /cased
+Expected        : /cased
+
+URI Type        [32m[OK]
+[0mParsed          : 3
+Expected        : 3
+
+URI Port int    [32m[OK]
+[0mParsed          : 80
+Expected        : 80
+
+URI auth        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI frag        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI host        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI pass        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI path        [32m[OK]
+[0mParsed          : /cased
+Expected        : /cased
+
+URI port string [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI query       [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI scheme      [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI user        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+errNum          [32m[OK]
+[0mParsed          : 200
+Expected        : 200
+
+errMess         [32m[OK]
+[0mParsed          : Parsing Complete
+Expected        : Parsing Complete
+
+p_state         [32m[OK]
+[0mParsed          : 2
+Expected        : 2
+
+body            [32m[OK]
+[0mParsed          : hi
+Expected        : hi
+
+hasBody         [32m[OK]
+[0mParsed          : 1
+Expected        : 1
+
+isChunked       [32m[OK]
+[0mParsed          : 1
+Expected        : 1
+
+
+fd  = 24
+========
+
+Test Outcome : Valid - chunked with query string
+
+Test String  : POST /q?x=1 HTTP/1.1\r\nHost: s\r\nTransfer-Encoding: chunked\r\n\r\n6\r\nquery!\r\n0\r\n\r\n
+
+Status               : P DONE
+Method               : POST
+URI string           : /q?x=1
+Version              : HTTP/1.1
+Header               : host
+  Value              : s
+
+Header               : transfer-encoding
+  Value              : chunked
+
+Body                 : query!
+
+ErrMess              : Parsing Complete
+ErrNum               : 200
+
+Unparsed Length      : 0
+Unparsed Data        : 
+
+Request String  [32m[OK]
+[0mParsed          : POST /q?x=1 HTTP/1.1
+Expected        : POST /q?x=1 HTTP/1.1
+
+Method          [32m[OK]
+[0mParsed          : POST
+Expected        : POST
+
+Version         [32m[OK]
+[0mParsed          : HTTP/1.1
+Expected        : HTTP/1.1
+
+URI String      [32m[OK]
+[0mParsed          : /q?x=1
+Expected        : /q?x=1
+
+URI Type        [32m[OK]
+[0mParsed          : 3
+Expected        : 3
+
+URI Port int    [32m[OK]
+[0mParsed          : 80
+Expected        : 80
+
+URI auth        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI frag        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI host        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI pass        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI path        [32m[OK]
+[0mParsed          : /q
+Expected        : /q
+
+URI port string [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI query       [32m[OK]
+[0mParsed          : x=1
+Expected        : x=1
+
+URI scheme      [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI user        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+errNum          [32m[OK]
+[0mParsed          : 200
+Expected        : 200
+
+errMess         [32m[OK]
+[0mParsed          : Parsing Complete
+Expected        : Parsing Complete
+
+p_state         [32m[OK]
+[0mParsed          : 2
+Expected        : 2
+
+body            [32m[OK]
+[0mParsed          : query!
+Expected        : query!
+
+hasBody         [32m[OK]
+[0mParsed          : 1
+Expected        : 1
+
+isChunked       [32m[OK]
+[0mParsed          : 1
+Expected        : 1
+
+
+fd  = 25
+========
+
+Test Outcome : Valid - chunk with trailing LF
+
+Test String  : POST /lf HTTP/1.1\r\nHost: h\r\nTransfer-Encoding: chunked\r\n\r\n2\r\nok\n\r\n0\r\n\r\n
+
+Status               : P ERROR
+Method               : POST
+URI string           : /lf
+Version              : HTTP/1.1
+Header               : host
+  Value              : h
+
+Header               : transfer-encoding
+  Value              : chunked
+
+Body                 : 
+
+ErrMess              : Malformed Body : Invalid chunk termination
+ErrNum               : 400
+
+Unparsed Length      : 10
+Unparsed Data        : ok\n\r\n0\r\n\r\n
+
+Request String  [32m[OK]
+[0mParsed          : POST /lf HTTP/1.1
+Expected        : POST /lf HTTP/1.1
+
+Method          [32m[OK]
+[0mParsed          : POST
+Expected        : POST
+
+Version         [32m[OK]
+[0mParsed          : HTTP/1.1
+Expected        : HTTP/1.1
+
+URI String      [32m[OK]
+[0mParsed          : /lf
+Expected        : /lf
+
+URI Type        [32m[OK]
+[0mParsed          : 3
+Expected        : 3
+
+URI Port int    [32m[OK]
+[0mParsed          : 80
+Expected        : 80
+
+URI auth        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI frag        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI host        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI pass        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI path        [32m[OK]
+[0mParsed          : /lf
+Expected        : /lf
+
+URI port string [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI query       [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI scheme      [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI user        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+errNum          [31m[FAILED]
+[0mParsed          : 400
+Expected        : 200
+
+errMess         [31m[FAILED]
+[0mParsed          : Malformed Body : Invalid chunk termination
+Expected        : Parsing Complete
+
+p_state         [31m[FAILED]
+[0mParsed          : 3
+Expected        : 2
+
+body            [31m[FAILED]
+[0mParsed          : 
+Expected        : ok
+
+hasBody         [32m[OK]
+[0mParsed          : 1
+Expected        : 1
+
+isChunked       [32m[OK]
+[0mParsed          : 1
+Expected        : 1
+
+
+fd  = 26
+========
+
+Test Outcome : Valid - UTF-8 body
+
+Test String  : POST /utf8 HTTP/1.1\r\nHost: h\r\nTransfer-Encoding: chunked\r\n\r\n8\r\n'\xc3''\xa5''\xc3''\x9f''\xc3''\xa7''\xc3''\xb8'\r\n0\r\n\r\n
+
+Status               : P DONE
+Method               : POST
+URI string           : /utf8
+Version              : HTTP/1.1
+Header               : host
+  Value              : h
+
+Header               : transfer-encoding
+  Value              : chunked
+
+Body                 : '\xc3''\xa5''\xc3''\x9f''\xc3''\xa7''\xc3''\xb8'
+
+ErrMess              : Parsing Complete
+ErrNum               : 200
+
+Unparsed Length      : 0
+Unparsed Data        : 
+
+Request String  [32m[OK]
+[0mParsed          : POST /utf8 HTTP/1.1
+Expected        : POST /utf8 HTTP/1.1
+
+Method          [32m[OK]
+[0mParsed          : POST
+Expected        : POST
+
+Version         [32m[OK]
+[0mParsed          : HTTP/1.1
+Expected        : HTTP/1.1
+
+URI String      [32m[OK]
+[0mParsed          : /utf8
+Expected        : /utf8
+
+URI Type        [32m[OK]
+[0mParsed          : 3
+Expected        : 3
+
+URI Port int    [32m[OK]
+[0mParsed          : 80
+Expected        : 80
+
+URI auth        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI frag        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI host        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI pass        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI path        [32m[OK]
+[0mParsed          : /utf8
+Expected        : /utf8
+
+URI port string [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI query       [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI scheme      [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI user        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+errNum          [32m[OK]
+[0mParsed          : 200
+Expected        : 200
+
+errMess         [32m[OK]
+[0mParsed          : Parsing Complete
+Expected        : Parsing Complete
+
+p_state         [32m[OK]
+[0mParsed          : 2
+Expected        : 2
+
+body            [32m[OK]
+[0mParsed          : åßçø
+Expected        : åßçø
+
+hasBody         [32m[OK]
+[0mParsed          : 1
+Expected        : 1
+
+isChunked       [32m[OK]
+[0mParsed          : 1
+Expected        : 1
+
+
+fd  = 27
+========
+
+Test Outcome : Valid - with custom trailer
+
+Test String  : POST /custom HTTP/1.1\r\nHost: test\r\nTransfer-Encoding: chunked\r\n\r\n4\r\ntest\r\n0\r\nX-Trailer: yes\r\n\r\n
+
+Status               : P DONE
+Method               : POST
+URI string           : /custom
+Version              : HTTP/1.1
+Header               : host
+  Value              : test
+
+Header               : transfer-encoding
+  Value              : chunked
+
+Body                 : test
+
+ErrMess              : Parsing Complete
+ErrNum               : 200
+
+Unparsed Length      : 0
+Unparsed Data        : 
+
+Request String  [32m[OK]
+[0mParsed          : POST /custom HTTP/1.1
+Expected        : POST /custom HTTP/1.1
+
+Method          [32m[OK]
+[0mParsed          : POST
+Expected        : POST
+
+Version         [32m[OK]
+[0mParsed          : HTTP/1.1
+Expected        : HTTP/1.1
+
+URI String      [32m[OK]
+[0mParsed          : /custom
+Expected        : /custom
+
+URI Type        [32m[OK]
+[0mParsed          : 3
+Expected        : 3
+
+URI Port int    [32m[OK]
+[0mParsed          : 80
+Expected        : 80
+
+URI auth        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI frag        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI host        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI pass        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI path        [32m[OK]
+[0mParsed          : /custom
+Expected        : /custom
+
+URI port string [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI query       [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI scheme      [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI user        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+errNum          [32m[OK]
+[0mParsed          : 200
+Expected        : 200
+
+errMess         [32m[OK]
+[0mParsed          : Parsing Complete
+Expected        : Parsing Complete
+
+p_state         [32m[OK]
+[0mParsed          : 2
+Expected        : 2
+
+body            [32m[OK]
+[0mParsed          : test
+Expected        : test
+
+hasBody         [32m[OK]
+[0mParsed          : 1
+Expected        : 1
+
+isChunked       [32m[OK]
+[0mParsed          : 1
+Expected        : 1
+
+
+fd  = 28
+========
+
+Test Outcome : Invalid - final CRLF missing
+
+Test String  : POST /misscrlf HTTP/1.1\r\nHost: x\r\nTransfer-Encoding: chunked\r\n\r\n1\r\na\r\n0\r\n
+
+Status               : P ERROR
+Method               : POST
+URI string           : /misscrlf
+Version              : HTTP/1.1
+Header               : host
+  Value              : x
+
+Header               : transfer-encoding
+  Value              : chunked
+
+Body                 : a
+
+ErrMess              : Read Size of Zero : Incomplete message
+ErrNum               : 400
+
+Unparsed Length      : 0
+Unparsed Data        : 
+
+Request String  [32m[OK]
+[0mParsed          : POST /misscrlf HTTP/1.1
+Expected        : POST /misscrlf HTTP/1.1
+
+Method          [32m[OK]
+[0mParsed          : POST
+Expected        : POST
+
+Version         [32m[OK]
+[0mParsed          : HTTP/1.1
+Expected        : HTTP/1.1
+
+URI String      [32m[OK]
+[0mParsed          : /misscrlf
+Expected        : /misscrlf
+
+URI Type        [32m[OK]
+[0mParsed          : 3
+Expected        : 3
+
+URI Port int    [32m[OK]
+[0mParsed          : 80
+Expected        : 80
+
+URI auth        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI frag        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI host        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI pass        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI path        [32m[OK]
+[0mParsed          : /misscrlf
+Expected        : /misscrlf
+
+URI port string [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI query       [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI scheme      [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI user        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+errNum          [32m[OK]
+[0mParsed          : 400
+Expected        : 400
+
+errMess         [32m[OK]
+[0mParsed          : Read Size of Zero : Incomplete message
+Expected        : Read Size of Zero : Incomplete message
+
+p_state         [32m[OK]
+[0mParsed          : 3
+Expected        : 3
+
+body            [32m[OK]
+[0mParsed          : a
+Expected        : a
+
+hasBody         [32m[OK]
+[0mParsed          : 1
+Expected        : 1
+
+isChunked       [32m[OK]
+[0mParsed          : 1
+Expected        : 1
+
+
+fd  = 29
+========
+
+Test Outcome : Invalid - early EOF
+
+Test String  : POST /eof HTTP/1.1\r\nHost: x\r\nTransfer-Encoding: chunked\r\n\r\n5\r\nhello\r\n
+
+Status               : P ERROR
+Method               : POST
+URI string           : /eof
+Version              : HTTP/1.1
+Header               : host
+  Value              : x
+
+Header               : transfer-encoding
+  Value              : chunked
+
+Body                 : hello
+
+ErrMess              : Read Size of Zero : Incomplete message
+ErrNum               : 400
+
+Unparsed Length      : 0
+Unparsed Data        : 
+
+Request String  [32m[OK]
+[0mParsed          : POST /eof HTTP/1.1
+Expected        : POST /eof HTTP/1.1
+
+Method          [32m[OK]
+[0mParsed          : POST
+Expected        : POST
+
+Version         [32m[OK]
+[0mParsed          : HTTP/1.1
+Expected        : HTTP/1.1
+
+URI String      [32m[OK]
+[0mParsed          : /eof
+Expected        : /eof
+
+URI Type        [32m[OK]
+[0mParsed          : 3
+Expected        : 3
+
+URI Port int    [32m[OK]
+[0mParsed          : 80
+Expected        : 80
+
+URI auth        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI frag        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI host        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI pass        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI path        [32m[OK]
+[0mParsed          : /eof
+Expected        : /eof
+
+URI port string [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI query       [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI scheme      [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI user        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+errNum          [32m[OK]
+[0mParsed          : 400
+Expected        : 400
+
+errMess         [32m[OK]
+[0mParsed          : Read Size of Zero : Incomplete message
+Expected        : Read Size of Zero : Incomplete message
+
+p_state         [32m[OK]
+[0mParsed          : 3
+Expected        : 3
+
+body            [32m[OK]
+[0mParsed          : hello
+Expected        : hello
+
+hasBody         [32m[OK]
+[0mParsed          : 1
+Expected        : 1
+
+isChunked       [32m[OK]
+[0mParsed          : 1
+Expected        : 1
+
+
+fd  = 30
+========
+
+Test Outcome : Invalid - invalid hex with extra chars
+
+Test String  : POST /extra HTTP/1.1\r\nHost: y\r\nTransfer-Encoding: chunked\r\n\r\n5z\r\nwrong\r\n0\r\n\r\n
+
+Status               : P ERROR
+Method               : POST
+URI string           : /extra
+Version              : HTTP/1.1
+Header               : host
+  Value              : y
+
+Header               : transfer-encoding
+  Value              : chunked
+
+Body                 : 
+
+ErrMess              : Malformed Body : Invalid chunk size
+ErrNum               : 400
+
+Unparsed Length      : 12
+Unparsed Data        : wrong\r\n0\r\n\r\n
+
+Request String  [32m[OK]
+[0mParsed          : POST /extra HTTP/1.1
+Expected        : POST /extra HTTP/1.1
+
+Method          [32m[OK]
+[0mParsed          : POST
+Expected        : POST
+
+Version         [32m[OK]
+[0mParsed          : HTTP/1.1
+Expected        : HTTP/1.1
+
+URI String      [32m[OK]
+[0mParsed          : /extra
+Expected        : /extra
+
+URI Type        [32m[OK]
+[0mParsed          : 3
+Expected        : 3
+
+URI Port int    [32m[OK]
+[0mParsed          : 80
+Expected        : 80
+
+URI auth        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI frag        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI host        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI pass        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI path        [32m[OK]
+[0mParsed          : /extra
+Expected        : /extra
+
+URI port string [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI query       [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI scheme      [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI user        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+errNum          [32m[OK]
+[0mParsed          : 400
+Expected        : 400
+
+errMess         [32m[OK]
+[0mParsed          : Malformed Body : Invalid chunk size
+Expected        : Malformed Body : Invalid chunk size
+
+p_state         [32m[OK]
+[0mParsed          : 3
+Expected        : 3
+
+body            [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+hasBody         [32m[OK]
+[0mParsed          : 1
+Expected        : 1
+
+isChunked       [32m[OK]
+[0mParsed          : 1
+Expected        : 1
+
+
+fd  = 31
+========
+
+Test Outcome : Invalid - headers after body start
+
+Test String  : POST /oops HTTP/1.1\r\nHost: z\r\nTransfer-Encoding: chunked\r\n\r\nContent-Length: 10\r\n2\r\nhi\r\n0\r\n\r\n
+
+Status               : P ERROR
+Method               : POST
+URI string           : /oops
+Version              : HTTP/1.1
+Header               : host
+  Value              : z
+
+Header               : transfer-encoding
+  Value              : chunked
+
+Body                 : 
+
+ErrMess              : Malformed Body : Invalid chunk size
+ErrNum               : 400
+
+Unparsed Length      : 10
+Unparsed Data        : 2\r\nhi\r\n0\r\n
+
+Request String  [32m[OK]
+[0mParsed          : POST /oops HTTP/1.1
+Expected        : POST /oops HTTP/1.1
+
+Method          [32m[OK]
+[0mParsed          : POST
+Expected        : POST
+
+Version         [32m[OK]
+[0mParsed          : HTTP/1.1
+Expected        : HTTP/1.1
+
+URI String      [32m[OK]
+[0mParsed          : /oops
+Expected        : /oops
+
+URI Type        [32m[OK]
+[0mParsed          : 3
+Expected        : 3
+
+URI Port int    [32m[OK]
+[0mParsed          : 80
+Expected        : 80
+
+URI auth        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI frag        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI host        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI pass        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI path        [32m[OK]
+[0mParsed          : /oops
+Expected        : /oops
+
+URI port string [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI query       [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI scheme      [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI user        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+errNum          [32m[OK]
+[0mParsed          : 400
+Expected        : 400
+
+errMess         [32m[OK]
+[0mParsed          : Malformed Body : Invalid chunk size
+Expected        : Malformed Body : Invalid chunk size
+
+p_state         [32m[OK]
+[0mParsed          : 3
+Expected        : 3
+
+body            [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+hasBody         [32m[OK]
+[0mParsed          : 1
+Expected        : 1
+
+isChunked       [32m[OK]
+[0mParsed          : 1
+Expected        : 1
+
+
+fd  = 32
+========
+
+Test Outcome : Invalid - trailing headers without 0
+
+Test String  : POST /trail HTTP/1.1\r\nHost: site\r\nTransfer-Encoding: chunked\r\n\r\n2\r\nok\r\nX-Bad: oops\r\n
+
+Status               : P ERROR
+Method               : POST
+URI string           : /trail
+Version              : HTTP/1.1
+Header               : host
+  Value              : site
+
+Header               : transfer-encoding
+  Value              : chunked
+
+Body                 : ok
+
+ErrMess              : Malformed Body : Invalid chunk size
+ErrNum               : 400
+
+Unparsed Length      : 0
+Unparsed Data        : 
+
+Request String  [32m[OK]
+[0mParsed          : POST /trail HTTP/1.1
+Expected        : POST /trail HTTP/1.1
+
+Method          [32m[OK]
+[0mParsed          : POST
+Expected        : POST
+
+Version         [32m[OK]
+[0mParsed          : HTTP/1.1
+Expected        : HTTP/1.1
+
+URI String      [32m[OK]
+[0mParsed          : /trail
+Expected        : /trail
+
+URI Type        [32m[OK]
+[0mParsed          : 3
+Expected        : 3
+
+URI Port int    [32m[OK]
+[0mParsed          : 80
+Expected        : 80
+
+URI auth        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI frag        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI host        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI pass        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI path        [32m[OK]
+[0mParsed          : /trail
+Expected        : /trail
+
+URI port string [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI query       [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI scheme      [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+URI user        [32m[OK]
+[0mParsed          : 
+Expected        : 
+
+errNum          [32m[OK]
+[0mParsed          : 400
+Expected        : 400
+
+errMess         [32m[OK]
+[0mParsed          : Malformed Body : Invalid chunk size
+Expected        : Malformed Body : Invalid chunk size
+
+p_state         [32m[OK]
+[0mParsed          : 3
+Expected        : 3
+
+body            [32m[OK]
+[0mParsed          : ok
+Expected        : ok
+
+hasBody         [32m[OK]
+[0mParsed          : 1
+Expected        : 1
+
+isChunked       [32m[OK]
+[0mParsed          : 1
+Expected        : 1
+

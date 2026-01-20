@@ -1,0 +1,3 @@
+GET /search?q=open%20ai HTTP/1.1
+Host: engine.com
+

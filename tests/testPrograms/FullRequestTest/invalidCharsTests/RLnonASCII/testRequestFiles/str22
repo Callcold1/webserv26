@@ -1,0 +1,9 @@
+POST /junk HTTP/1.1
+Host: host
+Transfer-Encoding: chunked
+
+1
+x
+0
+
+GARBAGE

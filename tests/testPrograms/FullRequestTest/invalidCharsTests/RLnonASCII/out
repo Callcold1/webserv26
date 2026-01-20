@@ -1,0 +1,683 @@
+
+P_ERROR : fd  = 3
+Status               : P ERROR
+Method               : 
+URI                  : 
+Version              : 
+Body                 : 
+ErrMess              : Request Line Format Error : invalid character
+ErrNum               : 400
+
+
+*********     FD 3 : MESSAGE      ***********
+
+POST /upload HTTP/1.1
+Host: test.com
+Transfer-Encoding: chunked
+
+4
+Wiki
+5
+pedia
+0
+
+
+***********    END OF MESSAGE      ************
+
+
+P_ERROR : fd  = 4
+Status               : P ERROR
+Method               : 
+URI                  : 
+Version              : 
+Body                 : 
+ErrMess              : Request Line Format Error : invalid character
+ErrNum               : 400
+
+
+*********     FD 4 : MESSAGE      ***********
+
+POST /empty HTTP/1.1
+Host: test.com
+Transfer-Encoding: chunked
+
+0
+
+
+***********    END OF MESSAGE      ************
+
+
+P_ERROR : fd  = 6
+Status               : P ERROR
+Method               : 
+URI                  : 
+Version              : 
+Body                 : 
+ErrMess              : Request Line Format Error : invalid character
+ErrNum               : 400
+
+
+*********     FD 6 : MESSAGE      ***********
+
+POST /log HTTP/1.1
+Host: myhost.com
+Transfer-Encoding: chunked
+
+3
+abc
+3
+def
+0
+Trailer-Header: value
+
+
+***********    END OF MESSAGE      ************
+
+
+P_ERROR : fd  = 7
+Status               : P ERROR
+Method               : 
+URI                  : 
+Version              : 
+Body                 : 
+ErrMess              : Request Line Format Error : invalid character
+ErrNum               : 400
+
+
+*********     FD 7 : MESSAGE      ***********
+
+POST /small HTTP/1.1
+Host: test.org
+Transfer-Encoding: chunked
+
+1
+a
+1
+b
+1
+c
+0
+
+
+***********    END OF MESSAGE      ************
+
+
+P_ERROR : fd  = 8
+Status               : P ERROR
+Method               : 
+URI                  : 
+Version              : 
+Body                 : 
+ErrMess              : Request Line Format Error : invalid character
+ErrNum               : 400
+
+
+*********     FD 8 : MESSAGE      ***********
+
+POST /bad HTTP/1.1
+Host: badhost
+Transfer-Encoding: chunked
+
+5
+hello
+
+***********    END OF MESSAGE      ************
+
+
+P_ERROR : fd  = 10
+Status               : P ERROR
+Method               : 
+URI                  : 
+Version              : 
+Body                 : 
+ErrMess              : Request Line Format Error : invalid character
+ErrNum               : 400
+
+
+*********     FD 10 : MESSAGE      ***********
+
+POST /bhad3 HTTP/1.1
+Host: err
+Transfer-Encoding: chunked
+
+4hello
+0
+
+
+***********    END OF MESSAGE      ************
+
+
+P_ERROR : fd  = 11
+Status               : P ERROR
+Method               : 
+URI                  : 
+Version              : 
+Body                 : 
+ErrMess              : Request Line Format Error : invalid character
+ErrNum               : 400
+
+
+*********     FD 11 : MESSAGE      ***********
+
+POST /bad HTTP/1.1
+Host: bug
+Transfer-Encoding: chunked
+
+5
+hel
+0
+
+
+***********    END OF MESSAGE      ************
+
+
+P_ERROR : fd  = 12
+Status               : P ERROR
+Method               : 
+URI                  : 
+Version              : 
+Body                 : 
+ErrMess              : Request Line Format Error : invalid character
+ErrNum               : 400
+
+
+*********     FD 12 : MESSAGE      ***********
+
+POST /bad5 HTTP/1.1
+Host: test
+
+4
+data
+0
+
+
+***********    END OF MESSAGE      ************
+
+
+P_ERROR : fd  = 13
+Status               : P ERROR
+Method               : 
+URI                  : 
+Version              : 
+Body                 : 
+ErrMess              : Request Line Format Error : invalid character
+ErrNum               : 400
+
+
+*********     FD 13 : MESSAGE      ***********
+
+POST /upper HTTP/1.1
+Host: site.com
+Transfer-Encoding: chunked
+
+A
+0123456789
+0
+
+
+***********    END OF MESSAGE      ************
+
+
+P_ERROR : fd  = 14
+Status               : P ERROR
+Method               : 
+URI                  : 
+Version              : 
+Body                 : 
+ErrMess              : Request Line Format Error : invalid character
+ErrNum               : 400
+
+
+*********     FD 14 : MESSAGE      ***********
+
+POST /trailer HTTP/1.1
+Host: host.com
+Transfer-Encoding: chunked
+
+0
+X-Debug: true
+
+
+***********    END OF MESSAGE      ************
+
+
+P_ERROR : fd  = 15
+Status               : P ERROR
+Method               : 
+URI                  : 
+Version              : 
+Body                 : 
+ErrMess              : Request Line Format Error : invalid character
+ErrNum               : 400
+
+
+*********     FD 15 : MESSAGE      ***********
+
+POST /crlf HTTP/1.1
+Host: data
+Transfer-Encoding: chunked
+
+B
+Line1
+Line2
+0
+
+
+***********    END OF MESSAGE      ************
+
+
+P_ERROR : fd  = 17
+Status               : P ERROR
+Method               : 
+URI                  : 
+Version              : 
+Body                 : 
+ErrMess              : Request Line Format Error : invalid character
+ErrNum               : 400
+
+
+*********     FD 17 : MESSAGE      ***********
+
+POST /t HTTP/1.1
+Host: t.com
+Transfer-Encoding: chunked
+
+1
+x
+0
+T:1
+
+
+***********    END OF MESSAGE      ************
+
+
+P_ERROR : fd  = 19
+Status               : P ERROR
+Method               : 
+URI                  : 
+Version              : 
+Body                 : 
+ErrMess              : Request Line Format Error : invalid character
+ErrNum               : 400
+
+
+*********     FD 19 : MESSAGE      ***********
+
+POST /nodta HTTP/1.1
+Host: h
+Transfer-Encoding: chunked
+
+3
+
+0
+
+
+***********    END OF MESSAGE      ************
+
+
+P_ERROR : fd  = 20
+Status               : P ERROR
+Method               : 
+URI                  : 
+Version              : 
+Body                 : 
+ErrMess              : Request Line Format Error : invalid character
+ErrNum               : 400
+
+
+*********     FD 20 : MESSAGE      ***********
+
+POST /badtrailer HTTP/1.1
+Host: h
+Transfer-Encoding: chunked
+
+3
+foo
+0
+InvalidHeader
+
+
+***********    END OF MESSAGE      ************
+
+
+P_ERROR : fd  = 22
+Status               : P ERROR
+Method               : 
+URI                  : 
+Version              : 
+Body                 : 
+ErrMess              : Request Line Format Error : invalid character
+ErrNum               : 400
+
+
+*********     FD 22 : MESSAGE      ***********
+
+POST /junk HTTP/1.1
+Host: host
+Transfer-Encoding: chunked
+
+1
+x
+0
+
+GARBAGE
+***********    END OF MESSAGE      ************
+
+
+P_ERROR : fd  = 23
+Status               : P ERROR
+Method               : 
+URI                  : 
+Version              : 
+Body                 : 
+ErrMess              : Request Line Format Error : invalid character
+ErrNum               : 400
+
+
+*********     FD 23 : MESSAGE      ***********
+
+POST /cased HTTP/1.1
+Host: site
+Transfer-Encoding: Chunked
+
+2
+hi
+0
+
+
+***********    END OF MESSAGE      ************
+
+
+P_ERROR : fd  = 24
+Status               : P ERROR
+Method               : 
+URI                  : 
+Version              : 
+Body                 : 
+ErrMess              : Request Line Format Error : invalid character
+ErrNum               : 400
+
+
+*********     FD 24 : MESSAGE      ***********
+
+POST /q?x=1 HTTP/1.1
+Host: s
+Transfer-Encoding: chunked
+
+6
+query!
+0
+
+
+***********    END OF MESSAGE      ************
+
+
+P_ERROR : fd  = 25
+Status               : P ERROR
+Method               : 
+URI                  : 
+Version              : 
+Body                 : 
+ErrMess              : Request Line Format Error : invalid character
+ErrNum               : 400
+
+
+*********     FD 25 : MESSAGE      ***********
+
+POST /l HTTP/1.1
+Host: h
+Transfer-Encoding: chunked
+
+2
+ok
+
+0
+
+
+***********    END OF MESSAGE      ************
+
+
+P_ERROR : fd  = 26
+Status               : P ERROR
+Method               : 
+URI                  : 
+Version              : 
+Body                 : 
+ErrMess              : Request Line Format Error : invalid character
+ErrNum               : 400
+
+
+*********     FD 26 : MESSAGE      ***********
+
+POST /utg9f8 HTTP/1.1
+Host: h
+Transfer-Encoding: chunked
+
+4
+Ã¥ÃŸÃ§Ã¸
+0
+
+
+***********    END OF MESSAGE      ************
+
+
+P_ERROR : fd  = 27
+Status               : P ERROR
+Method               : 
+URI                  : 
+Version              : 
+Body                 : 
+ErrMess              : Request Line Format Error : invalid character
+ErrNum               : 400
+
+
+*********     FD 27 : MESSAGE      ***********
+
+POST /custom HTTP/1.1
+Host: test
+Transfer-Encoding: chunked
+
+4
+test
+0
+X-Trailer: yes
+
+
+***********    END OF MESSAGE      ************
+
+
+P_ERROR : fd  = 28
+Status               : P ERROR
+Method               : 
+URI                  : 
+Version              : 
+Body                 : 
+ErrMess              : Request Line Format Error : invalid character
+ErrNum               : 400
+
+
+*********     FD 28 : MESSAGE      ***********
+
+POST /misscrlf HTTP/1.1
+Host: x
+Transfer-Encoding: chunked
+
+1
+a
+0
+
+***********    END OF MESSAGE      ************
+
+
+P_ERROR : fd  = 30
+Status               : P ERROR
+Method               : 
+URI                  : 
+Version              : 
+Body                 : 
+ErrMess              : Request Line Format Error : invalid character
+ErrNum               : 400
+
+
+*********     FD 30 : MESSAGE      ***********
+
+POST /extra HTTP/1.1
+Host: y
+Transfer-Encoding: chunked
+
+5z
+wrong
+0
+
+
+***********    END OF MESSAGE      ************
+
+
+P_ERROR : fd  = 31
+Status               : P ERROR
+Method               : 
+URI                  : 
+Version              : 
+Body                 : 
+ErrMess              : Request Line Format Error : invalid character
+ErrNum               : 400
+
+
+*********     FD 31 : MESSAGE      ***********
+
+POST /oops HTTP/1.1
+Host: z
+Transfer-Encoding: chunked
+Content-Length: 10
+
+2
+hi
+0
+
+
+***********    END OF MESSAGE      ************
+
+
+P_ERROR : fd  = 32
+Status               : P ERROR
+Method               : 
+URI                  : 
+Version              : 
+Body                 : 
+ErrMess              : Request Line Format Error : invalid character
+ErrNum               : 400
+
+
+*********     FD 32 : MESSAGE      ***********
+
+POST /tr
+il HTTP/1.1
+Host: site
+Transfer-Encoding: chunked
+
+2
+ok
+X-Bad: oops
+
+***********    END OF MESSAGE      ************
+
+Read operation = 0 : fd  = 5
+P_ERROR : fd  = 5
+Status               : P ERROR
+Method               : 
+URI                  : 
+Version              : 
+Body                 : 
+ErrMess              : Read Size of Zero : Incomplete message
+ErrNum               : 400
+
+Read operation = 0 : fd  = 16
+P_ERROR : fd  = 16
+Status               : P ERROR
+Method               : 
+URI                  : 
+Version              : 
+Body                 : 
+ErrMess              : Read Size of Zero : Incomplete message
+ErrNum               : 400
+
+Read operation = 0 : fd  = 21
+P_ERROR : fd  = 21
+Status               : P ERROR
+Method               : 
+URI                  : 
+Version              : 
+Body                 : 
+ErrMess              : Read Size of Zero : Incomplete message
+ErrNum               : 400
+
+Read operation = 0 : fd  = 29
+P_ERROR : fd  = 29
+Status               : P ERROR
+Method               : 
+URI                  : 
+Version              : 
+Body                 : 
+ErrMess              : Read Size of Zero : Incomplete message
+ErrNum               : 400
+
+
+P_ERROR : fd  = 9
+Status               : P ERROR
+Method               : POST
+URI                  : /ba€g
+Version              : HTTP/1.1
+Body                 : 
+ErrMess              : Missing 'Content-Type' header (POST)
+ErrNum               : 400
+
+Header               : host
+  Value              : test
+
+Header               : transfer-encoding
+  Value              : chunked
+
+
+*********     FD 9 : MESSAGE      ***********
+
+POST /ba€g HTTP/1.1
+Host: test
+Transfer-Encoding: chunked
+
+ZZ
+fail
+0
+
+
+***********    END OF MESSAGE      ************
+
+
+P_ERROR : fd  = 18
+Status               : P ERROR
+Method               : POST
+URI                  : /ne€g
+Version              : HTTP/1.1
+Body                 : 
+ErrMess              : Missing 'Content-Type' header (POST)
+ErrNum               : 400
+
+Header               : host
+  Value              : bad
+
+Header               : transfer-encoding
+  Value              : chunked
+
+
+*********     FD 18 : MESSAGE      ***********
+
+POST /ne€g HTTP/1.1
+Host: bad
+Transfer-Encoding: chunked
+
+-5
+nope
+0
+
+
+***********    END OF MESSAGE      ************
+
