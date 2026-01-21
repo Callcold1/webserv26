@@ -12,8 +12,8 @@ nginx configuration contexts are hierarchical:
 
     main (global)
      └── http
-     └── server
-     └── location
+        └── server
+              └── location
 
 
 Rules:

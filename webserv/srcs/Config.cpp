@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/14 09:52:13 by kmooney           #+#    #+#             */
-/*   Updated: 2026/01/19 13:57:25 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/01/21 09:38:18 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,11 +23,6 @@ Config Config::operator=(const Config &other) {
 }
 
 Config::~Config() {
-}
-
-// GETTERS
-int	Config::getNumberOfServers(void) {
-	return _servers.size();
 }
 
 // std::string Config::getRootDirConfig() const { return root_dir; }
@@ -115,11 +110,54 @@ std::ostream& Config::outputLocations(std::ostream& os){
 >>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<
 */
 
+// GETTERS
+int	Config::getNumberOfServers(void) const{
+	return _servers.size();
+}
+
+const std::string&	Config::getConfigFile(void) const { 
+	return _config_file; 
+}
+
+std::string	Config::getErrorPage(int error_code){
+	
+	std::map<int, std::string>::iterator it;
+	for (it = _error_pages.begin(); it != _error_pages.end(); it++){
+		if (it->first == error_code)
+			return it->second;
+	}
+}
+	
+
+int	Config::getMaxBodySize(int max_body_size) const {
+	 _max_body = max_body_size;
+}
+
+int	Config::getNumberOfServers(void) const {
+
+}
+
+std::string	Config::getRootDir() const {
+
+}
+
 /*
 >>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<
 >>>>>>		SETTERS 		<<<<<<
 >>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<
 */
+void	Config::setConfigFile(const std::string& config_file){
+
+}
+
+void 	Config::setErrorPage(int error_status, std::string error_page) {
+	 _error_pages[error_status] = error_page;
+}
+
+void 	Config::setMaxBodySize(long long max_body_size) {
+	 _max_body = max_body_size;
+}
+
 
 /*
 >>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<

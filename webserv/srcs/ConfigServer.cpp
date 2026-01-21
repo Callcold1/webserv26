@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/19 10:47:44 by kmooney           #+#    #+#             */
-/*   Updated: 2026/01/19 14:27:46 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/01/21 16:02:30 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,9 +18,9 @@ ConfigServer::~ConfigServer( void ){}
 
 ConfigServer::ConfigServer(const ConfigServer &other){}
 
-ConfigServer& ConfigServer::operator=(const ConfigServer &other) {
+ConfigServer& ConfigServer::operator=(const ConfigServer& other) {
 	(void) other;
-    return *this;
+	return *this;
 }
 
 /*
@@ -29,40 +29,73 @@ ConfigServer& ConfigServer::operator=(const ConfigServer &other) {
 >>>>>>>>>>>>>>><<<<<<<<<<<<<<<
 */
 
-// DIRECTLY RETURNED VARIABLES : 
-
-const std::map<int, std::string>&	ConfigServer::getErrorPages(void){
+const std::map<int, std::string>&	ConfigServer::getErrorPages(void) const {
 	return _error_pages;
 }
 
-const std::vector<std::string>&	ConfigServer::getMethods(void) {
+const std::vector<std::string>&	ConfigServer::getMethods(void) const {
 	return _methods;
 }
 
-const std::string&	ConfigServer::getName(void){
+const std::string&	ConfigServer::getName(void) const {
 	return _name;
 }
 
-int	ConfigServer::getPort(void){
-
-	 return _port; 
+int	ConfigServer::getPort(void) const {
+	 return _port;
 }
 
-const std::string&	ConfigServer::getRootDir(void) {
+const std::string&	ConfigServer::getRootDir(void) const {
 	return _root_dir;
 }
 
-const std::vector<ConfigLocation>&	ConfigServer::getServerLocations(void) { //NEED SEARCH TERM AS PARAMETER?
+const std::vector<ConfigLocation>&	ConfigServer::getServerLocations(void) const { //NEED SEARCH TERM AS PARAMETER?
 	return _locations;
 }
 
-// PARAMATERISED GETTERS : 
+/*
+>>>>>>>>>>>>>>><<<<<<<<<<<<<<<
+>>>>>>		FINDERS		<<<<<<
+>>>>>>>>>>>>>>><<<<<<<<<<<<<<<
+*/
 
-const ConfigLocation&	ConfigServer::getLocation(const std::string& name){
-
-	std::vector<ConfigLocation>::iterator it = _locations.find(name);
-
+bool	ConfigServer::findErrorPage(int error_code, std::string& path) {
 	
+	std::map<int, std::string>::iterator it = _error_pages.find(error_code);
+	
+	if (it == _error_pages.end())
+		return false;
+	path = it->second;
+	return true;
+}
+
+ConfigLocation*	ConfigServer::findLocation(const std::string& uri) {
+	
+	std::vector<ConfigLocation>::iterator it;
+
+	for ( it = _locations.begin(); it != _locations.end(); it++) {
+		if (it->match_uri(uri))
+			return &(*it);
+	}
+	return NULL;
+}
+
+/*
+>>>>>>>>>>>>>>><<<<<<<<<<<<<<<
+>>>>>>		CHECKERS	<<<<<<
+>>>>>>>>>>>>>>><<<<<<<<<<<<<<<
+*/
+
+bool	ConfigServer::checkServerMethod(const std::string& method) const{
+	
+	std::vector<std::string>::const_iterator it;
+	std::vector<std::string>::const_iterator end = _methods.end();
+
+	for (it = _methods.begin(); it != end; it++){
+		if (method.compare(*it) == 0)
+			return true;
+	}
+	return false;
 }
 
 /*
@@ -76,20 +109,20 @@ void	ConfigServer::setErrorPage(int error_status, std::string error_page){
 }
 
 void	ConfigServer::setLocation(ConfigLocation& location){
-	_locations.push_back(location); 
+	_locations.push_back(location);
 }
 
 void	ConfigServer::setMethods(const std::vector<std::string> &allowed_methods){
 	_methods = allowed_methods; 
 }
-\n
+
 void	ConfigServer::setName(std::string name){
 	_name = name; 
 }
 
 void	ConfigServer::setPort(int port){
 	if (port <= 0 || port > 65535)
-        throw std::runtime_error("Invalid port");
+		throw std::runtime_error("Invalid port");
 	 _port = port;
 }
 

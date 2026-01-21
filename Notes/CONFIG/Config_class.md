@@ -1,9 +1,96 @@
-# CONFIG CLASS
+# CONFIG/CONFIG PARSER
 
-## CONFIG CLASS STRUCTURE
+## CONFIG/CONFIG PARSER CLASS STRUCTURE
 
-The Config class returns an object that contains information on the server structures provided in the config file
+The ConfigParser class returns a pointer to a Config object.
+It allocates memory for a Config object, and returns a pointer to that object.
 
+The ConfigParser is called by means of a static function, and so no ConfigParser object is instantiated.
+
+The calling function is responsible or deleting the Config object.
+
+## CONFIG STRUCTURE
+
+The initial section of the config file contains definitions of variables that apply globally.
+This section is followed by a series of nested blocks of the following types :
+
+    GLOBAL VARIABLES
+          |
+      HTTP BLOCK (contains any number of server blocks)
+          |
+          └── SERVER BLOCK (contains Server-level variables and any number of Location blocks)
+                    |
+                    └── LOCATION BLOCK(contains Location-level variables)
+
+### CONFIG STRUCTURE TABLE
+
+|   BLOCK |   DELIMITER   |   CONTENTS   |  ASSOCIATED CLASS   |
+|---------|---------------|--------------|---------------------|
+| HTTP | {} | Variables that apply at global-level | Config |
+|        |    | Server Blocks | |
+| SERVER | {} | Variables that apply at server-level | ConfigServer |
+|        |    | Location Blocks | |
+| LOCATION | {} | Variables that apply at location-level | ConfigLocation |
+
+### CONFIG HIERARCHY
+
+- Inner scopes **inherit** from outer scopes unless overridden
+- Not every directive is valid in every scope
+- Some directives are intentionally restricted for correctness and performance
+
+The Config file is essentially parsed into 3 different object types:
+|   Class |   Variable   | Parsed? |   Source   |  Description |
+|---------|--------------|---------|------------|--------------|
+| Config | _config_file | No | Command line arg or DEFAULT_CONFIG used (path is defined in Config.hpp) | Path to config |
+| | _error_pages | Yes | HTTP block| Error codes (and corresponding paths to error-file?) |
+| | _log_names | Yes | pre-HTTP block | Name of logs to be created and formats? |
+| | _max_body | Yes | HTTP block | Maximum body size in bytes |
+| | _max_connections | Yes | HTTP block | Maximum number of connections (across all servers - informs server/poll functions) |
+| | _servers | Yes | HTTP block | Container of servers (one for each server block - should it be one for each port? Do we support virtual servers?) |
+| | _timeout_ka | Opt | HTTP block or DEFAULT_TIMEOUT_RW in Config.hpp | Default timeout for keep-alive |
+| | _timeout_rw | Opt | HTTP block | Default timeout for read/write operations |
+| | | | |
+| ConfigServer | Yes | Server block | |
+| ConfigLocation | | | Location block |
+
+## CONFIG CLASS
+
+Config class objects contain the following variables :
+
+```c++
+std::string 						_config_file; 			// config file name	(if not provided, revert to DEFAULT_CONF)
+std::map<int, std::string> 			_error_pages;			// Map of error pages to generate
+std::vector<std::string>			_log_names;				// Vector of log names to be generated
+long long							_max_body;				// Max acceptable body size in bytes
+int									_max_connections; 		// (e.g. 1024)
+std::vector<ConfigServer>			_servers;				// Vector of servers
+struct tm							_timeout_ka;			// Length of time before keep-alive timeout
+struct tm							_timeout_rw;			// Length of time before rw timeout
+```
+
+## SERVER CLASS
+
+```c++
+std::map<int, std::string>			_error_pages;
+std::vector<ConfigLocation> 		_locations;			// Vector of location structs
+std::vector<std::string>			_methods;			// Methods permitted for all locations on server (can be superceded by location_methods)
+std::string 						_name;				// Server name
+int 								_port;				// Port that server will listen on
+std::string 						_root_dir;			// Root directory for server - overrides global value
+```
+
+## LOCATION CLASS
+
+```c++
+bool								_autoindex;			// Indicates if the location has autoindex ()
+std::string							_index;
+std::vector<std::string>			_location_methods;
+std::string 						_name;
+std::string							_path;
+bool								_redirect_status;
+std::string							_redirect_url;
+std::string							_root_dir;			// Root directory for location
+```
 ### CONFIG FILE
 
 #### CONFIG FILE PATH
@@ -17,11 +104,9 @@ The path to the config file is either :
 
 #### CONFIG FILE FORMAT
 
-The config file is expected to be in JSON format.
+The config file is expected to be in JSON format (Global variables may precede the JSON format, which should start from point 'http {}' or 'HTTP {}')
 
 ## LOGGING
-
-The Config object will be available to the entire program, so it makes sense to define the paths to the logs in the config class
 
 Separate logs will be created for
 
@@ -176,9 +261,9 @@ Non-blocking safe
 
 Logging must not block:
 
-Avoid logging inside tight loops
+- Avoid logging inside tight loops
 
-Avoid large strings
+- Avoid large strings
 
 ## CONFIG CLASS ERROR HANDLING
 
@@ -201,22 +286,22 @@ Some are mandatory and some are optional
 
 ### OPTIONAL VARIABLES
 
-### SERVERS STRUCT AND VARIABLES
+### SERVERS CLASS AND VARIABLES
 
 ```c++
-typedef struct server_s {
+class ConfigServer {
 
-std::map<int, std::string>	error_pages;
-std::vector<location_t> 	locations;			// Vector of location structs
-std::string 				name;				// Server name
-int 						port;				// Port that server will listen on
-std::string 				root_dir;			// Root directory for server
-std::vector<std::string>	server_methods;		// Methods permitted for all locations on server (can be superceded by location_methods)
-} server_t;
+std::map<int, std::string>  _error_pages;
+std::vector<ConfigLocation> _locations;			// Vector of location structs
+std::vector<std::string>    _methods;			// Methods permitted for all locations on server (can be superceded by location_methods)
+std::string                 _name;				// Server name
+int                         _port;				// Port that server will listen on
+std::string                 _root_dir;			// Root directory for server - overrides global value
+};
 
 ```
 
-#### LOCATIONS STRUCT AND VARIABLES
+#### LOCATION CLASS AND VARIABLES
 
 ##### AUTOINDEX
 

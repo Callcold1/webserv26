@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/16 15:18:30 by kmooney           #+#    #+#             */
-/*   Updated: 2026/01/19 13:57:22 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/01/21 16:02:00 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,21 +31,22 @@ Config& ConfigParser::parseConfigFile(std::string& filename)
 		throw std::runtime_error("Could not open configuration file.");
 
 	config_parser_state state = CONFIG_PARSER_GLOBAL;
+	config_parser_state previous = CONFIG_PARSER_GLOBAL;
 	Config& config = new Config[];
-	std::string line;
 
 	while (true){
-		
-		std::getline(stream, line);
-		trimWS(line);
-		
+					
+		previous = state;
 		switch (state){
-			case CONFIG_PARSER_GLOBAL 		: {parseGlobalAttributes(state, config, line); continue;}
-			case CONFIG_PARSER_SERVER 		: {parseServerBlock(state, config, line); continue;}
-			case CONFIG_PARSER_LOCATION 	: {parseLocationBlock(state, config, line); continue;}
-			case CONFIG_PARSER_VALIDATION 	: {parseLocationBlock(state, config, line); continue;}
+			case CONFIG_PARSER_COMMENT 		: {parseComment(config, stream); state = previous; continue;}
 			case CONFIG_PARSER_COMPLETE 	: break;
-			default 						: throw std::exception(); break;
+			//case CONFIG_PARSER_ERROR		: {clean up, throw error and exit;}
+			case CONFIG_PARSER_GLOBAL 		: {parseGlobalAttributes(config, stream); state = CONFIG_PARSER_COMPLETE; continue;}
+			case CONFIG_PARSER_HTTP 		: {parseHttpBlock(config, stream); state = previous; continue;}
+			case CONFIG_PARSER_LOCATION 	: {parseLocationBlock(config, stream); state = previous; continue;}
+			case CONFIG_PARSER_SERVER 		: {parseServerBlock(config, stream); state = previous; continue;}
+			//case CONFIG_PARSER_VALIDATION 	: {(config, line); state = previous; continue;}
+			default 						: state = CONFIG_PARSER_ERROR; continue; // ? unnecessary?
 		}
 	}
 	return config;
@@ -72,19 +73,18 @@ Config& ConfigParser::parseConfigFile(std::string& filename)
 	character sets
 
 */
-void	ConfigParser::parseGlobalAttributes(config_parser_state& state, Config& config, std::string& line){
+void	ConfigParser::parseGlobalAttributes(Config& config, std::ifstream& stream){
 
 	while (state == CONFIG_PARSER_GLOBAL) {
-
+		std::string line;
+		line << stream;
 		if (line.empty() || line[0] == '#')
 			continue;
 		if ( line == "server {" || line == "server{" || line == "Server {" || line == "Server{")
 			state == CONFIG_PARSER_SERVER;
-		
-	return config;
 }
 
-void	ConfigParser::parseServerBlock(config_parser_state& state, Config& config, std::ifstream& stream){
+void	ConfigParser::parseServerBlock(Config& config, std::ifstream& stream){
 	ServerBlock* server_block = new ServerBlock;
 	std::string line;
 	
@@ -126,7 +126,7 @@ if (line.find("listen") == 0)
 	}
 }
 
-void	ConfigParser::parseLocationBlock(config_parser_state& state, Config& config, std::ifstream& stream){
+void	ConfigParser::parseLocationBlock(Config& config, std::ifstream& stream){
 	location_t* location = new location_t;
 	std::string line;
 	
@@ -140,6 +140,18 @@ void	ConfigParser::parseLocationBlock(config_parser_state& state, Config& config
 
 }
 
+void	ConfigParser::parseLocationBlock(Config& config, std::ifstream& stream){
+	location_t* location = new location_t;
+	std::string line;
+	
+	while (state == CONFIG_PARSER_LOCATION) {
+		std::getline(stream, line);
+
+		if (line == "}")
+			state == CONFIG_PARSER_SERVER;
+	}
+	std::string line;
+}
 
 /*
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<
@@ -263,42 +275,11 @@ void ConfigParser::appendPathToRoot()
 	Should we maintain a map of Routes for all servers to make this easier to manage?
 
 */
-
-/*
-	This struct has been added to the Route class
-	An instance should be used as a private variable in the Route class
-	
-	struct targetInfo_s
-	{
-		bool inaccessible;		// set to true if path can"t be accessed
-		bool is_dir;			// set to true if path is a dir
-		bool is_file;			// set to true if path is a file
-		bool not_found;			// set to true if file not found
-		__mode_t permissions;	// the file permissions
-		std::string path;		// the path (root + '/' endpoint )
-
-		targetInfo_s() : inaccessible(false), is_dir(false), is_file(false), not_found(false), permissions(0), path("") {}
-	};
-*/
-void ConfigParser::getTargetPathPermissions(){
-	struct stat fileStat;
-	
-	if (stat(_target.path.c_str(), &fileStat) == 0)
-	{
-		_target.is_dir = S_ISDIR(fileStat.st_mode);
-		_target.is_file = S_ISREG(fileStat.st_mode);
-		_target.permissions = fileStat.st_mode;
-	}
-	else if(errno == ENOENT)
-		_target.not_found = true;
-	else if(errno == EACCES)
-		_target.inaccessible = true;
-}
-
+// call this function to check file info : getFileInfo(std::string& path, std::string& root_dir)
 void ConfigParser::setRouteTarget()
 {
 	appendPathToRoot();
-	getTargetPathPermissions();
+	getFilePermissions();
 	/* 
 		Need to decide if we throw error if path inaccessible or not found
 		 or just log it?

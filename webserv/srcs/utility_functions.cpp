@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/16 15:33:48 by kmooney           #+#    #+#             */
-/*   Updated: 2026/01/18 17:20:53 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/01/21 08:59:45 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -346,6 +346,20 @@ bool isAccessible(const std::string &path)
 	return access(path.c_str(), R_OK) == 0;
 }
 
+/*
+	struct fileInfo_s
+	{
+		bool inaccessible;		// set to true if path can"t be accessed
+		bool is_dir;			// set to true if path is a dir
+		bool is_file;			// set to true if path is a file
+		bool not_found;			// set to true if file not found
+		__mode_t permissions;	// the file permissions
+		std::string path;		// the path (root + '/' endpoint )
+
+		fileInfo_s() : inaccessible(false), is_dir(false), is_file(false), not_found(false), permissions(0), path("") {}
+	};
+*/
+
 void	getFilePermissions(fileInfo_s* fileinfo){
 	struct stat fileStat;
 	
@@ -386,7 +400,7 @@ std::string	appendPathToRoot(fileInfo_s& fileinfo, std::string& path, std::strin
 		trimEndChar(root_dir, '/');
 	if (path[0] == '/')
 		trimLeadingChar(path, '/');
-	fileinfo->path = root_dir + '/' + path;
+	fileinfo.path = root_dir + '/' + path;
 }
 
 std::vector<std::string> split_path(std::istringstream &iss)

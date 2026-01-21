@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/14 09:52:22 by kmooney           #+#    #+#             */
-/*   Updated: 2026/01/19 13:57:24 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/01/21 09:37:52 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,14 +27,14 @@
 class Config {
 	private:
 
-	std::string 						_default_config; 		// Default config file	-> defined above in DEFAULT_CONF
+	std::string 						_config_file; 			// config file name	(if not provided, revert to DEFAULT_CONF)
 	std::map<int, std::string> 			_error_pages;			// Map of error pages to generate
 	std::vector<std::string>			_log_names;				// Vector of log names to be generated
 	long long							_max_body;				// Max acceptable body size in bytes
 	int									_max_connections; 		// (e.g. 1024)
 	std::vector<ConfigServer>			_servers;				// Vector of servers
-	struct tm							_timeout_rw;			// Length of time before rw timeout
 	struct tm							_timeout_ka;			// Length of time before keep-alive timeout
+	struct tm							_timeout_rw;			// Length of time before rw timeout
 
 	public:
 
@@ -46,20 +46,20 @@ class Config {
 										
 										// Getters
    	// ConfigLocation*					getLocationForTarget(const std::string &target);
-	
+	// GETTERS
+	const std::string&					getConfigFile(void) const;			// return name of config file
+	std::string 						getErrorPage(int error_code);		// return path to error_page corresponding to error_code	
+	const long long						getMaxBodySize(void) const;			// Max body size in bytes
+	int									getNumberOfServers(void) const;		// Max body size in bytes
+	std::string 						getRootDir() const;					// Max body size in bytes
+
 	// SETTERS
 
-	void 								setDefaultFile(void) { _default_config = DEFAULT_CONF; }
-	void 								setErrorPage(int error_status, std::string error_page) { _error_pages[error_status] = error_page; }
-	void 								setMaxBodySize(int max_body_size) { _max_body = max_body_size; }
-	
-	// GETTERS
-	void 								getDefaultFile(void) { _default_config = DEFAULT_CONF; }
-	void 								getErrorPage(int error_status, std::string error_page) { _error_pages[error_status] = error_page; }
-	long long							getMaxBodySize(int max_body_size) { _max_body = max_body_size; } // Max body size in bytes
-	int									getNumberOfServers(void);
-	std::string 						getRootDir() const;
-	
+	void 								setConfigFile(const std::string& config_file);
+	void 								setErrorPage(int error_status, std::string error_page);
+	void 								setMaxBodySize(long long max_body_size);
+		
+
 	// QUERIES USED BY SERVER CLASS 
 	const ConfigServer&					getServer(const std::string& name); // Return ConfigServer corresponding to given name
 

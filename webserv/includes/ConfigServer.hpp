@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/19 09:55:28 by kmooney           #+#    #+#             */
-/*   Updated: 2026/01/19 14:21:30 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/01/21 16:02:39 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,28 +24,33 @@ class ConfigServer {
 		std::string 						_root_dir;			// Root directory for server - overrides global value
 
 	public:
-											/* CONSTRUCTORS */
+											/*	CONSTRUCTORS	*/
 											ConfigServer( void );
 											ConfigServer( const ConfigServer& other );
 
-											/* DESTRUCTORS */
+											/*	DESTRUCTORS	*/
 											~ConfigServer( void );
 	
-											/* COPY ASSIGNMENT */
+											/*	COPY ASSIGNMENT	*/
 		ConfigServer&						operator=(const ConfigServer& other);
 
-											//Getters
-		const std::map<int, std::string>&	getErrorPages(void);		// Do we have these saved to specific paths or generate them? I would generate
-		const std::vector<std::string>&		getMethods(void);
-		const std::string&					getName(void);
-		int									getPort(void);
-		const std::string& 					getRootDir(void);
-		const std::vector<ConfigLocation>&	getServerLocations(void);
-											
-		// QUERIES USED BY REQUEST CLASS 
-		const ConfigLocation&				getLocation(const std::string& name); // Identify ConfigLocation corresponding to the given name/path in Request URI
+											/*	GETTERS	*/
+		const std::map<int, std::string>&	getErrorPages(void) const;							// Return all error pages at server level
+		const std::vector<std::string>&		getMethods(void) const;								// Return vector of methods available on server
+		const std::string&					getName(void) const;								// Return name of server
+		int									getPort(void) const;								// Return server listening port
+		const std::string& 					getRootDir(void) const;								// Return server root directory
+		const std::vector<ConfigLocation>&	getServerLocations(void) const;						// Return vector of locations on server
+		const ConfigLocation&				getServerLocation(const std::string& path);			// Return single location if accessible on server
 
-											//Setters
+											/*	FINDERS	*/
+		bool								findErrorPage(int error_code, std::string& path);	// Return bool to inidicate if error_code found in map - if true the path to the error_page is returned
+		ConfigLocation*						findLocation(const std::string& uri);				// Identify ConfigLocation corresponding to the given name/path in Request URI
+
+											/*	CHECKERS	*/
+		bool								checkServerMethod(const std::string& method) const; // Check if server supports given method
+		
+											/*	SETTERS	*/
 		void 								setErrorPage(int error_status, std::string error_page);
 		void 								setLocation(ConfigLocation& location);
 		void 								setMethods(const std::vector<std::string> &allowed_methods);
@@ -53,7 +58,7 @@ class ConfigServer {
 		void 								setPort(int port);
 		void 								setRootDirConfig(std::string root_dir);
 
-											//Validation
+											/*	VALIDATION	*/
 
 };
 								//Printing

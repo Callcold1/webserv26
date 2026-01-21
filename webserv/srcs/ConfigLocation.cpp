@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/19 10:47:58 by kmooney           #+#    #+#             */
-/*   Updated: 2026/01/19 14:34:04 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/01/21 13:15:09 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,27 +30,27 @@ ConfigLocation& ConfigLocation::operator=(const ConfigLocation &other) {
 */
 
 const std::string&	ConfigLocation::getPath(void) const{
-	return ;
+	return _path;
 }
 
 const std::string&	ConfigLocation::getRootDir(void) const{
-	return ;
+	return _root_dir;
 }	
 
 const std::string&	ConfigLocation::getIndex(void) const{
-	return ;
+	return _index ;
 }	
 
 const bool	ConfigLocation::getAutoIndex(void) const{
-	return ;
+	return _autoindex;
 }	
 
 const bool	ConfigLocation::getRedirectStatus(void) const{
-	return ;
+	return _redirect_status;
 }	
 
 const std::string&	ConfigLocation::getRedirectURL(void) const{
-	return ;
+	return _redirect_url;
 }
 
 /*
@@ -59,28 +59,38 @@ const std::string&	ConfigLocation::getRedirectURL(void) const{
 >>>>>>>>>>>>>>><<<<<<<<<<<<<<<
 */
 
-void ConfigLocation::setAutoIndex(void){
-
+void	ConfigLocation::setAutoIndex(bool autoindex){
+	_autoindex = autoindex;
 }	
 
-void ConfigLocation::setIndex(void){
-
+void	ConfigLocation::setIndex(const std::string& index){
+	_index = index;
 }	
 
-void ConfigLocation::setPath(void){
-
+void	ConfigLocation::setPath(const std::string& path){
+	_path = path;
 }
 
-void ConfigLocation::setRedirectStatus(void){
-
+void	ConfigLocation::setRedirectStatus(bool redirect_status){
+	_redirect_status = redirect_status;
 }	
 
-void ConfigLocation::setRedirectURL(void){
-
+void	ConfigLocation::setRedirectURL(const std::string& redirect_url){
+	_redirect_url = redirect_url;
 }
 
-void ConfigLocation::setRootDir(void){
+void	ConfigLocation::setRootDir(const std::string& root_dir){
+	_root_dir = root_dir;
+}
 
+/*
+>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<
+>>>>>>		CHECKERS		<<<<<<
+>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<
+*/
+
+bool	ConfigLocation::match_uri(const std::string& uri){
+	//LOGIC
 }
 
 /*
