@@ -3,7 +3,9 @@ response headers:
 	-Content length	: Y/N	usually yes but not for chunked 
 	-Content type	: YES	needs to know sontent type -> otherwise security risk by the browser sniffing
 	-connection		: YES	keep alive generally but for 4xx errors (client side) close bc security
+	-Date			: YES	easy to do
 	-Location		: YES	for 3xx (redirect) and 201(resource creation)
+	-Allow			: MAYBE	dont need to but for 405 its clean to give allowed methods
 	-Retry after	: MAYBE	in 503 + 429 (service unavailable + to many requests) - not necessary but good to have probably (tecnically redirect too but we dont need waiting time)
 	-accept ranges	: NO	dont have to implement but maybe consider for very lange file types
 	-age 			: NO 	dont need bc no proxy -> always gonna be 0
