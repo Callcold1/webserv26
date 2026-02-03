@@ -6,7 +6,7 @@
 /*   By: jake <jake@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/07 10:25:15 by kmooney           #+#    #+#             */
-/*   Updated: 2026/01/13 17:51:56 by jake             ###   ########.fr       */
+/*   Updated: 2026/02/03 21:06:53 by jake             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,8 @@
 #include <iostream>
 
 #include "Server.hpp"
+#include "ErrorResponse.hpp"
+#include "RediResponse.hpp"
 
 /*
 
@@ -32,7 +34,14 @@ close()     → release socket
 
 int	main()
 {
-	Server server;
+	//Server server;
 	
-	server.loop();
+	//server.loop();
+
+	RediResponse r(404);
+
+	r.print_response();
+	
+	return(0);
+	
 }
