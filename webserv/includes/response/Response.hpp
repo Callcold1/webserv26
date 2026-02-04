@@ -7,6 +7,7 @@
 #include "helpers.hpp"
 
 #define HTTP_VERSION "HTTP/1.1"
+#define NOT_FOUND_ERROR 404
 
 typedef std::map<std::string, std::string> HeaderMap_t;
 
@@ -19,7 +20,7 @@ public:
 	Response &operator=(const Response &other);
 	~Response();
 
-	virtual void	generate() = 0;
+	virtual int	generate() = 0;
 	std::string		status_text();
 	std::string		serialize();
 

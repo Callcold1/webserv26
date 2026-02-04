@@ -10,6 +10,6 @@ public:
 	CgiResponse &operator=(const CgiResponse &other);
 	~CgiResponse();
 
-	void	generate();
+	int	generate();
 	
 };

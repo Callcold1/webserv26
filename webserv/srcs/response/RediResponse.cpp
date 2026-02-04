@@ -1,6 +1,6 @@
 #include "RediResponse.hpp"
-// #include <unistd.h>
-// #include <fcntl.h>
+#include <unistd.h>
+#include <fcntl.h>
 
 RediResponse::RediResponse() : Response()
 {
@@ -24,12 +24,13 @@ RediResponse &RediResponse::operator=(const RediResponse &other)
 RediResponse::~RediResponse()
 {}
 
-void RediResponse::generate()
+int RediResponse::generate()
 {
 	get_location();
 	gen_redi_page();
 	defaultHeaders();
 	redi_headers();
+	return (0);
 }
 
 void RediResponse::gen_redi_page()
@@ -47,9 +48,9 @@ void RediResponse::gen_redi_page()
 		</body>\n\
 	</html>";
 
-	// int fd = open("redifile.html", O_CREAT| O_WRONLY | O_TRUNC, 0644);
-	// write(fd, _body.c_str(), get_content_len());
-	// close(fd);
+	int fd = open("redifile.html", O_CREAT| O_WRONLY | O_TRUNC, 0644);
+	write(fd, _body.c_str(), get_content_len());
+	close(fd);
 }
 
 void RediResponse::redi_headers()

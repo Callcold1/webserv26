@@ -1,6 +1,6 @@
 #include "ErrorResponse.hpp"
-//#include <unistd.h>
-//#include <fcntl.h>
+#include <unistd.h>
+#include <fcntl.h>
 
 ErrorResponse::ErrorResponse() : Response()
 {
@@ -24,11 +24,12 @@ ErrorResponse &ErrorResponse::operator=(const ErrorResponse &other)
 ErrorResponse::~ErrorResponse()
 {}
 
-void ErrorResponse::generate()
+int ErrorResponse::generate()
 {
 	gen_error_page();
 	defaultHeaders();
 	error_headers();
+	return (0);
 }
 
 void ErrorResponse::gen_error_page()
@@ -46,9 +47,9 @@ void ErrorResponse::gen_error_page()
 		</body>\n\
 	</html>";
 
-	//int fd = open("file.html", O_CREAT| O_WRONLY | O_TRUNC, 0644);
-	//write(fd, _body.c_str(), get_content_len());
-	//close(fd);
+	int fd = open("errfile.html", O_CREAT| O_WRONLY | O_TRUNC, 0644);
+	write(fd, _body.c_str(), get_content_len());
+	close(fd);
 }
 
 void ErrorResponse::error_headers()

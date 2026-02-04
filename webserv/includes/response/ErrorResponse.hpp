@@ -11,7 +11,7 @@ public:
 	ErrorResponse &operator=(const ErrorResponse &other);
 	~ErrorResponse();
 
-	void		generate();
+	int		generate();
 	void		gen_error_page();
 
 	//headers:

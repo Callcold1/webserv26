@@ -11,7 +11,7 @@ public:
 	RediResponse &operator=(const RediResponse &other);
 	~RediResponse();
 
-	void		generate();
+	int		generate();
 	void		gen_redi_page();
 
 	//headers:

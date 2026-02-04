@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jake <jake@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: junruh <junruh@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/07 10:25:15 by kmooney           #+#    #+#             */
-/*   Updated: 2026/02/03 21:06:53 by jake             ###   ########.fr       */
+/*   Updated: 2026/02/04 18:20:42 by junruh           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@
 #include "Server.hpp"
 #include "ErrorResponse.hpp"
 #include "RediResponse.hpp"
+#include "StaticResponse.hpp"
 
 /*
 
@@ -38,9 +39,13 @@ int	main()
 	
 	//server.loop();
 
-	RediResponse r(404);
+	// RediResponse rr(300);
+	// ErrorResponse er(404);
 
-	r.print_response();
+	StaticResponse sr(200);
+	sr.generate();
+
+	//r.print_response();
 	
 	return(0);
 	
