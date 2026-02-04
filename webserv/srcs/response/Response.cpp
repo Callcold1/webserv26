@@ -13,7 +13,7 @@ Response::Response(int status)
 Response::Response(const Response &other)
 {
 	_status = other._status;
-	_headers.insert(std::begin(other._headers), std::end(other._headers));
+	_headers.insert(other._headers.begin(), other._headers.end());
 	_body = other._body;
 }
 
@@ -21,7 +21,7 @@ Response &Response::operator=(const Response &other)
 {
 	_status = other._status;
 	_headers.clear();
-	_headers.insert(std::begin(other._headers), std::end(other._headers));
+	_headers.insert(other._headers.begin(), other._headers.end());
 	_body = other._body;
 	return(*this);
 }
