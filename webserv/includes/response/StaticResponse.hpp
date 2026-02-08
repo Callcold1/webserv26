@@ -18,5 +18,6 @@ public:
 
 	void	static_headers();
 private:
-	std::string _path; 
+	std::string _path;
+	bool		_is_dir;
 };

@@ -7,11 +7,11 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-StaticResponse::StaticResponse() : Response()
+StaticResponse::StaticResponse() : Response(), _is_dir(false)
 {
 }
 
-StaticResponse::StaticResponse(int status) : Response(status)
+StaticResponse::StaticResponse(int status) : Response(status), _is_dir(false)
 {
 }
 
@@ -31,7 +31,7 @@ int StaticResponse::generate()
 {
 	int re_status;
 	//_path = "html/redifile.html"; //TODO change this to get actual path from response
-	_path = "html";
+	_path = "html/lalala";
 	if ((re_status = get_file()) != 0)
 		return (re_status);
 	defaultHeaders();
@@ -82,7 +82,7 @@ int StaticResponse::gen_index_page()
 		<body>\n\
 			<h1>Index</h1>\n";
 	ss << "<pre>\n";
-	directory_tree(0, &ss, "html");
+	directory_tree(0, &ss, _path);
 	ss << "<pre>\n";
 	ss << "	</body>\n\
 	</html>";
@@ -97,12 +97,13 @@ int StaticResponse::gen_index_page()
 int StaticResponse::get_file()
 {
 	struct stat st;
- 
+
 	if (stat(_path.c_str(), &st) == 0)
 	{
 		if (S_ISDIR(st.st_mode))
 		{
 			gen_index_page();
+			_is_dir = true;
 		}
 		else if (S_ISREG(st.st_mode))
 		{
@@ -117,11 +118,8 @@ int StaticResponse::get_file()
 	return (0);
 }
 
-// void StaticResponse::error_headers()
-// {
-// 	if (_status >= 400 && _status <= 499)
-// 		_headers["Connection"] = "close";
-// 	//if (_status == 405)
-// 	//	_headers["Allow"] = //figure out allowed methods
-// 	_headers["Content-Type"] = "text/html; charset=utf-8";
-// }
+void StaticResponse::static_headers()
+{
+	
+	_headers["Content-Type"] = "text/html; charset=utf-8";
+}
