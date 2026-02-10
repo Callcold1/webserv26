@@ -26,6 +26,7 @@ public:
 
 	//headers:
 	void			defaultHeaders();
+	void			addHeader(std::string header, std::string value);
 
 	std::string		get_date();
 	size_t			get_content_len();

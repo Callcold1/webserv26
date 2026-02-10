@@ -85,6 +85,11 @@ void Response::defaultHeaders()
 	_headers["Content-Length"] = to_str(get_content_len());
 }
 
+void Response::addHeader(std::string header, std::string value)
+{
+	_headers[header] = value;
+}
+
 std::string Response::get_date()
 {
 	std::time_t now = std::time(NULL);
