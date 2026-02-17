@@ -35,7 +35,7 @@ int StaticResponse::generate()
 	if ((re_status = get_file()) != 0)
 		return (re_status);
 	defaultHeaders();
-//	static_headers();
+	static_headers();
 	return (0);
 }
 
