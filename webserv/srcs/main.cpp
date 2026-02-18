@@ -6,7 +6,7 @@
 /*   By: junruh <junruh@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/07 10:25:15 by kmooney           #+#    #+#             */
-/*   Updated: 2026/02/04 18:20:42 by junruh           ###   ########.fr       */
+/*   Updated: 2026/02/18 18:25:58 by junruh           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,7 @@
 #include "ErrorResponse.hpp"
 #include "RediResponse.hpp"
 #include "StaticResponse.hpp"
+#include "CgiResponse.hpp"
 
 /*
 
@@ -41,9 +42,8 @@ int	main()
 
 	// RediResponse rr(300);
 	// ErrorResponse er(404);
-
-	StaticResponse sr(200);
-	sr.generate();
+	CgiResponse cr(200);
+	cr.generate();
 
 	//r.print_response();
 	

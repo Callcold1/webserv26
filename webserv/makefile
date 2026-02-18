@@ -21,6 +21,7 @@ SRCS        := main.cpp \
 				response/ErrorResponse.cpp \
 				response/RediResponse.cpp \
 				response/StaticResponse.cpp 
+				response/CgiResponse.cpp
 
 OBJS := $(patsubst %.cpp, $(OBJDIR)/%.o, $(SRCS))
 DEPS := $(patsubst %.cpp, $(OBJDIR)/%.d, $(SRCS))

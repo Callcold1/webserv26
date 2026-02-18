@@ -1,4 +1,6 @@
-#!/usr/bin/env python3
+#!/opt/pyenv/versions/3.13.1/bin/python3
+
+##!/usr/bin/env python3
 
 import cgi
 import sys
@@ -26,19 +28,19 @@ def draw_multiline_centered(draw, text, box_x, box_y, box_w, box_h, font, fill="
 		y += h
 
 
-#env = cgi.FieldStorage()
-#jim_text = env.getvalue('jim', 'JIM')
-#dwight_text = env.getvalue('dwight', 'DWIGHT')
-#michael_text = env.getvalue('michael', 'MICHAEL')
+env = cgi.FieldStorage()
+jim_text = env.getvalue('jim', 'JIM')
+dwight_text = env.getvalue('dwight', 'DWIGHT')
+michael_text = env.getvalue('michael', 'MICHAEL')
 
-print("jim: ")
-jim_text = input()
-print("dwight: ")
-dwight_text = input()
-print("michael: ")
-michael_text = input()
+#print("jim: ")
+#jim_text = input()
+#print("dwight: ")
+#dwight_text = input()
+#print("michael: ")
+#michael_text = input()
 
-img = Image.open('assets/officememe.png')
+img = Image.open("assets/officememe.png")
 draw = ImageDraw.Draw(img)
 
 font = ImageFont.truetype("assets/open-sans/static/OpenSans-SemiBold.ttf", 14)
