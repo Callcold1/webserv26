@@ -1,0 +1,96 @@
+# Nginx `location =` vs `location /`
+
+In nginx, `location =` and `location /` control how precisely a URL must match and which block wins when multiple locations could apply.
+
+---
+
+## `location = /something` — Exact Match
+
+- Matches only the exact URI
+- Has the highest priority
+- Stops searching once matched
+
+Example:
+
+    location = /login {
+        return 403;
+    }
+
+Matches:
+    /login
+
+Does NOT match:
+    /login/
+    /login?x=1
+    /login/extra
+
+### When to use `location =`
+- You need to target one specific path
+- You want it to override all other locations
+- Common use cases:
+  - Redirects
+  - Health checks
+  - Security rules
+  - Performance optimizations for hot paths
+
+Example:
+
+    location = / {
+        return 301 /app;
+    }
+
+---
+
+## `location /` — Prefix (Catch-All) Match
+
+- Matches anything starting with `/`
+- Lowest specificity
+- Acts as the default handler
+
+Example:
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+Matches:
+    /
+    /about
+    /images/logo.png
+    /api/v1/users
+
+### When to use `location /`
+- As a fallback
+- To serve a website or SPA
+- When you want to handle “everything else”
+
+---
+
+## Location Matching Priority (Important)
+
+nginx evaluates locations in this order:
+
+1. Exact match — `location =`
+2. Longest prefix match — `location /foo/bar`
+3. Regex match — `location ~` or `location ~*`
+4. Fallback prefix — `location /`
+
+Example configuration:
+
+    location = /health { return 200; }
+    location /api/ { proxy_pass http://api; }
+    location / { root /var/www; }
+
+Request → Matched Location:
+    /health      → location = /health
+    /api/users  → location /api/
+    /about      → location /
+
+---
+
+## Rule of Thumb
+
+- Use `location =` for special, exact paths
+- Use `location /` as your default catch-all
+
+
