@@ -1,51 +1,224 @@
 #include "Server.hpp"
 
-//Server::Server(Config &config){
-Server::Server(Config& config){
-		
-	createSockets(config.ports);
-}
-
-Server::~Server( void )
+//Server::Server(Config &config)
+Server::Server()
 {
-}
-
-void	Server::createSockets(int ports[]){
-	for(int i = 0; i < 5; i++)
+	//createSockets(config.ports);
+	int ports[] = {8080, 2020, 2025, 3030};
+	for (int i = NUM_SOCK; i < NUM_SOCK + MAX_CONN; i++)
 	{
-		sock_pair new_pair;
-		new_pair.first = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-		
-		int flags = fcntl(new_pair.first, F_GETFL, 0);
-		fcntl(new_pair.first, F_SETFL, flags | O_NONBLOCK);
-		
-		
-		struct sockaddr_in address;
-		
-		new_pair.second.sin_family = AF_INET;
-		new_pair.second.sin_port = htons(ports[i]);
-		new_pair.second.sin_addr.s_addr = INADDR_ANY;
-		
-		if (bind(new_pair.first, (struct sockaddr *)&new_pair.second, sizeof(new_pair.second)) < 0) {
-			perror("bind failed");
-			return;
+		sockets[i].fd = -1;
+		sockets[i].events = POLLIN | POLLOUT;
+	}
+	try
+	{
+		createSockets(ports);
+	}
+	catch(const std::exception& e)
+	{
+		std::cerr << "Fatal: could not set up server: " << e.what() << "\nExiting..." << '\n';
+		for (int i = 0; i < NUM_SOCK; i++)
+		{
+			if (sockets[i].fd != -1)
+				close(sockets[i].fd);
 		}
-		
-		if (listen(new_pair.first, 5) < 0) {
-			perror("listen failed");
-			return;
-		}
-		sockets[i] = new_pair;
+		exit(1);
 	}
 }
 
-int server(void)
+Server::~Server(void)
 {
-	
+	for(int i = 0; i < NUM_SOCK + MAX_CONN; i++)
+	{	
+		if (sockets[i].fd != -1)
+			close(sockets[i].fd);
+	}
+}
+
+void	Server::createSockets(int ports[])
+{
+	for(int i = 0; i < NUM_SOCK; i++)
+	{
+		//creating new socket:
+		int new_sock_fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+		if (new_sock_fd == -1)
+    		throw std::runtime_error("socket() failed!");
+		//set flags:
+		int flags = fcntl(new_sock_fd, F_GETFL, 0);
+		if (flags == -1)
+			throw std::runtime_error("fcntl(F_GETFL) failed");
+
+		if (fcntl(new_sock_fd, F_SETFL, flags | O_NONBLOCK) == -1)
+			throw std::runtime_error("fcntl(F_SETFL) failed");
+		
+		//binding to address:
+		struct sockaddr_in address;
+		
+		address.sin_family = AF_INET;
+		address.sin_port = htons(ports[i]);
+		address.sin_addr.s_addr = INADDR_ANY;
+		
+		if (bind(new_sock_fd, (struct sockaddr *)&address, sizeof(address)) < 0)
+		{
+			perror("bind");
+			throw(std::runtime_error("bind() failed!"));
+		}
+		
+		if (listen(new_sock_fd, 5) < 0) //?
+		{
+			throw(std::runtime_error("listen() failed!"));
+		}
+		sockets[i].fd = new_sock_fd;
+		sockets[i].events = POLLIN;
+	}
+}
+
+void Server::conn_new_clients()
+{
+	int i, j;
+	int	new_client = 0;
+
+	for (i = 0; i < NUM_SOCK; i++)
+	{
+		if (sockets[i].revents & (POLLERR | POLLHUP | POLLNVAL))
+		{
+			close(sockets[i].fd);
+			sockets[i].fd = -1;
+			std::cout << "Invalid poll request, connection failed" << std::endl;
+			continue;
+		}
+		if (sockets[i].revents & POLLIN)
+		{
+			if ((new_client = accept(sockets[i].fd, NULL, NULL)) == -1)
+				continue;
+			int flags = fcntl(new_client, F_GETFL, 0);
+			if (flags == -1 || fcntl(new_client, F_SETFL, flags | O_NONBLOCK) == -1)
+			{
+				perror("fcntl");
+				close(new_client);
+				continue;
+			}
+			for (j = NUM_SOCK; j < NUM_SOCK + MAX_CONN; j++)
+			{
+				if (sockets[j].fd == -1)
+				{
+					sockets[j].fd = new_client;
+					sockets[j].events = POLLIN;
+					clients.insert(std::pair<int,Client>(new_client,Client(new_client)));
+					break;
+				}
+			}
+			if (j == NUM_SOCK + MAX_CONN)
+			{
+				std::cout << "Maximum connections reached, couldn't connect!" << std::endl; 
+				close(new_client);
+			}
+			else
+				std::cout << "client connected!" << std::endl;
+		}
+	}
+}
+
+void Server::client_read()
+{
+	char buffer[BUF_SIZE];
+
+	for (int i = NUM_SOCK; i < NUM_SOCK + MAX_CONN; i++)
+	{
+		if (sockets[i].fd != -1 && (sockets[i].revents & POLLIN))
+		{
+			ssize_t valread = recv(sockets[i].fd, buffer, BUF_SIZE - 1, 0);
+			if (valread == 0)
+			{
+				close(sockets[i].fd);
+				clients.erase(sockets[i].fd);
+				sockets[i].fd = -1;
+				std::cout << "Client disconnected" << std::endl;
+			}
+			else if (valread == -1)
+			{
+				if (errno == EAGAIN || errno == EWOULDBLOCK)
+					continue;
+				perror("read: ");
+				close(sockets[i].fd);
+				sockets[i].fd = -1;
+				std::cout << "failed connection: Client was disconnected" << std::endl;
+			}
+			else
+			{
+				buffer[valread] = '\0';
+				//send(clients[i].fd, buffer, valread, 0);
+				clients.at(sockets[i].fd).append_read(buffer, valread);
+				std::cout << sockets[i].fd << " said: " << buffer << std::endl;
+			}
+		} 
+	}
+}
+
+void Server::client_write()
+{
+	std::string msg;
+
+	for (int i = NUM_SOCK; i < NUM_SOCK + MAX_CONN; i++)
+	{
+		if (sockets[i].fd != -1 && (sockets[i].revents & POLLOUT)) 
+		{
+			std::cout << "aaaaa\n";
+			if ((msg = clients.at(sockets[i].fd).get_msg()) != "")
+			{
+				std::cout << "sendign \n";
+				send(sockets[i].fd, msg.c_str(), msg.size(), 0);
+				clients.at(sockets[i].fd).clear_out_buff();
+			}
+
+		}
+	}
+}
+
+void Server::update_poll_events()
+{
+	for (int i = NUM_SOCK; i < NUM_SOCK + MAX_CONN; i++)
+    {
+        int fd = sockets[i].fd;
+        if (fd == -1)
+            continue;
+
+        if (clients.at(fd).has_output)
+            sockets[i].events |= POLLOUT;
+        else
+            sockets[i].events &= ~POLLOUT;
+    }
+}
+
+int Server::loop()
+{
+
+	while (true)
+	{
+		update_poll_events();
+		int activity = poll(sockets, NUM_SOCK + MAX_CONN, -1);
+		if (activity == -1)
+		{
+			perror("poll: ");
+		}
+		else if (activity > 0)
+		{
+			//handling new client connections:
+			Server::conn_new_clients();
+			//handling client actions:
+			Server::client_read();
+			Server::client_write();
+		}
+	}
+}
+
+
+/*int server_setup_old(Server &server)
+{
 	int	clientSocket = 0;
 
 	while (true){
-		clientSocket = accept(server_fd, (struct sockaddr *)&address, &addrlen);
+		clientSocket = accept(server_fd, NULL, NULL);
 		if (clientSocket > 0){
 			while (true){
 			
@@ -64,7 +237,5 @@ int server(void)
 			}
 			close(clientSocket);
 		}
-	} 
-	close(server_fd);
-
-}
+	}
+}*/
