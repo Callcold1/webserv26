@@ -1,19 +1,20 @@
 # USEFUL IF THE MAKEFILE IS NOT IN THE PROJECT ROOT FOLDER
 PROJECT_ROOT := $(realpath ./)
 
-NAME        := testServer
+NAME        := webserv
 
-CXX         := g++
-CXXFLAGS    := -Wall -Werror -Wextra -std=c++98 -g
+# CXX         := g++ 
+CXX         := c++
+CXXFLAGS    := -Wall -Werror -Wextra -std=c++98 -g3
 
-INCLUDES    :=	-I ./
+INCLUDES    :=	-I $(PROJECT_ROOT)/includes
 #  				-I$(PROJECT_ROOT)/Request/includes \
 # 				-I$(PROJECT_ROOT)/Config/includes \
 
 OBJDIR      := objs
 SRCDIR      := $(PROJECT_ROOT)/srcs
 
-SRCS        := main.cpp
+SRCS        := main.cpp utilityFunctions.cpp Log.cpp Config.cpp CParser.cpp CServer.cpp CLocation.cpp Parser.cpp Tokeniser.cpp
 
 OBJS := $(patsubst %.cpp, $(OBJDIR)/%.o, $(SRCS))
 DEPS := $(patsubst %.cpp, $(OBJDIR)/%.d, $(SRCS))
