@@ -12,7 +12,7 @@
 
 #include "CLocation.hpp"
 
-CLocation::CLocation( void ){}
+CLocation::CLocation( void ) : _autoindex(false), _modifier(NONE){}
 
 CLocation::~CLocation( void ){}
 

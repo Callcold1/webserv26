@@ -1,24 +1,52 @@
 #include "Server.hpp"
+#include "Config.hpp"
 
-//Server::Server(Config &config)
-Server::Server()
+Server::Server(Config &config)
 {
-	//createSockets(config.ports);
+	size_t socket_count;
+
+	std::vector<CServer> servers = config.getServers();
+	size_t server_count = servers.size();
+
+	for (size_t i = 0; i < server_count; i++){
+
+		std::vector<listen_s> p = servers[i].getListen();
+		size_t listen_size = p.size();
+
+		for (size_t j = 0; j < listen_size; j++, socket_count ++){
+			try {
+				createSingleSocket(p[j], socket_count, config.getMaxConnections());
+			}
+			catch (const std::exception& e){
+				std::cerr << "Fatal: could not set up server: " << e.what() << "\nExiting..." << '\n';
+
+				for (size_t i = 0; i < socket_count; i++) {
+
+					if (sockets[i].fd != -1)
+					close(sockets[i].fd);
+				}
+				return;
+			}
+		}
+	}
+}
+
+Server::Server(){
 	int ports[] = {8080, 2020, 2025, 3030};
-	for (int i = NUM_SOCK; i < NUM_SOCK + MAX_CONN; i++)
+	for (size_t i = NUM_SOCK; i < NUM_SOCK + MAX_CONN; i++)
 	{
 		sockets[i].fd = -1;
 		sockets[i].events = POLLIN | POLLOUT;
 	}
-	try
-	{
+	try	{
 		createSockets(ports);
 	}
-	catch(const std::exception& e)
-	{
+	catch(const std::exception& e) {
+
 		std::cerr << "Fatal: could not set up server: " << e.what() << "\nExiting..." << '\n';
-		for (int i = 0; i < NUM_SOCK; i++)
-		{
+
+		for (int i = 0; i < NUM_SOCK; i++) {
+
 			if (sockets[i].fd != -1)
 				close(sockets[i].fd);
 		}
@@ -29,10 +57,41 @@ Server::Server()
 Server::~Server(void)
 {
 	for(int i = 0; i < NUM_SOCK + MAX_CONN; i++)
-	{	
+	{
 		if (sockets[i].fd != -1)
 			close(sockets[i].fd);
 	}
+}
+
+void	Server::createSingleSocket(listen_s port_info, size_t socket_count, int max_conn )
+{
+	int new_sock_fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	if (new_sock_fd == -1)
+    	throw std::runtime_error("socket() failed!");
+	//set flags:
+	int flags = fcntl(new_sock_fd, F_GETFL, 0);
+	if (flags == -1)
+		throw std::runtime_error("fcntl(F_GETFL) failed");
+
+	if (fcntl(new_sock_fd, F_SETFL, flags | O_NONBLOCK) == -1)
+		throw std::runtime_error("fcntl(F_SETFL) failed");
+
+	struct sockaddr_in address;
+
+	address.sin_family = AF_INET;
+	address.sin_port = port_info.port;
+	address.sin_addr.s_addr = port_info.ip;
+
+	if (bind(new_sock_fd, (struct sockaddr *)&address, sizeof(address)) < 0) {
+		perror("bind");
+		throw(std::runtime_error("bind() failed!"));
+	}
+
+	if (listen(new_sock_fd, max_conn) < 0){
+		throw(std::runtime_error("listen() failed!"));
+	}
+	sockets[socket_count].fd = new_sock_fd;
+	sockets[socket_count].events = POLLIN;
 }
 
 void	Server::createSockets(int ports[])
@@ -50,20 +109,20 @@ void	Server::createSockets(int ports[])
 
 		if (fcntl(new_sock_fd, F_SETFL, flags | O_NONBLOCK) == -1)
 			throw std::runtime_error("fcntl(F_SETFL) failed");
-		
+
 		//binding to address:
 		struct sockaddr_in address;
-		
+
 		address.sin_family = AF_INET;
 		address.sin_port = htons(ports[i]);
 		address.sin_addr.s_addr = INADDR_ANY;
-		
+
 		if (bind(new_sock_fd, (struct sockaddr *)&address, sizeof(address)) < 0)
 		{
 			perror("bind");
 			throw(std::runtime_error("bind() failed!"));
 		}
-		
+
 		if (listen(new_sock_fd, 5) < 0) //?
 		{
 			throw(std::runtime_error("listen() failed!"));
@@ -110,7 +169,7 @@ void Server::conn_new_clients()
 			}
 			if (j == NUM_SOCK + MAX_CONN)
 			{
-				std::cout << "Maximum connections reached, couldn't connect!" << std::endl; 
+				std::cout << "Maximum connections reached, couldn't connect!" << std::endl;
 				close(new_client);
 			}
 			else
@@ -151,7 +210,7 @@ void Server::client_read()
 				clients.at(sockets[i].fd).append_read(buffer, valread);
 				std::cout << sockets[i].fd << " said: " << buffer << std::endl;
 			}
-		} 
+		}
 	}
 }
 
@@ -161,7 +220,7 @@ void Server::client_write()
 
 	for (int i = NUM_SOCK; i < NUM_SOCK + MAX_CONN; i++)
 	{
-		if (sockets[i].fd != -1 && (sockets[i].revents & POLLOUT)) 
+		if (sockets[i].fd != -1 && (sockets[i].revents & POLLOUT))
 		{
 			std::cout << "aaaaa\n";
 			if ((msg = clients.at(sockets[i].fd).get_msg()) != "")
@@ -221,11 +280,11 @@ int Server::loop()
 		clientSocket = accept(server_fd, NULL, NULL);
 		if (clientSocket > 0){
 			while (true){
-			
+
 				char buffer[1024] = { 0 };
 				if (clientSocket > 0){
 					std::cout << "client connected : fd = " << clientSocket << std::endl;
-					
+
 					ssize_t bytesRead = recv(clientSocket, buffer, sizeof(buffer) - 1, 0);
 					if (bytesRead != 0) {
 						buffer[bytesRead] = '\0';

@@ -83,7 +83,7 @@ void	CParser::parseNext(node_t* parent, token_t awaited){
 			parent->children.push_back(addNode(value));
 			consume();
 			for (size_t i = 0; i < 3; i++){				// check for modifier (i.e = or ~) and/or path : can have "location = /path" (exact match), or "location /path" or "location ~ \.cgi_type"
-				token_t next = peek();					// a path must start with /, cgi with \.extension
+				token_t next = peek();					// a path must start with /, cgi with '\.ext' where ext is the file type/extension
 				if (next.type == T_WORD){
 					parent->children.back()->args.push_back(next.value);
 					consume();
@@ -394,7 +394,7 @@ void	CParser::setLocation(node_t* location_node, std::vector<CLocation>& locatio
 		else if (node->type == "upload_path")
 			setPath(node, upload_path);
 	}
-	if (!checkAliasRoot(alias, root))
+	if (checkAliasRoot(alias, root))
 		throw std::runtime_error("Error: location contains both alias and root directives");
 
 	redirect.status = redirect_status;
@@ -496,12 +496,8 @@ void	CParser::setIndex(node_t* node, std::vector<std::string>& index){
 
 	size_t size = node->args.size();
 
-	for (size_t i = 0; i < size - 1; i++){ // Need to check parent folder is accessible - index doesn't need to exist? (only if autoindex?)
-		if (isAccessible(node->args[i]))
+	for (size_t i = 0; i < size - 1; i++)
 			index.push_back(node->args[i]);
-		else
-			throw std::runtime_error("Error: invalid index"); // change to log entry for config
-	}
 }
 
 void	CParser::setModifier(std::string& str, LocationMatchType_e& modifier){
@@ -609,5 +605,5 @@ bool	CParser::isValidMethod(const std::string& str){
 }
 
 bool	CParser::checkAliasRoot(const std::string& alias, const std::string& root){
-	return alias.length() > 0 && root.length() > 0;
+	return (alias.length() > 0 && root.length() > 0);
 }

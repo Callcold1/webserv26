@@ -20,9 +20,16 @@ SRCS        := main.cpp \
 				response/Response.cpp \
 				response/ErrorResponse.cpp \
 				response/RediResponse.cpp \
-				response/StaticResponse.cpp 
-				response/CgiResponse.cpp
-SRCS        := main.cpp utilityFunctions.cpp Log.cpp Config.cpp CParser.cpp CServer.cpp CLocation.cpp Parser.cpp Tokeniser.cpp
+				response/StaticResponse.cpp \
+				response/CgiResponse.cpp \
+				utilityFunctions.cpp \
+				Log.cpp \
+				Config.cpp \
+				CParser.cpp \
+				CServer.cpp \
+				CLocation.cpp \
+				Parser.cpp \
+				Tokeniser.cpp
 
 OBJS := $(patsubst %.cpp, $(OBJDIR)/%.o, $(SRCS))
 DEPS := $(patsubst %.cpp, $(OBJDIR)/%.d, $(SRCS))

@@ -6,15 +6,16 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/14 09:52:13 by kmooney           #+#    #+#             */
-/*   Updated: 2026/02/18 18:05:04 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/02/18 20:56:31 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Config.hpp"
 
-Config::Config() : _max_body(DEFAULT_MAX_BODY), 
-                        _max_connections(DEFAULT_MAX_CONN), _timeout_ka(DEFAULT_TM_KA), 
-                            _timeout_rw(DEFAULT_TM_RW){}
+Config::Config() : _max_body(DEFAULT_MAX_BODY), _max_connections(DEFAULT_MAX_CONN),
+					_max_header_size(DEFAULT_MAX_HEAD), _timeout_ka(DEFAULT_TM_KA),
+                    	_timeout_rw(DEFAULT_TM_RW){
+}
 
 Config::Config(const Config &other) { (void)other;}
 
@@ -107,7 +108,7 @@ void    Config::setTimeoutRW(int timeout_in_seconds){
 */
 
 std::ostream&	operator<<(std::ostream& os, const std::vector<errorPage_s>& error_pages){
-    
+
 	size_t size = error_pages.size();
 
     for (size_t i = 0; i < size; i++){
@@ -117,7 +118,7 @@ std::ostream&	operator<<(std::ostream& os, const std::vector<errorPage_s>& error
 }
 
 std::ostream&	operator<<(std::ostream& os, const std::map<std::string, fileInfo_s*>& cgi_map){
-    
+
 	std::map<std::string, fileInfo_s*>::const_iterator it;
 
     for (it = cgi_map.begin(); it != cgi_map.end(); it++){
@@ -127,7 +128,7 @@ std::ostream&	operator<<(std::ostream& os, const std::map<std::string, fileInfo_
 }
 
 std::ostream&	operator<<(std::ostream& os, const listen_s& port_info){
-    
+
 	os << "IP address : " << port_info.ip
 	<< "Port : " << port_info.port
 	<< "is default : " << port_info.is_default;
@@ -136,7 +137,7 @@ std::ostream&	operator<<(std::ostream& os, const listen_s& port_info){
 }
 
 std::ostream&	operator<<(std::ostream& os, const std::vector<std::string>& strings){
-    
+
 	size_t size = strings.size();
 
     for (size_t i = 0; i < size; i++){
@@ -175,7 +176,7 @@ std::ostream& operator<<(std::ostream& os, const Config& config){
 }
 
 std::ostream&	operator<<(std::ostream& os, const CServer& server){
-	
+
 	os	<< "\nServer Max Body Size : " << server.getMaxBodySize()
     	<< "\nServer Max Header : " << server.getMaxHeaderSize()
 		<< "\nServer root dir : " << server.getRootDir()
@@ -189,7 +190,7 @@ std::ostream&	operator<<(std::ostream& os, const CServer& server){
 }
 
 std::ostream&	operator<<(std::ostream& os, const CLocation& location){
-	
+
 	os << "Location\n=========\n"
 		<< "\nLocation alias" << location.getAlias()
 		<< "\nLocation autoindex" << location.getAutoIndex()
