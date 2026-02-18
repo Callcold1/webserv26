@@ -1,16 +1,16 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   utility_functions.cpp                              :+:      :+:    :+:   */
+/*   utilityFunctions.cpp                               :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/16 15:33:48 by kmooney           #+#    #+#             */
-/*   Updated: 2026/01/21 08:59:45 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/02/18 17:43:20 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "utility_functions.hpp"
+#include "utilityFunctions.hpp"
 
 /*
 >>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<
@@ -75,9 +75,9 @@ void trimEndChar(std::string &str, char target)
 
 /* TRIM WHITESPACE FROM BOTH ENDS OF A STRING */
 void trimWS(std::string &str)
-{	
+{
 	size_t end = str.size();
- 
+
 	while (end > 0 && std::isspace(static_cast<unsigned char>(str[end - 1]))) {
 		--end;
 	}
@@ -147,7 +147,7 @@ long hexToLong(const char *str)
 unsigned char hexCharToUnsignedChar(char c)
 {
 	unsigned char x;
-	
+
 	if (c >= '0' && c <= '9')
 	x = c - '0';
 	else if (c >= 'A' && c <= 'F')
@@ -161,15 +161,15 @@ unsigned char hexCharToUnsignedChar(char c)
 
 // SUBSTRING TO HEX CONVERSION
 bool	substrToHex( uint64_t& dest, std::string str, size_t start, size_t end){
-	
+
 	std::string		sub;
 	unsigned char	converted = 0;
 	size_t			len = end - start;
-	
+
 	if (str.size() < (end - start) || str.size() == 0)
 		return false;
 	sub = str.substr(start, end);
-	
+
 	for (size_t i = 0; i < len; i++){
 		if (!isxdigit(sub[i]))
 			return false;
@@ -180,13 +180,24 @@ bool	substrToHex( uint64_t& dest, std::string str, size_t start, size_t end){
 	return true;
 }
 
+bool convertToBool(const std::string& str)
+{
+    if (str == "true")
+        return true;
+    if (str == "false")
+        return false;
+
+    throw std::runtime_error("Invalid boolean value: " + str);
+}
+
+
 /*
 >>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<
 >>>>>>		VALID CHARACTER CHECKS		<<<<<<
 >>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<
 */
 
-// CHECK IF STRING IS A VALID UTF-8 STRING 
+// CHECK IF STRING IS A VALID UTF-8 STRING
 bool isValidUTF8(const std::string &str)
 {
 	if (str.empty())
@@ -270,22 +281,22 @@ bool isValidUTF8(const std::string &str)
 */
 
 
-// CONVERT UTF-8 TO ISO8859_1 FORMAT 
+// CONVERT UTF-8 TO ISO8859_1 FORMAT
 std::string	UTF8ToISO8859_1(const std::string& utf8_str) { // PROBABLY WON'T BE REQUIRED BUT THIS TRANSLATES FROM UTF8 TO ISO8859.1
-	
+
 	std::string	iso_str;
 
 	for (size_t i = 0; i < utf8_str.size(); i++) {
-		
+
 		unsigned char c = utf8_str[i];
-		
+
 		if (c <= 127)
 			iso_str += c;
 
 		else if ((c & 224) == 192 && i + 1 < utf8_str.size()) {
-			
+
 			unsigned char c1 = utf8_str[i + 1];
-			
+
 			if ((c1 & 192) == 128) {
 
 				unsigned char iso_char = ((c & 31) << 6) | (c1 & 63);
@@ -304,7 +315,7 @@ std::string	UTF8ToISO8859_1(const std::string& utf8_str) { // PROBABLY WON'T BE 
 
 // CONVERT ISO8859_1 TO UTF-8 FORMAT
 std::string	ISO8859_1ToUTF8(const std::string& iso_str) { // PROBABLY WON'T BE REQUIRED BUT THIS TRANSLATES FROM ISO8859.1 to UTF8
-	
+
 	std::string utf8_str;
 	unsigned char c = 0;
 
@@ -346,6 +357,11 @@ bool isAccessible(const std::string &path)
 	return access(path.c_str(), R_OK) == 0;
 }
 
+bool isExecutable(const std::string &path)
+{
+	return access(path.c_str(), R_OK) == 0;
+}
+
 /*
 	struct fileInfo_s
 	{
@@ -360,19 +376,55 @@ bool isAccessible(const std::string &path)
 	};
 */
 
+void	getFilePermissions(fileInfo_s& fileinfo){
+	struct stat fileStat;
+
+	if (stat(fileinfo.path.c_str(), &fileStat) == 0)
+	{
+		fileinfo.is_dir = S_ISDIR(fileStat.st_mode);
+		fileinfo.is_file = S_ISREG(fileStat.st_mode);
+		fileinfo.is_symlink = S_ISLNK(fileStat.st_mode);
+		fileinfo.is_exec = fileStat.st_mode & S_IXUSR;
+		fileinfo.permissions = fileStat.st_mode;
+	}
+	else if(errno == ENOENT)
+		fileinfo.not_found = true;
+	else if(errno == EACCES)
+		fileinfo.inaccessible = true;
+
+}
+
 void	getFilePermissions(fileInfo_s* fileinfo){
 	struct stat fileStat;
-	
+
 	if (stat(fileinfo->path.c_str(), &fileStat) == 0)
 	{
 		fileinfo->is_dir = S_ISDIR(fileStat.st_mode);
 		fileinfo->is_file = S_ISREG(fileStat.st_mode);
+		fileinfo->is_symlink = S_ISLNK(fileStat.st_mode);
+		fileinfo->is_exec = fileStat.st_mode & S_IXUSR;
 		fileinfo->permissions = fileStat.st_mode;
 	}
 	else if(errno == ENOENT)
 		fileinfo->not_found = true;
 	else if(errno == EACCES)
 		fileinfo->inaccessible = true;
+
+}
+
+void getFileInfo(std::string& path, fileInfo_s& fileinfo){
+
+	fileinfo.path = path;
+	getFilePermissions(fileinfo);
+}
+
+fileInfo_s* getFileInfo(std::string& path){
+
+	fileInfo_s* fileinfo = new fileInfo_s;
+	fileinfo->path = path;
+	getFilePermissions(fileinfo);
+
+	return fileinfo;
 }
 
 fileInfo_s* getFileInfo(std::string& path, std::string& root_dir){
@@ -381,11 +433,8 @@ fileInfo_s* getFileInfo(std::string& path, std::string& root_dir){
 
 	appendPathToRoot(fileinfo, path, root_dir);
 	getFilePermissions(fileinfo);
-	/* 
-		Need to decide if we throw error if path inaccessible or not found
-		 or just log it?
-	*/
-	return;
+
+	return fileinfo;
 }
 
 /*
@@ -394,13 +443,13 @@ fileInfo_s* getFileInfo(std::string& path, std::string& root_dir){
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<
 */
 
-std::string	appendPathToRoot(fileInfo_s& fileinfo, std::string& path, std::string& root_dir){
-	
+void	appendPathToRoot(fileInfo_s* fileinfo, std::string& path, std::string& root_dir){
+
 	if (root_dir[root_dir.size() - 1] == '/')
 		trimEndChar(root_dir, '/');
 	if (path[0] == '/')
 		trimLeadingChar(path, '/');
-	fileinfo.path = root_dir + '/' + path;
+	fileinfo->path = root_dir + '/' + path;
 }
 
 std::vector<std::string> split_path(std::istringstream &iss)
@@ -455,13 +504,13 @@ void remove_dot_segments(std::string &str)
 // CHECK VECTOR FOR DUPLICATE ENTRIES
 template <class T>
 bool	hasDuplicates(const std::vector<T>& vec) {
-	
+
 	std::set<std::string> seen;
 
 	for (size_t i = 0; i < vec.size(); i++){
 
 		if (seen.find(vec[i]) != seen.end()) {
-			return true; 
+			return true;
 		}
 		seen.insert(vec[i]);
 	}
@@ -518,7 +567,7 @@ bool	isSubDelim(unsigned char c) {
 		case ')': case '*': case '+': case ',': case ';':
 		case '=':
 			return true;
-		default:	
+		default:
 			return false;
 	}
 }
@@ -617,7 +666,7 @@ std::ostream&	printFileInfo(std::ostream &os, fileInfo_s* fileinfo)
 	os << "File Not Found: " << fileinfo->not_found << std::endl;
 	os << "File Appended Path: " << fileinfo->path << std::endl;
 	os << "File Permissions: "
-	<< std::oct << std::setfill('0') << std::setw(4) << (fileinfo->permissions & 0777) 
+	<< std::oct << std::setfill('0') << std::setw(4) << (fileinfo->permissions & 0777)
 	<< std::dec << std::setfill(' ') << std::setw(0) << std::endl;
 	return os;
 }
@@ -653,8 +702,7 @@ void printStrVecStrMap(const std::map<std::string, std::vector<std::string> > &d
 	{
 		int i = 0;
 		std::cout << "Key : " + it->first << std::endl;
-		for (std::vector<std::string>::const_iterator itVec = it->second.begin(); itVec != it->second.end(); itVec++)
-		{
+		for (std::vector<std::string>::const_iterator itVec = it->second.begin(); itVec != it->second.end(); itVec++){
 			if (*itVec == "\r")
 			{
 				std::cout << "[CR]" << std::endl
@@ -685,14 +733,14 @@ void parseStreamToStrVecStrMap(std::istringstream &iss, std::map<std::string, st
 	while (std::getline(iss, line, pair_delim))
 	{
 		std::size_t pos = line.find(kv_delim);
-		
+
 		if (pos == std::string::npos)
 			break;
 		key = to_lower(line.substr(0, pos));
 		value = line.substr(pos + 1);
 
 		std::istringstream vec_stream(value);
-		
+
 		while (std::getline(vec_stream, line, vec_delim)){
 			result[key].push_back(line);
 		}
@@ -740,3 +788,115 @@ const std::set<std::string> &getHeaderTransferEncodings()
 	return supportedEndodings;
 }
 
+/*
+>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<
+>>>>>>		VECTOR OPERATIONS			<<<<<<
+>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<
+*/
+
+bool	isOnlyArg(std::vector<std::string>& args){
+	return args.size() == 1;
+}
+
+std::string	createArgsString(std::vector<std::string> args){
+	size_t size = args.size();
+
+	std::string str;
+
+	for (size_t i = 0; i < size; i++){
+		str.append(args[i]);
+		if (i < size - 1)
+			str.append(" ");
+	}
+	return str;
+}
+
+/*
+>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<
+>>>>>>		IP ADDRESS			<<<<<<
+>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<
+*/
+
+// uint32_t getIPfromStr(const std::string& ip_str)
+// {
+//     struct addrinfo hints;
+//     struct addrinfo* res = NULL;
+
+//     std::memset(&hints, 0, sizeof(hints));
+//     hints.ai_family = AF_INET;
+//     hints.ai_socktype = SOCK_STREAM;
+
+//     if (ip_str.empty())
+//         hints.ai_flags = AI_PASSIVE;
+
+//     const char* node = ip_str.empty() ? NULL : ip_str.c_str();
+
+//     int status = getaddrinfo(node, NULL, &hints, &res);
+//     if (status != 0)
+//         throw std::runtime_error(gai_strerror(status));
+
+//     if (!res)
+//         throw std::runtime_error("getaddrinfo returned no result");
+
+//     struct sockaddr_in* addr =
+//         reinterpret_cast<struct sockaddr_in*>(res->ai_addr);
+
+//     uint32_t ip = addr->sin_addr.s_addr;
+
+//     freeaddrinfo(res);
+//     return ip;
+// }
+
+static void resolveAddress(const std::string& ip_str,
+                    const std::string& port_str,
+                    uint32_t& ip,
+                    uint16_t& port)
+{
+    struct addrinfo hints;
+    struct addrinfo* res = NULL;
+
+    std::memset(&hints, 0, sizeof(hints));
+    hints.ai_family = AF_INET;
+    hints.ai_socktype = SOCK_STREAM;
+
+    if (ip_str.empty())
+        hints.ai_flags = AI_PASSIVE;
+
+    const char* node = ip_str.empty() ? NULL : ip_str.c_str();
+
+    int status = getaddrinfo(node, port_str.c_str(), &hints, &res);
+    if (status != 0)
+        throw std::runtime_error(gai_strerror(status));
+
+    if (!res)
+        throw std::runtime_error("getaddrinfo returned no result");
+
+    struct sockaddr_in* addr =
+        reinterpret_cast<struct sockaddr_in*>(res->ai_addr);
+
+    ip = addr->sin_addr.s_addr;
+    port = ntohs(addr->sin_port);
+
+    freeaddrinfo(res);
+}
+
+void splitPortInfo(const std::string& port_info, uint32_t& ip, uint16_t& port)
+{
+    size_t pos = port_info.find(':');
+    std::string ip_str;
+    std::string port_str;
+
+    if (pos != std::string::npos)
+    {
+        ip_str = port_info.substr(0, pos);
+        port_str = port_info.substr(pos + 1);
+    }
+    else
+    {
+        ip_str = "";
+        port_str = port_info;
+    }
+	resolveAddress(ip_str, port_str, ip, port);
+    //ip = getIPfromStr(ip_str);
+    //convertToType(port, port_str);
+}

@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/11 16:04:15 by kmooney           #+#    #+#             */
-/*   Updated: 2026/01/18 17:00:36 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/02/18 14:36:39 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,30 +14,48 @@
 
 #include <cctype>
 #include <cstring>
+#include <iomanip>
 #include <iostream>
 #include <sstream>
 #include <map>
 #include <set>
+#include <stdexcept>
+//#include <string>
 #include <vector>
 
+#include <arpa/inet.h>
+#include <errno.h>
 #include <dirent.h>
 #include <fcntl.h>
+#include <netdb.h>
+#include <netinet/in.h>
 #include <stdint.h>
+#include <sys/socket.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 #include <unistd.h>
 
 // PATH STRUCT
-
 struct fileInfo_s
 {
 	bool inaccessible;
 	bool is_dir;
+	bool is_exec;
 	bool is_file;
+	bool is_symlink;
 	bool not_found;
 	__mode_t permissions;
 	std::string path;
 
-	fileInfo_s() : inaccessible(false), is_dir(false), is_file(false), not_found(false), permissions(0), path("") {}
+	fileInfo_s() : inaccessible(false), is_dir(false), is_exec(false), is_file(false), is_symlink(false), not_found(false), permissions(0), path("") {}
+};
+
+template <typename T, T Min, T Max>
+struct StaticRange
+{
+    static bool test(T value){
+	    return value >= Min && value <= Max;
+	}
 };
 
 /* CONVERT TO STRING */
@@ -75,8 +93,10 @@ std::string							ISO8859_1ToUTF8(const std::string& iso_str);
 int									getFileType(const std::string& str);
 bool								isAccessible(const std::string& path);
 std::string&    					pathAppendToRoot(const std::string& path, const std::string& root);
-void								getFilePermissions(fileInfo_s* target);
+void								getFilePermissions(fileInfo_s& target);
 fileInfo_s*							getFileInfo(std::string& path, std::string& root_dir);
+fileInfo_s*							getFileInfo(std::string& path);
+void								getFileInfo(std::string& path, fileInfo_s& fileinfo);
 
 /*	FILEPATH MANIPULATION  */
 void								appendPathToRoot(fileInfo_s* target, std::string& path, std::string& root_dir);
@@ -132,3 +152,24 @@ void                                printStrVecStrMap(const std::map<std::string
 
 /*  SET CREATION */
 const std::set<std::string>& 		getHeaderTransferEncodings();
+
+/* 	VECTOR OPERATIONS */
+bool		isOnlyArg(std::vector<std::string>& args);
+std::string	createArgsString(std::vector<std::string> args);
+
+template <typename T>
+bool	convertToType(T& target, const std::string& str){
+	std::istringstream stream(str);
+	stream >> target;
+
+    if (stream.fail())
+        return false;
+		
+	 stream >> std::ws;
+	
+	return stream.eof();
+}
+
+/* IP ADDRESS */
+uint32_t	getIPfromStr(const std::string& ip_str);
+void		splitPortInfo(const std::string& port_info, uint32_t& ip, uint16_t& port);

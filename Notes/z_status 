@@ -5,3 +5,9 @@
 		  to save a bit of time, but changing structure and making it more robust....
 
 18/1/26 : Still updating config classes - still a mess!
+
+
+// Location	to do
+setAlias			
+setUploadPath - need root
+setRedirectPath - redirect_path

@@ -3,8 +3,9 @@ PROJECT_ROOT := $(realpath ./)
 
 NAME        := webserv
 
-CXX         := g++
-CXXFLAGS    := -Wall -Werror -Wextra -std=c++98 -g
+# CXX         := g++ 
+CXX         := c++
+CXXFLAGS    := -Wall -Werror -Wextra -std=c++98 -g3
 
 INCLUDES    :=	-I $(PROJECT_ROOT)/includes
 #  				-I$(PROJECT_ROOT)/Request/includes \
@@ -13,7 +14,7 @@ INCLUDES    :=	-I $(PROJECT_ROOT)/includes
 OBJDIR      := objs
 SRCDIR      := $(PROJECT_ROOT)/srcs
 
-SRCS        := main.cpp Log.cpp Config.cpp ConfigParser.cpp
+SRCS        := main.cpp utilityFunctions.cpp Log.cpp Config.cpp CParser.cpp CServer.cpp CLocation.cpp Parser.cpp Tokeniser.cpp
 
 OBJS := $(patsubst %.cpp, $(OBJDIR)/%.o, $(SRCS))
 DEPS := $(patsubst %.cpp, $(OBJDIR)/%.d, $(SRCS))
