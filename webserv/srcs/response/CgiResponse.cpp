@@ -1,6 +1,8 @@
 #include "CgiResponse.hpp"
 #include <unistd.h>
 #include <sys/wait.h>
+#include <fcntl.h>
+#include <iostream>
 
 
 CgiResponse::CgiResponse() : Response()
@@ -73,12 +75,10 @@ int CgiResponse::execute()
 		};
 
 		const char *envp[] = {
-			"jimtext=sryj",
-			"dwighttext=srthaze",
-			"michaeltext=sethser",
+			"QUERY_STRING=jimtext=srrrrrryj&dwighttext=srthaze&michaeltext=sethser",  //TODO get query string, maybe get only query string from parent
 			NULL
 		};
-		execve(_path.c_str(), args, const_cast<char * const *>(envp)); //get env, especially the ones from query string
+		execve(_path.c_str(), args, const_cast<char * const *>(envp)); 
 		_exit(1);
 	}
 	else //parent
@@ -89,20 +89,32 @@ int CgiResponse::execute()
 		// if (write(toCgi[1], _request, sizeof(_request)) < 0)
 		// 	{
 		// 		close(toCgi[1]); close(toServer[0]);
-		// 		waitpid(0, NULL, 0);
+		// 		waitpid(pid, NULL, 0);
 		// 		return(3);
 		// 	}
-		close(toCgi[1]);
 		
-		char *buf[2048];
-		if (read(toServer[0], buf, 2048) < 0)
-			{
-				close(toCgi[1]); close(toServer[0]);
-				waitpid(0, NULL, 0);
-				return(4);
-			}
+		char buf[2048];
+		std::string img;
+		ssize_t bytes_read;
+		ssize_t total_bytes = 0;
+		while ((bytes_read = read(toServer[0], buf, 2048)) > 0)
+		{
+			img.append(buf, bytes_read);
+			total_bytes += bytes_read;
+		}
+		if (bytes_read < 0)
+		{
+			close(toCgi[1]); close(toServer[0]);
+			waitpid(pid, NULL, 0);
+			return(4);
+		}
+		int fd = open("outfile.png", O_CREAT| O_WRONLY | O_TRUNC, 0644);
+		write(fd, img.c_str(), total_bytes);
+		close(fd);
+		_body = img;
 		close(toServer[0]);
-		waitpid(0, NULL, 0);
+		close(toCgi[1]);
+		waitpid(pid, NULL, 0);
 	}
 	return(0);
 }
