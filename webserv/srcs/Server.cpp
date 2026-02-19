@@ -148,7 +148,7 @@ void Server::conn_new_clients()
 		}
 		if (sockets[i].revents & POLLIN)
 		{
-			if ((new_client = accept(sockets[i].fd, NULL, NULL)) == -1) // Can this be amended to obtain connection port and ip?
+			if ((new_client = accept(sockets[i].fd, NULL, NULL)) == -1) // Can this be amended to obtain connection port and ip? Yes : https://chatgpt.com/share/69972875-05d4-800f-a863-fe04cf7a7443
 				continue;
 			int flags = fcntl(new_client, F_GETFL, 0);
 			if (flags == -1 || fcntl(new_client, F_SETFL, flags | O_NONBLOCK) == -1)
