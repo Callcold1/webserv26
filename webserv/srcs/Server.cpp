@@ -1,7 +1,7 @@
 #include "Server.hpp"
 #include "Config.hpp"
 
-Server::Server(Config &config)
+Server::Server(Config &config) : max_conn(config.getMaxConnections()), port_count()//add config.getPortCount()
 {
 	size_t socket_count;
 
@@ -148,7 +148,7 @@ void Server::conn_new_clients()
 		}
 		if (sockets[i].revents & POLLIN)
 		{
-			if ((new_client = accept(sockets[i].fd, NULL, NULL)) == -1)
+			if ((new_client = accept(sockets[i].fd, NULL, NULL)) == -1) // Can this be amended to obtain connection port and ip?
 				continue;
 			int flags = fcntl(new_client, F_GETFL, 0);
 			if (flags == -1 || fcntl(new_client, F_SETFL, flags | O_NONBLOCK) == -1)
@@ -163,7 +163,8 @@ void Server::conn_new_clients()
 				{
 					sockets[j].fd = new_client;
 					sockets[j].events = POLLIN;
-					clients.insert(std::pair<int,Client>(new_client,Client(new_client)));
+					//Identify port and ip that client is connecting to. 
+					clients.insert(std::pair<int,Client>(new_client,Client(new_client)));//Instantiate client with correct server block from config (also ensure that global variables filter into server and location after parsing/validation)
 					break;
 				}
 			}

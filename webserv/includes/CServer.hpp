@@ -22,7 +22,7 @@ class CLocation;
 
 class CServer {
 
-	std::vector<std::string>	_charsets;		// charset(s) that can be handled
+	std::vector<std::string>	_charsets;			// charset(s) that can be handled
 	std::vector<errorPage_s>	_error_pages;		// Vector of error_page structs
 	std::vector<CLocation>	 	_locations;			// Vector of location class objects
 	long long					_max_body;			// Max acceptable body size in bytes

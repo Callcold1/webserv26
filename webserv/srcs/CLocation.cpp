@@ -45,7 +45,7 @@ std::map<std::string, std::string>	CLocation::getCGIMap(void) const{
 }
 
 std::vector<std::string>	CLocation::getCharsets(void) const{
-	return _charset;
+	return _charsets;
 }
 
 std::vector<std::string>	CLocation::getIndex(void) const{
@@ -111,7 +111,7 @@ void 	CLocation::setCGIMap(const std::map<std::string, std::string> cgi_map){
 }
 
 void	CLocation::setCharsets(const std::vector<std::string>& charsets){
-	_charset = charsets;
+	_charsets = charsets;
 }
 
 void 	CLocation::setIndex(const std::vector<std::string>& index){

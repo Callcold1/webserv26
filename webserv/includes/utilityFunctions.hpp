@@ -1,26 +1,23 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   utility_functions.hpp                              :+:      :+:    :+:   */
+/*   utilityFunctions.hpp                               :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/11 16:04:15 by kmooney           #+#    #+#             */
-/*   Updated: 2026/02/18 14:36:39 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/02/19 13:28:37 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
 
-#include <cctype>
 #include <cstring>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
 #include <map>
 #include <set>
-#include <stdexcept>
-//#include <string>
 #include <vector>
 
 #include <arpa/inet.h>
@@ -28,12 +25,11 @@
 #include <dirent.h>
 #include <fcntl.h>
 #include <netdb.h>
-#include <netinet/in.h>
-#include <stdint.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+
 
 // PATH STRUCT
 struct fileInfo_s
@@ -171,5 +167,6 @@ bool	convertToType(T& target, const std::string& str){
 }
 
 /* IP ADDRESS */
-uint32_t	getIPfromStr(const std::string& ip_str);
-void		splitPortInfo(const std::string& port_info, uint32_t& ip, uint16_t& port);
+void	printVisible(const std::string& s);
+void	resolveAddress(const std::string& ip_str, const std::string& port_str, uint32_t& ip, uint16_t& port);
+void	splitPortInfo(const std::string& port_info, uint32_t& ip, uint16_t& port);

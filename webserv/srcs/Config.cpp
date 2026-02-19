@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/14 09:52:13 by kmooney           #+#    #+#             */
-/*   Updated: 2026/02/18 20:56:31 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/02/19 14:04:25 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,6 +33,10 @@ Config::~Config(){
 >>>>>>		GETTERS 		<<<<<<
 >>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<
 */
+
+std::vector<std::string>	Config::getCharsets(void) const{
+	return _charsets;
+}
 
 long long	Config::getMaxBodySize(void) const {
 	return _max_body;
@@ -107,22 +111,22 @@ void    Config::setTimeoutRW(int timeout_in_seconds){
 >>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<
 */
 
+std::ostream&	operator<<(std::ostream& os, const std::map<std::string, std::string>& cgi_map){
+
+	std::map<std::string, std::string>::const_iterator it;
+
+    for (it = cgi_map.begin(); it != cgi_map.end(); it++){
+        os << "\tCGI type : " << it->first << " \tCGI Location : " << it->second << std::endl;
+	}
+	return os;
+}
+
 std::ostream&	operator<<(std::ostream& os, const std::vector<errorPage_s>& error_pages){
 
 	size_t size = error_pages.size();
 
     for (size_t i = 0; i < size; i++){
         os << "\tError Num : " << error_pages[i]._error_num << " \tError Page Location : " << error_pages[i]._path << std::endl;
-	}
-	return os;
-}
-
-std::ostream&	operator<<(std::ostream& os, const std::map<std::string, fileInfo_s*>& cgi_map){
-
-	std::map<std::string, fileInfo_s*>::const_iterator it;
-
-    for (it = cgi_map.begin(); it != cgi_map.end(); it++){
-        os << "\tCGI type : " << it->first << " \tCGI Location : " << it->second->path << " \tCGI Executable : " << it->second->is_exec << std::endl;
 	}
 	return os;
 }
@@ -146,14 +150,25 @@ std::ostream&	operator<<(std::ostream& os, const std::vector<std::string>& strin
 	return os;
 }
 
-std::ostream&	operator<<(std::ostream& os, const std::vector<CLocation*>& locations){
+std::ostream&	operator<<(std::ostream &os, const std::vector<CLocation>& locations){
 
-    size_t size = locations.size();
+	std::vector<CLocation>::const_iterator it;
 
-    for (size_t i = 0; i < size; i++)
-        std::cout << "\n= Location " << i << " =\n" << locations[i];
-    return os;
+	os << "\nLocations\n=========\n";
+	int i = 0;
+	for (it = locations.begin(); it != locations.end(); it++, i++)
+		os << "Location " << i << " : " <<  *it << '\n';
+	return os;
 }
+
+// std::ostream&	operator<<(std::ostream& os, const std::vector<CLocation>& locations){
+
+//     size_t size = locations.size();
+
+//     for (size_t i = 0; i < size; i++)
+//         std::cout << "\n= Location " << i << " =\n" << locations[i];
+//     return os;
+// }
 
 std::ostream&	operator<<(std::ostream& os, const std::vector<CServer>& servers){
 
@@ -168,10 +183,12 @@ std::ostream& operator<<(std::ostream& os, const Config& config){
 	os << "\nGlobal\n======"
     	<< "\nMax Body size : " << config.getMaxBodySize()
     	<< "\nMax Connections : " << config.getMaxConnections()
+    	<< "\nMax Header size : " << config.getMaxHeaderSize()
     	<< "\nTimeout (keep-alive) : " << config.getTimeoutKA() << " seconds"
     	<< "\nTimeout (read-write) : " << config.getTimeoutRW() << " seconds"
-    	<< "\n\nGlobal Error Pages :\n" << config.getErrorPages()
-    	<< "\n\nServers\n=======\n" << config.getServers();
+    	<< "\n\nCharsets :\n" << config.getCharsets()
+    	<< "\nError Pages :\n" << config.getErrorPages()
+    	<< "\nServers\n=======\n" << config.getServers();
 	return os;
 }
 
@@ -201,7 +218,7 @@ std::ostream&	operator<<(std::ostream& os, const CLocation& location){
 		<< "\nLocation redirect url" << location.getRedirectURL()
 		<< "\nLocation root dir" << location.getRootDir()
 		<< "\nLocation upload path" << location.getUploadPath()
-		//<< "\n\nLocation accepted CGI types" << location.getCGIMap()	// Need to create << function
+		<< "\n\nLocation accepted CGI types" << location.getCGIMap()
 		<< "\n\nLocation accepted charset(s)" << location.getCharsets()
 		<< "\n\nLocation accepted method(s)" << location.getMethods()
 		<< std::endl;
@@ -237,14 +254,3 @@ std::ostream&	operator<<(std::ostream& os, const std::vector<T> vec){
 // 		os << "Methods  : " << *it << '\n';
 // 	return os;
 // }
-
-std::ostream&	operator<<(std::ostream &os, const std::vector<CLocation>& locations){
-
-	std::vector<CLocation>::const_iterator it;
-
-	os << " Locations\n=========\n";
-	int i = 0;
-	for (it = locations.begin(); it != locations.end(); it++, i++)
-		os << "Location " << i << " : " <<  *it << '\n';
-	return os;
-}

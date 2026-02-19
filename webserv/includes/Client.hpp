@@ -42,10 +42,9 @@ public:
 	// logic for sending and receiving etc
 private:
 	int				fd;
-	std::string		in_buff;
+	char		in_buff[1000];
 //	struct Request	request;
 	std::string		out_buff;
 	enum State		state;
 	time_t			last_active;
 };
-

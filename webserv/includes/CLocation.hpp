@@ -19,7 +19,7 @@ class CLocation {
 	std::string								_alias;				// actual path for url
 	bool									_autoindex;			// indicates if the location has autoindex ()
 	std::map<std::string, std::string>		_cgi_map;			// cgi map (extension/path)
-	std::vector<std::string>				_charset;			// charset(s) that can be handled
+	std::vector<std::string>				_charsets;			// charset(s) that can be handled
  	std::vector<std::string>				_index;				// ordered list of possible indexes - first one that works is returned
 	std::vector<std::string>				_methods;			// methods permitted for this locations on server (supercedes by global/server methods)
 	LocationMatchType_e						_modifier;			// need to add functionality - possibly use enum instead (Location = or Location ~ etc)

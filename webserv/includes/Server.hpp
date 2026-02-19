@@ -46,5 +46,6 @@ class Server {
 
 		struct pollfd sockets[NUM_SOCK + MAX_CONN];
 		std::map<int, Client> clients;
-
+		int	max_conn;	// The maximum number of client connections
+		int port_count; // The sum of all the ports in all the server blocks
 };

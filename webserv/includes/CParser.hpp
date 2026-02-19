@@ -67,7 +67,7 @@ class CParser : public Parser
 		void			setAlias(node_t* node, fileInfo_s& alias);
 		void			setBoolean(node_t* node, bool& state);
 		void			setCGImap(node_t* node, std::map<std::string, std::string>& cgiMap);
-		void			setCharsets(node_t* node, std::vector<std::string>& charset);
+		void			setCharsets(node_t* node, std::vector<std::string>& charsets);
 		void			setErrorPage(node_t* node, std::vector<errorPage_s>& error_pages);
 		void			setGlobalVar(node_t* node, Config& config);
 		void			setIndex(node_t* node, std::vector<std::string>& index);

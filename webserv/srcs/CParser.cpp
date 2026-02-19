@@ -148,8 +148,7 @@ void	CParser::populateKeywords(void) {
 	_location_keywords.push_back("alias");
 	_location_keywords.push_back("autoindex");
 	_location_keywords.push_back("cgi_path");
-	_location_keywords.push_back("cgi_type");
-	_location_keywords.push_back("charset");
+	_location_keywords.push_back("charsets");
 	_location_keywords.push_back("index");
 	_location_keywords.push_back("methods");
 	_location_keywords.push_back("redirect_status");
@@ -158,22 +157,24 @@ void	CParser::populateKeywords(void) {
 	_location_keywords.push_back("upload_path");
 
 	// SERVER
+	_server_keywords.push_back("charsets");				
 	_server_keywords.push_back("error_page");
 	_server_keywords.push_back("listen");
 	_server_keywords.push_back("max_body_size");
 	_server_keywords.push_back("max_connections");
-	_global_keywords.push_back("max_header_size");
+	_server_keywords.push_back("max_header_size");
 	_server_keywords.push_back("methods");
 	_server_keywords.push_back("root");
 	_server_keywords.push_back("server_name");
-
+	
 	// GLOBAL
+	_global_keywords.push_back("charsets");
 	_global_keywords.push_back("error_page");
 	_global_keywords.push_back("max_body_size");
 	_global_keywords.push_back("max_connections");
 	_global_keywords.push_back("max_header_size");
 	_global_keywords.push_back("keepalive_timeout");
-	_global_keywords.push_back("read_timeout");
+	_global_keywords.push_back("read_write_timeout");
 }
 
 template <typename T>
@@ -222,7 +223,7 @@ void	CParser::setConfig(Config& config){
 
 		if (node->type == "server")
 			setServer(node, servers);
-		else if (node->type == "charset")
+		else if (node->type == "charsets")
 			setCharsets(node, charset);
 		else if (node->type == "error_page")
 			setErrorPage(node, error_pages);
@@ -236,7 +237,7 @@ void	CParser::setConfig(Config& config){
 			setNumericValue<long long>(node, max_header, 1, SYS_MAX_HEAD);
 		else if (node->type == "keepalive_timeout")
 			setNumericValue<int>(node, timeout_ka, 1, SYS_TM_KA);
-		else if (node->type == "read_timeout")
+		else if (node->type == "read_write_timeout")
 			setNumericValue<int>(node, timeout_rw, 1, SYS_TM_RW);
 	}
 	config.setServers(servers);
@@ -290,7 +291,7 @@ void	CParser::setServer(node_t* server_node, std::vector<CServer>& servers){
 		node_t* node = server_node->children[i];
 
 		if (node->type == "server")
-			throw std::runtime_error("Error : server blocks cannot be nested");
+			throw std::runtime_error("Error : server blocks cannot contain server blocks");
 		else if (node->type == "location")
 			setLocation(node, locations);
 		else if (node->type == "error_page")
@@ -326,7 +327,7 @@ void	CParser::setServer(node_t* server_node, std::vector<CServer>& servers){
 Directive			Args		Multi Allowed	Type						Duplicate Behavior	Inherited	Notes
 =========			====		=============	====						==================	=========	=====
 
-cgi_map				multi		yes				map<string, std::string>	Append (by ext)		Merge		ext uniqueness
+cgi_path			multi		yes				map<string, std::string>	Append (by ext)		Merge		ext uniqueness
 charset				multi		yes				vector<string>				Append				Replace
 index				multi		yes				std::vector<string>			Append				Replace
 methods				multi		yes				std::vector<string>			Append				Replace
@@ -373,7 +374,9 @@ void	CParser::setLocation(node_t* location_node, std::vector<CLocation>& locatio
 
 		node_t* node = location_node->children[i];
 
-		if (node->type == "alias")
+		if (node->type == "location")
+			throw std::runtime_error("Error : location blocks cannot location blocks");
+		else if (node->type == "alias")
 			setPath(node, alias);
 		else if (node->type == "autoindex")
 			setBoolean(node, autoindex);
@@ -462,7 +465,7 @@ void	CParser::setCharsets(node_t* node, std::vector<std::string>& charset){
 
 	size_t size = node->args.size();
 
-	for (size_t i = 0; i < size - 1; i++){
+	for (size_t i = 0; i < size; i++){
 		if (isValidCharset(node->args[i]))
 			charset.push_back(node->args[i]);
 		else
@@ -542,12 +545,11 @@ void	CParser::setPorts(node_t* node, std::vector<listen_s>& ports){
 
 	for (size_t i = 0; i < size; i++){
 
-		if (def == true && i == size - 1) // default_server is last arg
+		if (def == true && i == (size - 1))
 			break;
 
 		uint32_t ip;
 		uint16_t port_num;
-
 		splitPortInfo(node->args[i], ip, port_num);
 
 		listen_s port(ip, def, port_num);
