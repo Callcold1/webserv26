@@ -7,16 +7,15 @@ CXX         := g++
 CXXFLAGS    := -Wall -Werror -Wextra -std=c++98 -g
 
 INCLUDES    :=	-I $(PROJECT_ROOT)/includes \
-				-I $(PROJECT_ROOT)/includes/response
+				-I $(PROJECT_ROOT)/includes/response \
+ 				-I$(PROJECT_ROOT)/includes/config
 #  				-I$(PROJECT_ROOT)/Request/includes \
-# 				-I$(PROJECT_ROOT)/Config/includes \
 
 OBJDIR      := objs
 SRCDIR      := $(PROJECT_ROOT)/srcs
 
 SRCS        := main.cpp \
 				Server.cpp \
-				Client.cpp \
 				response/Response.cpp \
 				response/ErrorResponse.cpp \
 				response/RediResponse.cpp \
@@ -24,12 +23,14 @@ SRCS        := main.cpp \
 				response/CgiResponse.cpp \
 				utilityFunctions.cpp \
 				Log.cpp \
-				Config.cpp \
-				CParser.cpp \
-				CServer.cpp \
-				CLocation.cpp \
-				Parser.cpp \
-				Tokeniser.cpp
+				config/Config.cpp \
+				config/CParser.cpp \
+				config/CServer.cpp \
+				config/CLocation.cpp \
+				config/Parser.cpp \
+				config/Tokeniser.cpp
+#				Client.cpp
+
 
 OBJS := $(patsubst %.cpp, $(OBJDIR)/%.o, $(SRCS))
 DEPS := $(patsubst %.cpp, $(OBJDIR)/%.d, $(SRCS))

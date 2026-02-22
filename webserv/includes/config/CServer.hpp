@@ -1,0 +1,110 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   CServer.hpp                                   :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/01/19 09:55:28 by kmooney           #+#    #+#             */
+/*   Updated: 2026/01/21 16:02:39 by kmooney          ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#pragma once
+
+#include "CLocation.hpp"
+#include "Config.hpp"
+
+struct errorPage_s;
+struct listen_s;
+
+class CLocation;
+
+class CServer {
+
+	private:
+
+		bool							_autoindex;			// indicates server autoindex setting (true = on, false = off)
+		std::vector<std::string>		_charsets;			// charset(s) that can be handled
+		std::vector<errorPage_s>		_error_pages;		// Vector of error_page structs
+ 		std::vector<std::string>		_index;				// ordered list of possible index filenames - first one that works is returned
+		std::vector<CLocation>	 		_locations;			// Vector of location class objects
+		long long						_max_body;			// Max acceptable body size in bytes
+		long long						_max_header_size;	// Max acceptable header size in bytes
+		std::vector<std::string>		_methods;			// Methods permitted for all locations on server (can be superceded by location_methods)
+		std::vector<listen_s> 			_ports;				// Connection info (port/ip/default_flag)
+		std::string	 					_root_dir;			// Root directory for server - overrides global value
+		std::vector<std::string> 		_server_names;		// Server names
+		int								_timeout_ka;		// Length of time before keep-alive timeout (seconds)
+		int								_timeout_rw;		// Length of time before rw timeout (seconds)
+
+		bool							_autoindex_set;
+		bool							_charset_set;
+		bool							_index_set;
+		bool							_max_body_set;
+		bool							_max_header_set;
+		bool							_methods_set;
+		bool							_ports_set;
+		bool							_root_set;
+		bool							_timeout_ka_set;
+		bool							_timeout_rw_set;
+
+	public:
+										/*	CONSTRUCTORS	*/
+										CServer( void );
+										CServer( const CServer& other );
+
+										/*	DESTRUCTORS	*/
+										~CServer( void );
+	
+										/*	COPY ASSIGNMENT	*/
+		CServer&						operator=(const CServer& other);
+
+										/* CHECK IF VARIABLE SET*/
+		bool							isAutoIndexSet(void) const;
+		bool							isCharsetSet(void) const;
+		bool							isIndexSet(void) const;
+		bool							isMaxBodySet(void) const;
+		bool							isMaxConnectionsSet(void) const;
+		bool							isMaxHeaderSet(void) const;
+		bool							isMethodsSet(void) const;
+		bool							isNamesSet(void) const;
+		bool							isRootDirSet(void) const;
+		bool							isTimeoutKASet(void) const;
+		bool							isTimeoutRWSet(void) const;
+
+										/*	GETTERS	*/
+		bool							getAutoIndex(void) const;
+		std::vector<std::string>		getCharsets(void) const;
+		std::vector<errorPage_s>		getErrorPages(void) const;				
+		std::vector<std::string>		getIndex(void) const;					
+		std::vector<listen_s>			getListen(void) const;					
+		std::vector<CLocation>			getLocations(void) const;				
+		long long						getMaxBodySize(void) const;				
+		int								getMaxConnections(void) const;			
+		long long						getMaxHeaderSize(void) const;			
+		const std::vector<std::string>	getMethods(void) const;					
+		std::vector<std::string>		getNames(void) const;					
+		std::string		 				getRootDir(void) const;					
+		int								getTimeoutKA (void) const;				
+		int								getTimeoutRW(void) const;				
+
+										/*	SETTERS	*/
+		void 							setAutoIndex(bool autoindex);
+		void							setCharsets(std::vector<std::string>& charsets);
+		void 							setErrorPages(const std::vector<errorPage_s>& error_pages);
+		void							setIndex(const std::vector<std::string>& index);		
+		void 							setLocations(const std::vector<CLocation>& locations);
+		void 							setMaxBodySize(long long max_body_size);			
+		void 							setMaxConnections(int max_connections);				
+		void 							setMaxHeaderSize(long long max_header_size);		
+		void 							setMethods(const std::vector<std::string>& methods);
+		void 							setNames(const std::vector<std::string>& names);	
+		void 							setListen(const std::vector<listen_s>& ports);
+		void 							setRootDir(std::string& root);
+		void							setTimeoutKA(int timeout_in_seconds);
+		void							setTimeoutRW(int timeout_in_seconds);
+	
+										/*	PROPAGATE VARIABLES TO LOWER LEVEL (CSERVER -> CLOCATION)	*/
+		void							propagateServerToLocation();
+};

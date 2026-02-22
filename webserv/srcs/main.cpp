@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/07 10:25:15 by kmooney           #+#    #+#             */
-/*   Updated: 2026/02/19 15:12:39 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/02/22 17:44:26 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,10 +25,6 @@
 int	main(int argc, char** argv){
 
 	std::string config_path;
-	std::istringstream test("abcdef ghijk");
-
-	test >> config_path;
-	std::cout << "String : " << config_path << std::endl;
 
 	if (argc == 2)
 		config_path = argv[1];

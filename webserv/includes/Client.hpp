@@ -4,6 +4,8 @@
 #include <string>
 #include <ctime>
 
+#include "Config.hpp"
+//#include "Request.hpp"
 
 enum State
 {
@@ -40,11 +42,15 @@ public:
 	
 	bool 		has_output;
 	// logic for sending and receiving etc
+
 private:
+	
 	int				fd;
-	char		in_buff[1000];
-//	struct Request	request;
+	char			in_buff[1000];
+	//Request			request;
 	std::string		out_buff;
 	enum State		state;
 	time_t			last_active;
+
+	CServer			_matched_server;
 };
