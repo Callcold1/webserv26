@@ -1,6 +1,6 @@
 
 
-void handle_request(Request *request)
+void handle_request(Request &request)
 {
 	
 }
