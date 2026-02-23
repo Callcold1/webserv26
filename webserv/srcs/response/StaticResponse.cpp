@@ -7,11 +7,11 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-StaticResponse::StaticResponse() : Response(), _is_dir(false)
+StaticResponse::StaticResponse(Request &request) : Response(request), _is_dir(false)
 {
 }
 
-StaticResponse::StaticResponse(int status) : Response(status), _is_dir(false)
+StaticResponse::StaticResponse(int status, Request &request) : Response(status, request), _is_dir(false)
 {
 }
 
@@ -30,8 +30,8 @@ StaticResponse::~StaticResponse()
 int StaticResponse::generate()
 {
 	int re_status;
-	//_path = "html/redifile.html"; //TODO change this to get actual path from response
-	_path = "html/lalala";
+
+	_path = _request._uri.path;
 	if ((re_status = get_file()) != 0)
 		return (re_status);
 	defaultHeaders();

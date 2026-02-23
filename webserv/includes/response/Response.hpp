@@ -4,6 +4,7 @@
 #include <string>
 #include <iterator>
 #include <sstream>
+#include <Request.hpp>
 #include "helpers.hpp"
 
 #define HTTP_VERSION "HTTP/1.1"
@@ -14,8 +15,8 @@ typedef std::map<std::string, std::string> HeaderMap_t;
 class Response
 {
 public:
-	Response();
-	Response(int status);
+	Response(Request &request);
+	Response(int status, Request &request);
 	Response(const Response &other);
 	Response &operator=(const Response &other);
 	~Response();

@@ -5,8 +5,8 @@
 class CgiResponse : public Response
 {
 public:
-	CgiResponse();
-	CgiResponse(int status);
+	CgiResponse(Request &request);
+	CgiResponse(int status, Request &request);
 	CgiResponse(const CgiResponse &other);
 	CgiResponse &operator=(const CgiResponse &other);
 	~CgiResponse();

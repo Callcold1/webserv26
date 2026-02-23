@@ -6,12 +6,13 @@
 /*   By: junruh <junruh@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/07 10:25:15 by kmooney           #+#    #+#             */
-/*   Updated: 2026/02/23 16:28:43 by junruh           ###   ########.fr       */
+/*   Updated: 2026/02/23 16:30:06 by junruh           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <cstring>
 #include <iostream>
+#include "CgiResponse.hpp"
 #include "Config.hpp"
 #include "CParser.hpp"
 #include "Log.hpp"

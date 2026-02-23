@@ -11,6 +11,7 @@ Response::Response(int status, Request &request)
 {}
 
 Response::Response(const Response &other)
+	: _request(other._request)
 {
 	_status = other._status;
 	_headers.insert(other._headers.begin(), other._headers.end());

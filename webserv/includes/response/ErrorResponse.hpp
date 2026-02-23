@@ -5,8 +5,8 @@
 class ErrorResponse : public Response
 {
 public:
-	ErrorResponse();
-	ErrorResponse(int status);
+	ErrorResponse(Request &request);
+	ErrorResponse(int status, Request &request);
 	ErrorResponse(const ErrorResponse &other);
 	ErrorResponse &operator=(const ErrorResponse &other);
 	~ErrorResponse();

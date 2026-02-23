@@ -5,8 +5,8 @@
 class StaticResponse : public Response
 {
 public:
-	StaticResponse();
-	StaticResponse(int status);
+	StaticResponse(Request &request);
+	StaticResponse(int status, Request &request);
 	StaticResponse(const StaticResponse &other);
 	StaticResponse &operator=(const StaticResponse &other);
 	~StaticResponse();

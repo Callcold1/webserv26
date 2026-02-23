@@ -46,7 +46,7 @@ public:
 private:
 	
 	int				fd;
-	char			in_buff[1000];
+	std::string		in_buff;
 	//Request		request;
 	std::string		out_buff;
 	enum State		state;

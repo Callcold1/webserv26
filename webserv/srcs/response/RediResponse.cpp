@@ -4,12 +4,10 @@
 
 RediResponse::RediResponse(Request &request) : Response(request)
 {
-	generate();
 }
 
 RediResponse::RediResponse(int status, Request &request) : Response(status, request)
 {
-	generate();
 }
 
 RediResponse::RediResponse(const RediResponse &other) : Response(other)

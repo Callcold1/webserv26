@@ -5,8 +5,8 @@
 class RediResponse : public Response
 {
 public:
-	RediResponse();
-	RediResponse(int status);
+	RediResponse(Request &request);
+	RediResponse(int status, Request &request);
 	RediResponse(const RediResponse &other);
 	RediResponse &operator=(const RediResponse &other);
 	~RediResponse();

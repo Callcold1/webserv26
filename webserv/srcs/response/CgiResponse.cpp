@@ -27,7 +27,7 @@ CgiResponse::~CgiResponse()
 
 int	CgiResponse::generate()
 {
-	_path = "www/cgi-bin/meme.py";
+	_path = _request._uri.path;
 	if (execute() != 0)
 	{
 		return(500);
@@ -75,7 +75,7 @@ int CgiResponse::execute()
 		};
 
 		const char *envp[] = {
-			"QUERY_STRING=jimtext=srrrrrryj&dwighttext=srthaze&michaeltext=sethser",  //TODO get query string, maybe get only query string from parent
+			_request._uri.query.c_str(),  //TODO get query string, maybe get only query string from parent
 			NULL
 		};
 		execve(_path.c_str(), args, const_cast<char * const *>(envp)); 
