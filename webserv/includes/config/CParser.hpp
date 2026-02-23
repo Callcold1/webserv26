@@ -145,9 +145,9 @@ class CParser : public Parser
 
 	private:
 
-		std::ifstream							_stream;
-		Tokeniser*								_tokeniser;
-		node_t*									_rawConfig;
+		std::ifstream	_stream;
+		Tokeniser*		_tokeniser;
+		node_t*			_rawConfig;
 
 						/* CONSTRUCTORS */
 						CParser( void );
