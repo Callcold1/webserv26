@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/16 15:33:48 by kmooney           #+#    #+#             */
-/*   Updated: 2026/02/18 17:43:20 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/02/19 14:09:31 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -182,12 +182,12 @@ bool	substrToHex( uint64_t& dest, std::string str, size_t start, size_t end){
 
 bool convertToBool(const std::string& str)
 {
-    if (str == "true")
-        return true;
-    if (str == "false")
-        return false;
+	if (str == "true")
+		return true;
+	if (str == "false")
+		return false;
 
-    throw std::runtime_error("Invalid boolean value: " + str);
+	throw std::runtime_error("Invalid boolean value: " + str);
 }
 
 
@@ -237,7 +237,13 @@ bool isValidUTF8(const std::string &str)
 
 /*
 0000	0
-0001	1
+0001	1Global
+======
+Max Body size : 500000
+Max Connections : 1024
+Max Header size : 8000
+Timeout (keep-alive) : 65 seconds
+Timeout (read-write) : 200 seconds
 0010	2
 0011	3
 0100	4
@@ -817,86 +823,69 @@ std::string	createArgsString(std::vector<std::string> args){
 >>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<
 */
 
-// uint32_t getIPfromStr(const std::string& ip_str)
-// {
-//     struct addrinfo hints;
-//     struct addrinfo* res = NULL;
-
-//     std::memset(&hints, 0, sizeof(hints));
-//     hints.ai_family = AF_INET;
-//     hints.ai_socktype = SOCK_STREAM;
-
-//     if (ip_str.empty())
-//         hints.ai_flags = AI_PASSIVE;
-
-//     const char* node = ip_str.empty() ? NULL : ip_str.c_str();
-
-//     int status = getaddrinfo(node, NULL, &hints, &res);
-//     if (status != 0)
-//         throw std::runtime_error(gai_strerror(status));
-
-//     if (!res)
-//         throw std::runtime_error("getaddrinfo returned no result");
-
-//     struct sockaddr_in* addr =
-//         reinterpret_cast<struct sockaddr_in*>(res->ai_addr);
-
-//     uint32_t ip = addr->sin_addr.s_addr;
-
-//     freeaddrinfo(res);
-//     return ip;
-// }
-
-static void resolveAddress(const std::string& ip_str,
-                    const std::string& port_str,
-                    uint32_t& ip,
-                    uint16_t& port)
+void printVisible(const std::string& s)
 {
-    struct addrinfo hints;
-    struct addrinfo* res = NULL;
+    for (size_t i = 0; i < s.size(); ++i)
+    {
+        unsigned char c = s[i];
 
-    std::memset(&hints, 0, sizeof(hints));
-    hints.ai_family = AF_INET;
-    hints.ai_socktype = SOCK_STREAM;
+        if (c == ' ')
+            std::cout << "[SPACE]";
+        else if (c == '\n')
+            std::cout << "[\\n]";
+        else if (c == '\r')
+            std::cout << "[\\r]";
+        else if (c == '\t')
+            std::cout << "[\\t]";
+        else if (std::isprint(c))
+            std::cout << c;
+        else
+            std::cout << "[0x" << std::hex << (int)c << std::dec << "]";
+    }
+    std::cout << std::endl;
+}
 
-    if (ip_str.empty())
-        hints.ai_flags = AI_PASSIVE;
+void	resolveAddress(const std::string& ip_str, const std::string& port_str, uint32_t& ip, uint16_t& port) {
+	struct addrinfo hints;
+	struct addrinfo* res = NULL;
 
-    const char* node = ip_str.empty() ? NULL : ip_str.c_str();
+	std::memset(&hints, 0, sizeof(hints));
+	hints.ai_family = AF_INET;
+	hints.ai_socktype = SOCK_STREAM;
+	
+	if (ip_str.empty())
+		hints.ai_flags = AI_PASSIVE;
 
-    int status = getaddrinfo(node, port_str.c_str(), &hints, &res);
-    if (status != 0)
-        throw std::runtime_error(gai_strerror(status));
+	const char* node = ip_str.empty() ? NULL : ip_str.c_str();
 
-    if (!res)
-        throw std::runtime_error("getaddrinfo returned no result");
+	int status = getaddrinfo(node, port_str.c_str(), &hints, &res);
+	if (status != 0)
+		throw std::runtime_error(gai_strerror(status));
 
-    struct sockaddr_in* addr =
-        reinterpret_cast<struct sockaddr_in*>(res->ai_addr);
+	if (!res)
+		throw std::runtime_error("getaddrinfo returned no result");
 
-    ip = addr->sin_addr.s_addr;
-    port = ntohs(addr->sin_port);
+	struct sockaddr_in* addr = reinterpret_cast<struct sockaddr_in*>(res->ai_addr);
 
-    freeaddrinfo(res);
+	ip = addr->sin_addr.s_addr;
+	port = ntohs(addr->sin_port);
+
+	freeaddrinfo(res);
 }
 
 void splitPortInfo(const std::string& port_info, uint32_t& ip, uint16_t& port)
 {
-    size_t pos = port_info.find(':');
-    std::string ip_str;
-    std::string port_str;
+	size_t pos = port_info.find(':');
+	std::string ip_str;
+	std::string port_str;
 
-    if (pos != std::string::npos)
-    {
-        ip_str = port_info.substr(0, pos);
-        port_str = port_info.substr(pos + 1);
-    }
-    else
-    {
-        ip_str = "";
-        port_str = port_info;
-    }
+	if (pos != std::string::npos){
+		ip_str = port_info.substr(0, pos);
+		port_str = port_info.substr(pos + 1);
+	} 
+	else {
+		ip_str = "";
+		port_str = port_info;
+	}
 	resolveAddress(ip_str, port_str, ip, port);
-    //ip = getIPfromStr(ip_str);
-    //convertToType(port, port_str);
 }

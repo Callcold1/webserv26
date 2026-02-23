@@ -32,18 +32,18 @@ class Parser {
 
 public:
 	Parser( void );
-	Parser(const std::vector<token_t>& tokens);
+	Parser(const std::vector<tokeniser_s>& tokens);
 
 	virtual node_t* parse() = 0;
 
-	const token_t&  peek(size_t offset = 0) const;
-	const token_t&  consume();
+	const tokeniser_s&  peek(size_t offset = 0) const;
+	const tokeniser_s&  consume();
 	bool            eof() const;
 
 	void            expect(TokenType_e type, const std::string& value = "");
 	bool            check(TokenType_e type, const std::string& value = "") const;
 
 protected:
-	std::vector<token_t>   _tokens;
+	std::vector<tokeniser_s>   _tokens;
 	size_t                 _pos;
 };

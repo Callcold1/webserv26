@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/18 17:37:44 by kmooney           #+#    #+#             */
-/*   Updated: 2026/02/18 17:42:46 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/02/22 14:13:41 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,9 +33,6 @@
 #define SYS_MAX_HEAD 		4000000000			// maximum permissible body size (if given size is higher, this value is applied)
 #define SYS_TM_KA 			1000				// maximum permissible keep-alive timeout in seconds (if given size is higher, this value is applied)
 #define SYS_TM_RW 			1000				// maximum permissible read-write timeout in seconds (if given size is higher, this value is applied)
-
-//class CServer; // Forward declaration
-//class CLocation; // Forward declaration
 
 struct errorPage_s {
 	int			_error_num;

@@ -25,7 +25,7 @@ class Server {
 	public:
 
 		/* Constructors and destructor */
-		//Server(Config &config);
+		Server(Config &config);
 		Server();
 		//Server(const Server& other);
 		//Server&	operator=( const Server& other);
@@ -38,11 +38,14 @@ class Server {
 		void client_write();
 
 		void update_poll_events();
+
 	private:
 
 		void createSockets(int ports[]);
+		void createSingleSocket(listen_s port_info, size_t socket_count, int max_conn );
 
 		struct pollfd sockets[NUM_SOCK + MAX_CONN];
 		std::map<int, Client> clients;
-
+		int	max_conn;	// The maximum number of client connections
+		int port_count; // The sum of all the ports in all the server blocks
 };

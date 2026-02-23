@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/14 09:52:22 by kmooney           #+#    #+#             */
-/*   Updated: 2026/01/21 09:37:52 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/02/23 12:40:50 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,11 +27,11 @@ enum TokenType_e {
 	T_EOF
 };
 
-struct token_t {
+struct tokeniser_s {
 	TokenType_e type;
 	std::string value;
 
-	token_t(TokenType_e k, const std::string& v)
+	tokeniser_s(TokenType_e k, const std::string& v)
 		: type(k), value(v) {}
 };
 
@@ -53,16 +53,16 @@ public:
 	Tokeniser&	operator=(const Tokeniser& other);
 	~Tokeniser();
 
-	const std::vector<token_t>&	getTokens() const;
+	const std::vector<tokeniser_s>&	getTokens() const;
 
 private:
 
 	tokenContext_t          _context;
 	std::stringstream       _stream;
-	std::vector<token_t>   _tokens;
+	std::vector<tokeniser_s>   _tokens;
 
 	void	tokenise();
-	token_t	nextToken();
+	tokeniser_s	nextToken();
 
 	bool	isSymbol(char c) const;
 };

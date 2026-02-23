@@ -29,12 +29,55 @@ CServer& CServer::operator=(const CServer& other) {
 >>>>>>>>>>>>>>><<<<<<<<<<<<<<<
 */
 
+bool	CServer::isAutoIndexSet(void) const{
+	return _autoindex_set;
+}
+
+bool	CServer::isCharsetSet(void) const{
+	return _charset_set;
+}
+
+bool	CServer::isIndexSet(void) const{
+	return _index_set;
+}
+
+bool	CServer::isMaxBodySet(void) const{
+	return _max_body_set;
+}
+
+bool	CServer::isMaxHeaderSet(void) const{
+	return _max_header_set;
+}
+bool	CServer::isMethodsSet(void) const{
+	return _methods_set;
+}
+bool	CServer::isNamesSet(void) const{
+	return _ports_set;
+}
+bool	CServer::isRootDirSet(void) const{
+	return _root_set;
+}
+bool	CServer::isTimeoutKASet(void) const{
+	return _timeout_ka_set;
+}
+bool	CServer::isTimeoutRWSet(void) const{
+	return _timeout_rw_set;
+}
+
+bool	CServer::getAutoIndex(void) const{
+	return _autoindex;
+}
+
 std::vector<std::string>	CServer::getCharsets(void) const{
 	return _charsets;
 }
 
 std::vector<errorPage_s>	CServer::getErrorPages(void) const{
 	return _error_pages;
+}
+
+std::vector<std::string>	CServer::getIndex(void) const{
+	return _index;
 }
 
 std::vector<CLocation>	CServer::getLocations(void) const{
@@ -65,13 +108,28 @@ std::string	CServer::getRootDir(void) const{
 	return _root_dir;
 }
 
+int    CServer::getTimeoutKA (void) const{
+    return _timeout_ka;
+}
+
+int    CServer::getTimeoutRW(void) const{
+    return _timeout_rw;
+}
+
 /*
 >>>>>>>>>>>>>>><<<<<<<<<<<<<<<
 >>>>>>		SETTERS		<<<<<<
 >>>>>>>>>>>>>>><<<<<<<<<<<<<<<
 */
 
+
+void 	CServer::setAutoIndex(bool autoindex){
+	_autoindex_set = true;
+	_autoindex = autoindex;
+}
+
 void	CServer::setCharsets(std::vector<std::string>& charsets){
+	_charset_set = true;
 	_charsets = charsets;
 }
 
@@ -79,19 +137,27 @@ void	CServer::setErrorPages(const std::vector<errorPage_s>& error_pages){
 	_error_pages = error_pages;
 }
 
+void 	CServer::setIndex(const std::vector<std::string>& index){
+	_index_set = true;
+	_index = index;
+}
+
 void	CServer::setLocations(const std::vector<CLocation>& locations){
 	_locations = locations;
 }
 
 void	CServer::setMaxBodySize(long long max_body_size){
+	_max_body_set = true;
 	_max_body = max_body_size;
 }
 
 void	CServer::setMaxHeaderSize(long long max_header_size){
+	_max_header_set = true;
 	_max_header_size = max_header_size;
 }
 
 void	CServer::setMethods(const std::vector<std::string>& methods){
+	_methods_set = true;
 	_methods = methods;
 }
 
@@ -100,53 +166,30 @@ void	CServer::setNames(const std::vector<std::string>& names){
 }
 
 void	CServer::setListen(const std::vector<listen_s>& ports){
+	_ports_set = true;
 	_ports = ports;
 }
 
 void	CServer::setRootDir(std::string& root_dir){
+	_root_set = true;
 	_root_dir = root_dir;
 }
 
-// /*
-// >>>>>>>>>>>>>>><<<<<<<<<<<<<<<
-// >>>>>>		FINDERS		<<<<<<
-// >>>>>>>>>>>>>>><<<<<<<<<<<<<<<
-// */
+void    CServer::setTimeoutKA(int timeout_in_seconds){
+	_timeout_ka_set = true;
+	_timeout_ka = timeout_in_seconds;
+}
 
-// bool	CServer::findErrorPage(int error_code, std::string& path) {
+void    CServer::setTimeoutRW(int timeout_in_seconds){
+	_timeout_rw_set = true;
+	_timeout_rw = timeout_in_seconds;
+}
 
-// 	std::map<int, std::string>::iterator it = _error_pages.find(error_code);
+/*
+>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<
+>>>>>>		CSERVER PROPAGATION 		<<<<<<
+>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<
+*/
+void	CServer::propagateServerToLocation(){
 
-// 	if (it == _error_pages.end())
-// 		return false;
-// 	path = it->second;
-// 	return true;
-// }
-
-// bool	CServer::matchLocation(const std::string& path, size_t& pos){
-// 	size_t size = _locations.size();
-// 	for (size_t i = 0; i < size; i++){
-// 		if (_locations[i].getPath() == path){
-// 			return true;
-// 		}
-// 	}
-// 	return false;
-// }
-
-// /*
-// >>>>>>>>>>>>>>><<<<<<<<<<<<<<<
-// >>>>>>		CHECKERS	<<<<<<
-// >>>>>>>>>>>>>>><<<<<<<<<<<<<<<
-// */
-
-// bool	CServer::checkServerMethod(const std::string& method) const{
-
-// 	std::vector<std::string>::const_iterator it;
-// 	std::vector<std::string>::const_iterator end = _methods.end();
-
-// 	for (it = _methods.begin(); it != end; it++){
-// 		if (method.compare(*it) == 0)
-// 			return true;
-// 	}
-// 	return false;
-// }
+}

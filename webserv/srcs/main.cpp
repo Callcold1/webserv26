@@ -6,33 +6,22 @@
 /*   By: junruh <junruh@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/07 10:25:15 by kmooney           #+#    #+#             */
-/*   Updated: 2026/02/19 17:36:07 by junruh           ###   ########.fr       */
+/*   Updated: 2026/02/23 16:28:43 by junruh           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-
-
 #include <cstring>
 #include <iostream>
-
+#include "Config.hpp"
+#include "CParser.hpp"
+#include "Log.hpp"
 #include "Server.hpp"
-#include "ErrorResponse.hpp"
-#include "RediResponse.hpp"
-#include "StaticResponse.hpp"
-#include "CgiResponse.hpp"
 
-/*
+#define DEFAULT_PATH "default.conf"
+#define TOO_MANY_ARGS "Error : too many arguments : the program can be started without arguments (default.conf will be used), or with a valid configuration file path"
+#define NO_CLI_ARG "No config file path provided - attempting to use : "
+#define ERR_CONFIG_NOT_OPEN "Error : the configuration file could not be opened : "
 
-Basic server structure is as follows
-
-socket()    → create socket
-bind()      → attach address (IP + port)
-listen()    → mark as passive
-accept()    → accept incoming connection
-recv()/send() → communicate
-close()     → release socket
-
-*/
 
 int	main()
 {
@@ -49,4 +38,5 @@ int	main()
 	
 	return(0);
 	
+	return 0;
 }
