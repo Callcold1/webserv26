@@ -2,12 +2,12 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-RediResponse::RediResponse() : Response()
+RediResponse::RediResponse(Request &request) : Response(request)
 {
 	generate();
 }
 
-RediResponse::RediResponse(int status) : Response(status)
+RediResponse::RediResponse(int status, Request &request) : Response(status, request)
 {
 	generate();
 }

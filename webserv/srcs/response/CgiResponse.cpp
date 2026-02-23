@@ -5,11 +5,11 @@
 #include <iostream>
 
 
-CgiResponse::CgiResponse() : Response()
+CgiResponse::CgiResponse(Request &request) : Response(request)
 {
 }
 
-CgiResponse::CgiResponse(int status) : Response(status)
+CgiResponse::CgiResponse(int status, Request &request) : Response(status, request)
 {
 }
 

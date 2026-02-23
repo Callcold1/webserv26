@@ -2,12 +2,12 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-ErrorResponse::ErrorResponse() : Response()
+ErrorResponse::ErrorResponse(Request &request) : Response(request)
 {
 	generate();
 }
 
-ErrorResponse::ErrorResponse(int status) : Response(status)
+ErrorResponse::ErrorResponse(int status, Request &request) : Response(status, request)
 {
 	generate();
 }

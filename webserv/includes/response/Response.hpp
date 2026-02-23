@@ -38,5 +38,5 @@ protected:
 	int			_status;
 	HeaderMap_t _headers;
 	std::string _body;
-	//Request		_request;
+	Request		_request;
 };

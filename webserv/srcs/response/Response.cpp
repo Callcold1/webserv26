@@ -2,12 +2,12 @@
 #include <ctime>
 #include <iostream>
 
-Response::Response()
-	: _status(200)
+Response::Response(Request &request)
+	: _status(200), _request(request)
 {}
 
-Response::Response(int status)
-	: _status(status)
+Response::Response(int status, Request &request)
+	: _status(status), _request(request)
 {}
 
 Response::Response(const Response &other)
