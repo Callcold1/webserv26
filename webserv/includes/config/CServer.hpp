@@ -99,7 +99,7 @@ class CServer {
 		void 							setMaxConnections(int max_connections);				
 		void 							setMaxHeaderSize(long long max_header_size);		
 		void 							setMethods(const std::vector<std::string>& methods);
-		void 							setNames(const std::vector<std::string>& names);	
+		void 							setServerNames(const std::vector<std::string>& names);	
 		void 							setListen(const std::vector<listen_s>& ports);
 		void 							setRootDir(std::string& root);
 		void							setTimeoutKA(int timeout_in_seconds);

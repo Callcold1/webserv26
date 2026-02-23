@@ -214,22 +214,8 @@ timeout_rw			1			no				int						Overwrite			Replace if redefined	Global/CServer
 */
 void	CParser::setConfig(Config& config){
 
-	std::vector<CServer>		servers;
-	tempConfig_s				tmp;
-
-	// bool						autoindex = false;
-	// std::vector<std::string>	charset;
-	// std::vector<errorPage_s>	error_pages;
-	// std::vector<std::string>	index;
-	// long long				max_body;
-	// int						max_conn;
-	// long long				max_header;
-	// std::vector<std::string>	methods;
-	// std::string				root;
-	// int						timeout_ka;
-	// int						timeout_rw;
-
-	tempConfig_s tmp;
+	std::vector<CServer>	servers;
+	tempConfig_s			tmp;
 
 	for (size_t i = 0; i < _rawConfig->children.size(); i++){
 
@@ -240,7 +226,7 @@ void	CParser::setConfig(Config& config){
 		else
 			setVariable(tmp, node, GLOBAL_HANDLER);
 	}
-	pushToConfig(tmp, config, GLOBAL_HANDLER);
+	pushToConfig(tmp, config);
 }
 
 /* SERVER
@@ -279,7 +265,7 @@ bool	CParser::setServer(node_t* server_node, std::vector<CServer>& servers){
 	
 	CServer server;
 
-	pushToConfig(tmp, server, SERVER_HANDLER);
+	pushToServer(tmp, server);
 	servers.push_back(server);
 
 	return true;
@@ -339,7 +325,7 @@ bool	CParser::setLocation(node_t* location_node, std::vector<CLocation>& locatio
 
 	CLocation	location;
 
-	pushToConfig(tmp, location, LOCATION_HANDLER);
+	pushToLocation(tmp, location);
 	locations.push_back(location);
 
 	return true;
@@ -375,7 +361,7 @@ void	CParser::setVariable(tempConfig_s& tmp, node_t* node, HandlerContext_e cont
 
 		else if (node->type == "listen"){
 			if (context == SERVER_HANDLER)
-				tmp.location_set = setLocation(node, tmp.locations);
+				tmp.listen_set = setPorts(node, tmp.listen);
 			else
 				throw std::runtime_error("Error : a 'listen' directive can only exist within a server block");
 		}
@@ -424,7 +410,20 @@ void	CParser::setVariable(tempConfig_s& tmp, node_t* node, HandlerContext_e cont
 		
 		else if (node->type == "root")
 			tmp.root_set = setPath(node, tmp.root);
-		
+	
+		else if (node->type == "server"){
+			if (context == SERVER_HANDLER)
+				tmp.servers_set = setServer(node, tmp.servers);
+			else
+				throw std::runtime_error("Error : the 'server' directive cannot be used inside Location or Server blocks");
+		}
+
+		else if (node->type == "server_name"){
+			if (context == SERVER_HANDLER)
+				tmp.server_names_set = setServerNames(node, tmp.server_names);
+			else
+				throw std::runtime_error("Error : the 'server' directive cannot be used inside Location or Server blocks");
+		}
 		else if (node->type == "keepalive_timeout"){
 			if (context == GLOBAL_HANDLER || context == SERVER_HANDLER)
 				tmp.timeout_ka = setNumericValue<int>(node, tmp.timeout_ka, 1, SYS_TM_KA);
@@ -439,6 +438,13 @@ void	CParser::setVariable(tempConfig_s& tmp, node_t* node, HandlerContext_e cont
 				throw std::runtime_error("Error : the 'read_write_timeout' directive cannot be used inside a Location block");
 		}
 
+		else if (node->type == "try_files"){
+			if (context == LOCATION_HANDLER)
+				tmp.try_files_set = setTryFiles(node, tmp.try_files);
+			else
+				throw std::runtime_error("Error : the 'try_files' directive can only be used inside a Location block");
+		}
+
 		else if (node->type == "upload_path"){
 			if (context == LOCATION_HANDLER)
 				tmp.upload_path_set = setPath(node, tmp.upload_path);
@@ -447,53 +453,91 @@ void	CParser::setVariable(tempConfig_s& tmp, node_t* node, HandlerContext_e cont
 		}
 }
 
-template <typename T>
-void	CParser::pushToConfig(tempConfig_s& tmp, T& dest, HandlerContext_e context){
+void	CParser::pushToConfig(tempConfig_s& tmp, Config& dest){
 
-	if (tmp.alias_set && context == LOCATION_HANDLER)
-		location.setAlias(tmp.alias);
 	if (tmp.autoindex_set)
 		dest.setAutoIndex(tmp.autoindex);
-	if (tmp.cgi_map_set && context == LOCATION_HANDLER)
-		location.setCGIMap(tmp.cgi_map);
 	if (tmp.charset_set)
 		dest.setCharsets(tmp.charsets);
 	if (tmp.error_pages_set)
 		dest.setErrorPages(tmp.error_pages);
 	if (tmp.index_set)
 		dest.setIndex(tmp.index);
-	if (tmp.listen_set && context == SERVER_HANDLER)
-		server.setListen(tmp.listen);
-	if (tmp.location_set && context == SERVER_HANDLER)
-		server.setLocations(tmp.locations);
 	if (tmp.max_body_set)
 		dest.setMaxBodySize(tmp.max_body);
-	if (tmp.max_connections_set && context == GLOBAL_HANDLER)
+	if (tmp.max_connections_set)
 		dest.setMaxConnections(tmp.max_connections);
-	if (tmp.max_header_set && (context == SERVER_HANDLER || context == GLOBAL_HANDLER))
+	if (tmp.max_header_set)
 		dest.setMaxHeaderSize(tmp.max_header_size);
 	if (tmp.methods_set)
 		dest.setMethods(tmp.methods);
-	if (tmp.modifier_set && context == LOCATION_HANDLER)
-		location.setModifier(tmp.modifier);
-	if (tmp.redirect_set && context == LOCATION_HANDLER)
-		location.setRedirect(tmp.redirect);
 	if (tmp.root_set)
 		dest.setRootDir(tmp.root);
-	if (tmp.servers_set && context == GLOBAL_HANDLER)
+	if (tmp.servers_set)
 		dest.setServers(tmp.servers);
-	if (tmp.server_names_set && context == SERVER_HANDLER)
-		server.setNames(tmp.server_names);
-	if (tmp.timeout_ka_set  && (context == SERVER_HANDLER || context == GLOBAL_HANDLER))
+	if (tmp.timeout_ka_set)
 		dest.setTimeoutKA(tmp.timeout_ka);
-	if (tmp.timeout_rw_set  && (context == SERVER_HANDLER || context == GLOBAL_HANDLER))
+	if (tmp.timeout_rw_set)
 		dest.setTimeoutRW(tmp.timeout_rw);
-	if (tmp.root_dir_set && context == LOCATION_HANDLER)
-		location.setTryFiles(tmp.try_files);
-	if (tmp.upload_path && context == LOCATION_HANDLER)
-		location.setUploadPath(tmp.upload_path);
-	if (tmp.uri_set && context == LOCATION_HANDLER)
-		location.setURI(tmp.uri);
+}
+
+void	CParser::pushToServer(tempConfig_s& tmp, CServer& dest){
+	if (tmp.charset_set)
+		dest.setCharsets(tmp.charsets);
+	if (tmp.error_pages_set)
+		dest.setErrorPages(tmp.error_pages);
+	if (tmp.index_set)
+		dest.setIndex(tmp.index);
+	if (tmp.listen_set)
+		dest.setListen(tmp.listen);
+	if (tmp.location_set)
+		dest.setLocations(tmp.locations);
+	if (tmp.max_body_set)
+		dest.setMaxBodySize(tmp.max_body);
+	if (tmp.max_header_set)
+		dest.setMaxHeaderSize(tmp.max_header_size);
+	if (tmp.methods_set)
+		dest.setMethods(tmp.methods);
+	if (tmp.root_set)
+		dest.setRootDir(tmp.root);
+	if (tmp.server_names_set)
+		dest.setServerNames(tmp.server_names);
+	if (tmp.timeout_ka_set)
+		dest.setTimeoutKA(tmp.timeout_ka);
+	if (tmp.timeout_rw_set)
+		dest.setTimeoutRW(tmp.timeout_rw);
+}
+
+void	CParser::pushToLocation(tempConfig_s& tmp, CLocation& dest){
+	
+	if (tmp.alias_set)
+		dest.setAlias(tmp.alias);
+	if (tmp.autoindex_set)
+		dest.setAutoIndex(tmp.autoindex);
+	if (tmp.cgi_map_set)
+		dest.setCGIMap(tmp.cgi_map);
+	if (tmp.charset_set)
+		dest.setCharsets(tmp.charsets);
+	if (tmp.error_pages_set)
+		dest.setErrorPages(tmp.error_pages);
+	if (tmp.index_set)
+		dest.setIndex(tmp.index);
+	if (tmp.max_body_set)
+		dest.setMaxBodySize(tmp.max_body);
+	if (tmp.methods_set)
+		dest.setMethods(tmp.methods);
+	if (tmp.modifier_set)
+		dest.setModifier(tmp.modifier);
+	if (tmp.redirect_set)
+		dest.setRedirect(tmp.redirect);
+	if (tmp.root_set)
+		dest.setRootDir(tmp.root);
+	if (tmp.root_set)
+		dest.setTryFiles(tmp.try_files);
+	if (tmp.upload_path_set)
+		dest.setUploadPath(tmp.upload_path);
+	if (tmp.uri_set)
+		dest.setURI(tmp.uri);
 }
 
 /*
@@ -660,6 +704,19 @@ bool	CParser::setPath(node_t* node, std::string& path){
 	return true;
 }
 
+bool	CParser::setTryFiles(node_t* node, tryFiles_s& try_files){
+
+	size_t size = node->args.size();
+
+	for (size_t i = 0; i < size; i++){
+		if (i < size - 1)
+			try_files.try_paths.push_back(node->args[i]);
+		else if (!convertToType(try_files.default_error, node->args[i]))
+			throw std::runtime_error("Error: invalid error_page number in 'try file' directive : " + node->args[i]);
+	}
+	return true;
+}
+
 template <typename T>
 bool	CParser::setNumericValue(node_t* node, T& target, T min, T max){
 
@@ -793,7 +850,7 @@ bool	CParser::setServer(node_t* server_node, std::vector<CServer>& servers){
 	if (root_set)
 		server.setRootDir(root);
 	if (server_names_set)
-		server.setNames(server_names);
+		server.setServerNames(server_names);
 	if (timeout_ka_set)
 		server.setTimeoutKA(timeout_ka);
 	if (timeout_rw_set)

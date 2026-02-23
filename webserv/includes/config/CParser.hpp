@@ -48,7 +48,7 @@ struct tempConfig_s {
 	std::vector<std::string>			server_names;		/*	SERVER	*/
 	int									timeout_ka;			/*	GLOBAL/SERVER	*/		
 	int									timeout_rw;			/*	GLOBAL/SERVER	*/
-	std::vector<tryFiles_s>				try_files;			/*	LOCATION	*/
+	tryFiles_s							try_files;			/*	LOCATION	*/
 	std::string							upload_path;		/*	LOCATION	*/
 	std::string							uri;				/*	LOCATION	*/
 
@@ -80,7 +80,9 @@ struct tempConfig_s {
 	tempConfig_s() : 
 		  autoindex(false),
 		  max_body(0),
+		  max_connections(0),
 		  max_header_size(0),
+		  redirect_status(false),
 		  timeout_ka(0),
 		  timeout_rw(0),
 		  alias_set(false),
@@ -95,7 +97,6 @@ struct tempConfig_s {
 		  max_connections_set(false),
 		  max_header_set(false),
 		  methods_set(false),
-		  redirect_status(false),
 		  modifier_set(false),
 		  redirect_set(false),
 		  redirect_status_set(false),
@@ -171,8 +172,13 @@ class CParser : public Parser
 		bool			setPorts(node_t* node, std::vector<listen_s>& ports);
 		bool			setServer(node_t* node, std::vector<CServer>& servers);
 		bool			setServerNames(node_t* node, std::vector<std::string>& server_names);
+		bool			setTryFiles(node_t* node, tryFiles_s& try_files);
 		void			setVariable(tempConfig_s& tmp, node_t* node, HandlerContext_e context);
 		
+		void			pushToConfig(tempConfig_s& tmp, Config& dest);
+		void			pushToServer(tempConfig_s& tmp, CServer& server);
+		void			pushToLocation(tempConfig_s& tmp, CLocation& location);
+
 		template<typename T>
 		bool			setNumericValue(node_t* node, T& target, T min, T max);
 
@@ -240,11 +246,6 @@ class CParser : public Parser
 
 		template <typename T>
 		void			handleTimeoutRW(node_t* node, T& tmp, HandlerContext_e context);
-
-		template <typename T> 
-		void			pushToConfig(tempConfig_s& tmp, T& dest, HandlerContext_e context);
-		// void			pushToServer(tempConfig_s& tmp, CServer& server);
-		// void			pushToLocation(tempConfig_s& tmp, CLocation& location);
 
 						/* VALIDATION */
 		std::vector<std::string>	_global_keywords;

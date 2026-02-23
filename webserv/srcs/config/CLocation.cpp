@@ -141,7 +141,7 @@ std::string	CLocation::getRootDir(void) const{
 	return _root_dir;
 }
 
-std::vector<tryFiles_s>	CLocation::getTryFiles(void) const{
+tryFiles_s	CLocation::getTryFiles(void) const{
 	return _try_files;
 }
 
@@ -214,7 +214,7 @@ void 	CLocation::setRootDir(const std::string& root_dir){
 	_root_dir = root_dir;
 }
 
-void	CLocation::setTryFiles(const std::vector<tryFiles_s>& try_files){
+void	CLocation::setTryFiles(const tryFiles_s& try_files){
 	_try_files_set = true;
 	_try_files = try_files;
 }

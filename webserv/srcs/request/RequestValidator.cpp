@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/30 11:26:19 by kmooney           #+#    #+#             */
-/*   Updated: 2026/02/23 12:45:41 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/02/23 15:58:05 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,29 +59,30 @@ void	RequestValidator::validateReqLine(){
 }
 
 
-bool	RequestValidator::serverSupportsMethod(const str_t& method) {
-	const std::vector<str_t> valid_methods = _req->_config->getAllowedMethods();
-	std::vector<str_t>::const_iterator it = valid_methods.begin();
+bool	RequestValidator::locationSupportsMethod(const str_t& method) {
+
+	std::vector<std::string> location_methods = _location.getMethods();
+	size_t size = _location.getMethods().size();
 	
-	for (*it; it != valid_methods.end(); it++) {
-		if (method == *it)
+	for (size_t i = 0; i < size; i++){
+		if (method.compare(location_methods[i]))
 			return true;
 	}
 	return false;
 }
 
-void	RequestValidator::setRoute(){
-	_route = _config->getRouteForTarget(_req->_uri.path);
+void	RequestValidator::setLocation(CLocation& location){
+	//_location = _server->getLocationForTarget(_req->_uri.path);
+	_location = location; // temporary - really need to use CServer object to find location - this should happen in the client class
 }
 
 bool	RequestValidator::validateMethod(){
 
-	setRoute();
-	if (serverSupportsMethod(_req->_method)) {
-		if (_route && !_route->allowsMethod(_req->_method))
-			return _req->setState(P_ERROR, V_REQLINE, "Method Not Permitted", 501);
-	}
-	else if (serverSupportsMethod(to_upper(_req->_method)))
+	std::vector<std::string> location_methods = _location.getMethods();
+
+	if (locationSupportsMethod(_req->_method))
+		return _req->setState(P_ERROR, V_REQLINE, "Method Not Permitted", 501);
+	else if (locationSupportsMethod(to_upper(_req->_method)))
 	 	return _req->setState(P_ERROR, V_REQLINE, "Method must be uppercase", 400);
 	else
 		return _req->setState(P_ERROR, V_REQLINE, "Method Not Supported", 501);

@@ -161,7 +161,7 @@ void	CServer::setMethods(const std::vector<std::string>& methods){
 	_methods = methods;
 }
 
-void	CServer::setNames(const std::vector<std::string>& names){
+void	CServer::setServerNames(const std::vector<std::string>& names){
 	_server_names = names;
 }
 

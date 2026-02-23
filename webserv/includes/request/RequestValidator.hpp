@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/23 01:37:52 by kmooney           #+#    #+#             */
-/*   Updated: 2026/02/23 12:44:02 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/02/23 15:55:08 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -73,11 +73,13 @@ class RequestValidator {
 		
 		//std::map<std::string, int>	hdr_seen;
 		//const HeaderFlags*			_hdr_flags;
-
+		void				setLocation(CLocation& location);	
+	
 		void				validateReqLine();
+
 		bool				validateMethod();
-		void				setRoute();	
-		bool				serverSupportsMethod(const str_t& method);
+		bool				locationSupportsMethod(const str_t& method);
+		
 		bool				validateURI();
 		bool				validateScheme();
 		bool				validateUser();

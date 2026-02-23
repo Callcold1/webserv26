@@ -27,7 +27,7 @@ class CLocation {
 	LocationMatchType_e						_modifier;			// need to add functionality - possibly use enum instead (Location = or Location ~ etc)
 	redirect_s								_redirect;			// redirect_s url and redirect status
 	std::string								_root_dir;			// root directory for location
-	std::vector<tryFiles_s>					_try_files;			// files to serve + error code to return if no match found
+	tryFiles_s								_try_files;			// files to serve + error code to return if no match found
 	std::string								_upload_path;		// path to which files can be uploaded
 	std::string								_uri;				// location uri
 
@@ -88,7 +88,7 @@ class CLocation {
 		bool								getRedirectStatus(void) const;
 		std::string							getRedirectURL(void) const;
 		std::string							getRootDir(void) const;
-		std::vector<tryFiles_s>				getTryFiles(void) const;
+		tryFiles_s							getTryFiles(void) const;
 		std::string							getUploadPath(void) const;
 		std::string							getURI(void) const;
 
@@ -105,7 +105,7 @@ class CLocation {
 		void 								setName(const std::string& name);
 		void								setRedirect(const redirect_s& redirect);
 		void 								setRootDir(const std::string& root);
-		void								setTryFiles(const std::vector<tryFiles_s>& try_files);
+		void								setTryFiles(const tryFiles_s& try_files);
 		void								setUploadPath(const std::string& path);
 		void								setURI(const std::string& uri);
 };
