@@ -47,7 +47,7 @@ private:
 	
 	int				fd;
 	char			in_buff[1000];
-	//Request			request;
+	//Request		request;
 	std::string		out_buff;
 	enum State		state;
 	time_t			last_active;

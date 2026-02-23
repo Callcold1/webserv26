@@ -8,7 +8,8 @@ CXXFLAGS    := -Wall -Werror -Wextra -std=c++98 -g
 
 INCLUDES    :=	-I $(PROJECT_ROOT)/includes \
 				-I $(PROJECT_ROOT)/includes/response \
- 				-I$(PROJECT_ROOT)/includes/config
+ 				-I$(PROJECT_ROOT)/includes/config \
+ 				-I$(PROJECT_ROOT)/includes/request
 #  				-I$(PROJECT_ROOT)/Request/includes \
 
 OBJDIR      := objs
@@ -28,9 +29,11 @@ SRCS        := main.cpp \
 				config/CServer.cpp \
 				config/CLocation.cpp \
 				config/Parser.cpp \
-				config/Tokeniser.cpp
-#				Client.cpp
-
+				config/Tokeniser.cpp \
+				request/Request.cpp \
+				request/RequestParser.cpp \
+				request/RequestValidator.cpp \
+				Client.cpp
 
 OBJS := $(patsubst %.cpp, $(OBJDIR)/%.o, $(SRCS))
 DEPS := $(patsubst %.cpp, $(OBJDIR)/%.d, $(SRCS))

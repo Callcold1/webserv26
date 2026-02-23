@@ -27,158 +27,88 @@
 class Config;
 
 struct tempConfig_s {
-	bool						autoindex;
-	std::vector<std::string>	charsets;
-	std::vector<errorPage_s> 	error_pages;
-	std::vector<std::string>	index;
-	long long					max_body;
-	int							max_connections;
-	long long					max_header_size;
-	std::vector<std::string>	methods;
-	std::string	 				root_dir;
-	std::vector<CServer>		servers;
-	int							timeout_ka;
-	int							timeout_rw;
+	std::string							alias;				/*	LOCATION	*/
+	bool								autoindex;			/*	GLOBAL/SERVER/LOCATION	*/
+	std::map<std::string, std::string>	cgi_map;			/*	LOCATION	*/
+	std::vector<std::string>			charsets;			/*	GLOBAL/SERVER/LOCATION	*/
+	std::vector<errorPage_s> 			error_pages;		/*	GLOBAL/SERVER/LOCATION	*/
+	std::vector<std::string>			index;				/*	GLOBAL/SERVER/LOCATION	*/
+	std::vector<listen_s>				listen;				/*	SERVER	*/
+	std::vector<CLocation>				locations;			/*	SERVER	*/
+	long long							max_body;			/*	GLOBAL/SERVER/LOCATION	*/
+	int									max_connections;	/*	GLOBAL/SERVER/LOCATION	*/
+	long long							max_header_size;	/*	GLOBAL/SERVER/LOCATION	*/
+	std::vector<std::string>			methods;			/*	GLOBAL/SERVER/LOCATION	*/
+	LocationMatchType_e					modifier;			/*	LOCATION	*/
+	redirect_s							redirect;			/*	LOCATION	*/
+	bool								redirect_status;	/*	LOCATION	*/	
+	std::string							redirect_url;		/*	LOCATION	*/	
+	std::string	 						root;				/*	GLOBAL/SERVER/LOCATION	*/		
+	std::vector<CServer>				servers;			/*	GLOBAL/SERVER/LOCATION	*/
+	std::vector<std::string>			server_names;		/*	SERVER	*/
+	int									timeout_ka;			/*	GLOBAL/SERVER	*/		
+	int									timeout_rw;			/*	GLOBAL/SERVER	*/
+	std::vector<tryFiles_s>				try_files;			/*	LOCATION	*/
+	std::string							upload_path;		/*	LOCATION	*/
+	std::string							uri;				/*	LOCATION	*/
 
+	bool	alias_set;
 	bool	autoindex_set;
-	bool	charset_set;
-	bool	error_pages_set;
-	bool	index_set;
-	bool	max_body_set;
-	bool	max_connections_set;
-	bool	max_header_set;
-	bool	methods_set;
-	bool	root_set;
-	bool	servers_set;
-	bool	timeout_ka_set;
-	bool	timeout_rw_set;
-
-	tempConfig_s()
-		: autoindex(false),
-		  max_body(0),
-		  max_header_size(0),
-		  timeout_ka(0),
-		  timeout_rw(0),
-		  autoindex_set(false),
-		  charset_set(false),
-		  error_pages_set(false),
-		  index_set(false),
-		  max_body_set(false),
-		  max_connections_set(false),
-		  max_header_set(false),
-		  methods_set(false),
-		  root_set(false),
-		  servers_set(false),
-		  timeout_ka_set(false),
-		  timeout_rw_set(false){}
-};
-
-struct tempServer_s {
-	bool						autoindex;
-	std::vector<std::string>	charsets;
-	std::vector<errorPage_s>	error_pages;
-	std::vector<std::string>	index;
-	std::vector<listen_s>		listen;
-	std::vector<CLocation>		locations;
-	long long					max_body;
-	long long					max_header;
-	std::vector<std::string>	methods;
-	std::string					root;
-	std::vector<std::string>	server_names;
-	int							timeout_ka;
-	int							timeout_rw;
-
-	bool	autoindex_set;
+	bool	cgi_map_set;
 	bool	charset_set;
 	bool	error_pages_set;
 	bool	index_set;
 	bool	listen_set;
 	bool	location_set;
 	bool	max_body_set;
+	bool	max_connections_set;
 	bool	max_header_set;
 	bool	methods_set;
+	bool	modifier_set;
+	bool	redirect_set;
+	bool	redirect_status_set;
+	bool	redirect_url_set;
 	bool	root_set;
 	bool	server_names_set;
+	bool	servers_set;
 	bool	timeout_ka_set;
 	bool	timeout_rw_set;
+	bool	try_files_set;
+	bool	upload_path_set;
+	bool	uri_set;
 
-	tempServer_s()
-		: autoindex(false),
+	tempConfig_s() : 
+		  autoindex(false),
 		  max_body(0),
-		  max_header(0),
+		  max_header_size(0),
 		  timeout_ka(0),
 		  timeout_rw(0),
+		  alias_set(false),
 		  autoindex_set(false),
+		  cgi_map_set(false),
 		  charset_set(false),
 		  error_pages_set(false),
 		  index_set(false),
 		  listen_set(false),
 		  location_set(false),
 		  max_body_set(false),
+		  max_connections_set(false),
 		  max_header_set(false),
 		  methods_set(false),
-		  root_set(false),
-		  server_names_set(false),
-		  timeout_ka_set(false),
-		  timeout_rw_set(false)
-	{}
-};
-
-struct tempLocation_s{
-	std::string							alias;
-	bool								autoindex;
-	std::map<std::string, std::string>	cgi_map;
-	std::vector<std::string>			charsets;
-	std::vector<errorPage_s>			error_pages;
-	std::vector<std::string>			index;
-	long long							max_body;
-	std::vector<std::string>			methods;
-	LocationMatchType_e					modifier;
-	redirect_s							redirect;
-	bool								redirect_status;
-	std::string							redirect_url;
-	std::string							root;
-	std::vector<tryFiles_s>				try_files;
-	std::string							upload_path;
-	std::string							uri;
-
-	bool								alias_set;
-	bool								autoindex_set;
-	bool								cgi_map_set;
-	bool								charsets_set;
-	bool								error_pages_set;
-	bool								index_set;
-	bool								max_body_set;
-	bool								methods_set;
-	bool								modifier_set;
-	bool								redirect_set;
-	bool								redirect_status_set;
-	bool								redirect_url_set;
-	bool								root_dir_set;
-	bool								try_files_set;
-	bool								upload_path_set;
-	bool								uri_set;
-
-	tempLocation_s()
-		: autoindex(false),
-		  max_body(0),
 		  redirect_status(false),
-		  alias_set(false),
-		  autoindex_set(false),
-		  cgi_map_set(false),
-		  charsets_set(false),
-		  error_pages_set(false),
-		  index_set(false),
-		  max_body_set(false),
-		  methods_set(false),
 		  modifier_set(false),
 		  redirect_set(false),
 		  redirect_status_set(false),
 		  redirect_url_set(false),
-		  root_dir_set(false),
+		  root_set(false),
+		  server_names_set(false),
+		  servers_set(false),
+		  timeout_ka_set(false),
+		  timeout_rw_set(false),
 		  try_files_set(false),
 		  upload_path_set(false),
-		  uri_set(false){}
+		  uri_set(false)
+		  {}
 };
 
 class CParser : public Parser
@@ -205,7 +135,7 @@ class CParser : public Parser
 		void			tokeniseStream(void);
 		void			parseTokens(void);
 
-		void			parseNext(node_t* parent, token_t awaited);
+		void			parseNext(node_t* parent, tokeniser_s awaited);
 		node_t*			addNode(const std::string& node_type);
 		void			populateHandlers(void);
 		bool			checkKeywords(const std::string& context, const std::string& value);
@@ -241,7 +171,8 @@ class CParser : public Parser
 		bool			setPorts(node_t* node, std::vector<listen_s>& ports);
 		bool			setServer(node_t* node, std::vector<CServer>& servers);
 		bool			setServerNames(node_t* node, std::vector<std::string>& server_names);
-
+		void			setVariable(tempConfig_s& tmp, node_t* node, HandlerContext_e context);
+		
 		template<typename T>
 		bool			setNumericValue(node_t* node, T& target, T min, T max);
 
@@ -310,10 +241,10 @@ class CParser : public Parser
 		template <typename T>
 		void			handleTimeoutRW(node_t* node, T& tmp, HandlerContext_e context);
 
-		void			pushToConfig(tempConfig_s& tmp, Config& config);
-		void			pushToServer(tempServer_s& tmp, CServer& server);
-		void			pushToLocation(tempLocation_s& tmp, CLocation& location);
-
+		template <typename T> 
+		void			pushToConfig(tempConfig_s& tmp, T& dest, HandlerContext_e context);
+		// void			pushToServer(tempConfig_s& tmp, CServer& server);
+		// void			pushToLocation(tempConfig_s& tmp, CLocation& location);
 
 						/* VALIDATION */
 		std::vector<std::string>	_global_keywords;

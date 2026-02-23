@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/14 09:52:13 by kmooney           #+#    #+#             */
-/*   Updated: 2026/02/08 16:07:02 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/02/23 12:40:50 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,7 +29,7 @@ Tokeniser&	Tokeniser::operator=(const Tokeniser& other){
 	return *this;
 }
 
-const std::vector<token_t>& Tokeniser::getTokens() const {
+const std::vector<tokeniser_s>& Tokeniser::getTokens() const {
 	return _tokens;
 }
 
@@ -39,14 +39,14 @@ bool Tokeniser::isSymbol(char c) const {
 
 void Tokeniser::tokenise() {
 	while (true) {
-		token_t t = nextToken();
+		tokeniser_s t = nextToken();
 		_tokens.push_back(t);
 		if (t.type == T_EOF)
 			break;
 	}
 }
 
-token_t Tokeniser::nextToken() {
+tokeniser_s Tokeniser::nextToken() {
 	char c;
 
 	while (_stream.get(c)) {
@@ -60,7 +60,7 @@ token_t Tokeniser::nextToken() {
 			continue;
 
 		if (isSymbol(c))
-			return token_t(T_SYMBOL, std::string(1, c));
+			return tokeniser_s(T_SYMBOL, std::string(1, c));
 
 		std::string value;
 		bool quoted = false;
@@ -82,8 +82,8 @@ token_t Tokeniser::nextToken() {
 			value += c;
 		}
 		if (quoted)
-			return token_t(T_QWORD, value);
-		return token_t(T_WORD, value);
+			return tokeniser_s(T_QWORD, value);
+		return tokeniser_s(T_WORD, value);
 	}
-	return token_t(T_EOF, "");
+	return tokeniser_s(T_EOF, "");
 }

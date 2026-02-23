@@ -13,26 +13,26 @@
 #include "Parser.hpp"
 
 Parser::Parser(void) : _pos(0) {}
-Parser::Parser(const std::vector<token_t>& tokens) : _tokens(tokens), _pos(0) {}
+Parser::Parser(const std::vector<tokeniser_s>& tokens) : _tokens(tokens), _pos(0) {}
 
 bool Parser::eof() const {
 	return peek().type == T_EOF;
 }
 
-const token_t& Parser::peek(size_t offset) const {
+const tokeniser_s& Parser::peek(size_t offset) const {
 	if (_pos + offset >= _tokens.size())
 		throw std::runtime_error("Parser: peek out of range");
 	return _tokens[_pos + offset];
 }
 
-const token_t& Parser::consume() {
+const tokeniser_s& Parser::consume() {
 	if (_pos >= _tokens.size())
 		throw std::runtime_error("Parser: consume past EOF");
 	return _tokens[_pos++];
 }
 
 bool Parser::check(TokenType_e type, const std::string& value) const {
-	const token_t& t = peek();
+	const tokeniser_s& t = peek();
 	if (t.type != type)
 		return false;
 	if (!value.empty() && t.value != value)
@@ -41,7 +41,7 @@ bool Parser::check(TokenType_e type, const std::string& value) const {
 }
 
 void Parser::expect(TokenType_e type, const std::string& value) {
-	const token_t& t = consume();
+	const tokeniser_s& t = consume();
 	if (t.type != type || (!value.empty() && t.value != value)) {
 		throw std::runtime_error("Parser error: unexpected token '" + t.value + "'"
 		);
