@@ -1,13 +1,9 @@
-1) Amend classes to ensure each level contains correct variables
+1) Update printing to ensure variables are set correctly
 
-2) Update printing to ensure variables are set correctly
-
-3)  Variable propagation : Config -> CServer -> CLocation
+2)  Variable propagation : Config -> CServer -> CLocation
 
 				Update CServer and CLocation variables after parsing/validation
 
-4) Update Server class so that it works with Config
+3) Update Server class so that it works with Config
 
-5) Bring in Request class
-
-6) Amend Client class to work with Config, Request and Response
+4) Amend Client class to work with Config, Request and Response
