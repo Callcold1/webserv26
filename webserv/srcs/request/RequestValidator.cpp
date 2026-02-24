@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/30 11:26:19 by kmooney           #+#    #+#             */
-/*   Updated: 2026/02/23 15:58:05 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/02/24 13:39:03 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,11 +61,11 @@ void	RequestValidator::validateReqLine(){
 
 bool	RequestValidator::locationSupportsMethod(const str_t& method) {
 
-	std::vector<std::string> location_methods = _location.getMethods();
-	size_t size = _location.getMethods().size();
+	std::vector<std::string> location_method = _location.getMethod();
+	size_t size = _location.getMethod().size();
 	
 	for (size_t i = 0; i < size; i++){
-		if (method.compare(location_methods[i]))
+		if (method.compare(location_method[i]))
 			return true;
 	}
 	return false;
@@ -78,7 +78,7 @@ void	RequestValidator::setLocation(CLocation& location){
 
 bool	RequestValidator::validateMethod(){
 
-	std::vector<std::string> location_methods = _location.getMethods();
+	std::vector<std::string> location_method = _location.getMethod();
 
 	if (locationSupportsMethod(_req->_method))
 		return _req->setState(P_ERROR, V_REQLINE, "Method Not Permitted", 501);
@@ -371,12 +371,14 @@ bool	RequestValidator::validateContentType(){ // CHECK SERVER SUPPORTS TYPE
 	// if (count == 0 && _req->_method == "POST" && (_req->_hasBody)) // - ASK MINA FOR OPINION
 	// 	return _req->setState(P_ERROR, V_HEADERS, "Missing 'Content-Type' header (POST)", 400);
 	// else if (count == 0)
+
 	if (count == 0)
 		return true;
 	else if ( count > 1)
 		return _req->setState(P_ERROR, V_HEADERS, "Multiple 'Content-Type' received", 400);
 	
 	fieldMap_t::iterator										header 			= _req->_headers.find("content-type");
+	// Need to iterate over vector
 	const std::string& 											val 			= header->second[0]->val;
 	const std::vector< std::pair<std::string, std::string> >&	options 		= header->second[0]->params;
 	//int 														options_size 	= options.size();

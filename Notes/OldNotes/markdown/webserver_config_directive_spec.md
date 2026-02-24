@@ -314,7 +314,7 @@ Redundant. Location name already represents URI.
 
 # 7. Recommended Clean Model
 
-GLOBAL: - limits - default charsets - default error pages
+GLOBAL: - limits - default charset - default error pages
 
 SERVER: - listen - server_name - root - limits override - methods
 default - error_page override

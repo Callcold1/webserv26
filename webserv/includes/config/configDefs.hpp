@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/18 17:37:44 by kmooney           #+#    #+#             */
-/*   Updated: 2026/02/22 14:13:41 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/02/24 14:41:05 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,7 +48,7 @@ struct listen_s {
 	bool		is_default;
 	uint16_t	port;
 
-	listen_s(void){}
+	listen_s(void): ip((uint32_t)0), is_default(false), port((uint16_t)0){}
 	listen_s(uint32_t ip_addr, bool default_port, uint16_t port_num):
 		ip(ip_addr), is_default(default_port), port(port_num){};
 };
@@ -65,7 +65,7 @@ struct tryFiles_s {
     std::vector<std::string> try_paths;
     int default_error;
 
-	tryFiles_s(void){}
+	tryFiles_s(void): default_error(0){}
 	tryFiles_s(int error) : default_error(error){}
 };
 

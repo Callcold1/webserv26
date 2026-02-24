@@ -25,13 +25,13 @@ class CServer {
 	private:
 
 		bool							_autoindex;			// indicates server autoindex setting (true = on, false = off)
-		std::vector<std::string>		_charsets;			// charset(s) that can be handled
+		std::vector<std::string>		_charset;			// charset(s) that can be handled
 		std::vector<errorPage_s>		_error_pages;		// Vector of error_page structs
  		std::vector<std::string>		_index;				// ordered list of possible index filenames - first one that works is returned
 		std::vector<CLocation>	 		_locations;			// Vector of location class objects
 		long long						_max_body;			// Max acceptable body size in bytes
 		long long						_max_header_size;	// Max acceptable header size in bytes
-		std::vector<std::string>		_methods;			// Methods permitted for all locations on server (can be superceded by location_methods)
+		std::vector<std::string>		_method;			// Method permitted for all locations on server (can be superceded by location_method)
 		std::vector<listen_s> 			_ports;				// Connection info (port/ip/default_flag)
 		std::string	 					_root_dir;			// Root directory for server - overrides global value
 		std::vector<std::string> 		_server_names;		// Server names
@@ -43,7 +43,7 @@ class CServer {
 		bool							_index_set;
 		bool							_max_body_set;
 		bool							_max_header_set;
-		bool							_methods_set;
+		bool							_method_set;
 		bool							_ports_set;
 		bool							_root_set;
 		bool							_timeout_ka_set;
@@ -62,12 +62,12 @@ class CServer {
 
 										/* CHECK IF VARIABLE SET*/
 		bool							isAutoIndexSet(void) const;
-		bool							isCharsetSet(void) const;
+		bool							isCharset(void) const;
 		bool							isIndexSet(void) const;
 		bool							isMaxBodySet(void) const;
 		bool							isMaxConnectionsSet(void) const;
 		bool							isMaxHeaderSet(void) const;
-		bool							isMethodsSet(void) const;
+		bool							isMethodSet(void) const;
 		bool							isNamesSet(void) const;
 		bool							isRootDirSet(void) const;
 		bool							isTimeoutKASet(void) const;
@@ -75,7 +75,7 @@ class CServer {
 
 										/*	GETTERS	*/
 		bool							getAutoIndex(void) const;
-		std::vector<std::string>		getCharsets(void) const;
+		std::vector<std::string>		getCharset(void) const;
 		std::vector<errorPage_s>		getErrorPages(void) const;				
 		std::vector<std::string>		getIndex(void) const;					
 		std::vector<listen_s>			getListen(void) const;					
@@ -83,7 +83,7 @@ class CServer {
 		long long						getMaxBodySize(void) const;				
 		int								getMaxConnections(void) const;			
 		long long						getMaxHeaderSize(void) const;			
-		const std::vector<std::string>	getMethods(void) const;					
+		const std::vector<std::string>	getMethod(void) const;					
 		std::vector<std::string>		getNames(void) const;					
 		std::string		 				getRootDir(void) const;					
 		int								getTimeoutKA (void) const;				
@@ -91,14 +91,14 @@ class CServer {
 
 										/*	SETTERS	*/
 		void 							setAutoIndex(bool autoindex);
-		void							setCharsets(std::vector<std::string>& charsets);
+		void							setCharset(std::vector<std::string>& charset);
 		void 							setErrorPages(const std::vector<errorPage_s>& error_pages);
 		void							setIndex(const std::vector<std::string>& index);		
 		void 							setLocations(const std::vector<CLocation>& locations);
 		void 							setMaxBodySize(long long max_body_size);			
 		void 							setMaxConnections(int max_connections);				
 		void 							setMaxHeaderSize(long long max_header_size);		
-		void 							setMethods(const std::vector<std::string>& methods);
+		void 							setMethod(const std::vector<std::string>& method);
 		void 							setServerNames(const std::vector<std::string>& names);	
 		void 							setListen(const std::vector<listen_s>& ports);
 		void 							setRootDir(std::string& root);

@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/14 09:52:13 by kmooney           #+#    #+#             */
-/*   Updated: 2026/02/22 22:19:20 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/02/24 15:14:37 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,9 +20,10 @@ Config::Config() : _max_body(DEFAULT_MAX_BODY), _max_connections(DEFAULT_MAX_CON
 Config::Config(const Config &other) { (void)other;}
 
 Config Config::operator=(const Config &other) {
-	if (this != &other) {
-	}
+	if (this != &other) 
+		return *this;
 	return *this;
+	
 }
 
 Config::~Config(){
@@ -38,7 +39,7 @@ bool	Config::isAutoIndexSet(void) const{
 	return _autoindex_set;
 }
 
-bool	Config::isCharsetSet(void) const{
+bool	Config::isCharset(void) const{
 	return _charset_set;
 }
 
@@ -62,8 +63,8 @@ bool	Config::isMaxHeaderSet(void) const{
 	return _max_header_set;
 }
 
-bool	Config::isMethodsSet(void) const{
-	return _methods_set;
+bool	Config::isMethodSet(void) const{
+	return _method_set;
 }
 
 bool	Config::isRootDirSet(void) const{
@@ -93,8 +94,8 @@ bool	Config::getAutoIndex(void) const{
 	return _autoindex;
 }
 
-std::vector<std::string>	Config::getCharsets(void) const{
-	return _charsets;
+std::vector<std::string>	Config::getCharset(void) const{
+	return _charset;
 }
 
 std::vector<errorPage_s>	Config::getErrorPages() const{
@@ -117,8 +118,8 @@ long long	Config::getMaxHeaderSize(void) const{
 	return _max_header_size;
 }
 
-std::vector<std::string>	Config::getMethods(void) const{
-	return _methods;
+std::vector<std::string>	Config::getMethod(void) const{
+	return _method;
 }
 
 std::string	Config::getRootDir(void) const{
@@ -151,8 +152,8 @@ void 	Config::setAutoIndex(bool autoindex){
 	_autoindex = autoindex;
 }
 
-void 	Config::setCharsets(std::vector<std::string>& charsets) {
-	_charsets = charsets;
+void 	Config::setCharset(std::vector<std::string>& charset) {
+	_charset = charset;
 }
 
 void 	Config::setErrorPages(std::vector<errorPage_s>& error_pages) {
@@ -175,8 +176,8 @@ void    Config::setMaxHeaderSize(long long max_header_size) {
 	_max_header_size = max_header_size;
 }
 
-void 	Config::setMethods(const std::vector<std::string>& methods){
-	_methods = methods;
+void 	Config::setMethod(const std::vector<std::string>& method){
+	_method = method;
 }
 
 void	Config::setRootDir(std::string& root_dir){
@@ -217,45 +218,81 @@ void    Config::setTimeoutRW(int timeout_in_seconds){
 >>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<
 */
 
-std::ostream&	operator<<(std::ostream& os, const std::map<std::string, std::string>& cgi_map){
-
-	std::map<std::string, std::string>::const_iterator it;
-
-	for (it = cgi_map.begin(); it != cgi_map.end(); it++){
-		os << "\tCGI type : " << it->first << " \tCGI Location : " << it->second << std::endl;
-	}
+std::ostream& operator<<(std::ostream& os, const Config& config){
+	os << "\nGlobal\n======"
+		<< "\nGlobal : autoindex : " << std::boolalpha << config.getAutoIndex()							//	Bool
+		<< "\nGlobal : charset :\n" << config.getCharset()												//	Vector of strings
+		<< "\nGlobal : Error Pages :\n" << config.getErrorPages()										//	Error Pages
+		<< "\nGlobal : index : \n" << config.getIndex()													//	Vector of strings
+		<< "\nGlobal : Max Body size : " << config.getMaxBodySize()										//	long long						(No function required)
+		<< "\nGlobal : Max Connections : " << config.getMaxConnections()								//	int								(No function required)
+		<< "\nGlobal : Max Header size : " << config.getMaxHeaderSize()									//	long long						(No function required)
+		<< "\nGlobal : method : \n" << config.getMethod()												// 	Vector of strings
+		<< "\nGlobal : root : " << config.getRootDir()													//	string 							(No function required)
+		<< "\nGlobal : Timeout (keep-alive) : " << config.getTimeoutKA() << " seconds"					//	int
+		<< "\nGlobal : Timeout (read-write) : " << config.getTimeoutRW() << " seconds"					//	int
+		<< std::noboolalpha
+		<< "\n\nServers\n=======\n" << config.getServers();
 	return os;
 }
 
-std::ostream&	operator<<(std::ostream& os, const std::vector<errorPage_s>& error_pages){
+std::ostream&	operator<<(std::ostream& os, const CServer& server){
 
-	size_t size = error_pages.size();
-
-	for (size_t i = 0; i < size; i++){
-		os << "\tError Num : " << error_pages[i]._error_num << " \tError Page Location : " << error_pages[i]._path << std::endl;
-	}
+	os	
+		<< "\nServer : autoindex : " << std::boolalpha << server.getAutoIndex()							//	Bool
+		<< "\nServer : charset :\n" << server.getCharset()												//	Vector of strings
+		<< "\nServer : Error Pages :\n" << server.getErrorPages()										//	Error Pages
+		<< "\nServer : index : \n" << server.getIndex()													//	Vector of strings
+		<< "\n\nServer : port(s)\n" << server.getListen()
+		<< "\nServer : Max Body size : " << server.getMaxBodySize()										//	long long						(No function required)
+		<< "\nServer : Max Header size : " << server.getMaxHeaderSize()									//	long long						(No function required)
+		<< "\nServer : method : \n" << server.getMethod()												// 	Vector of strings
+		<< "\nServer : root : " << server.getRootDir()													//	string 							(No function required)
+		<< "\n\nServer : name(s)\n" << server.getNames()
+		<< "\nServer : Timeout (keep-alive) : " << server.getTimeoutKA() << " seconds"					//	int
+		<< "\nServer : Timeout (read-write) : " << server.getTimeoutRW() << " seconds"					//	int
+		<< "\n\nServer : location(s)\n" << server.getLocations()
+		<< std::endl;
 	return os;
 }
 
-std::ostream&	operator<<(std::ostream& os, const listen_s& port_info){
+std::ostream&	operator<<(std::ostream& os, const CLocation& location){
 
-	os << "IP address : " << port_info.ip
-	<< "Port : " << port_info.port
-	<< "is default : " << port_info.is_default;
+	std::string alias = location.getAlias();
+	if (alias.length() == 0)
+		alias = "No value";
+	std::string redirect_url = location.getRedirectURL();
+	if (redirect_url.length() == 0)
+		redirect_url = "No value";
+	std::string upload_path = location.getUploadPath();
+	if (upload_path.length() == 0)
+		upload_path = "No value";
+	std::string uri = location.getURI();
+	if (uri.length() == 0)
+		uri = "No value";
+
+	os
+	<< "\nLocation : alias : " << alias 													//	string							(No function required)
+	<< "\nLocation : autoindex : " << std::boolalpha << location.getAutoIndex()							//	Bool							(No function required)
+	<< "\nLocation : cgi_path : \n" << location.getCGIMap()												//	CGIMap							
+	<< "\nLocation : charset : \n" << location.getcharset()												//	Vector of strings
+	<< "\nLocation : error_page : " << location.getErrorPages()											//	Error Pages
+	<< "\nLocation : index : \n" << location.getIndex()													//	Vector of strings
+	<< "\nLocation : max_body : " << location.getMaxBodySize()											//	long long						(No function required)
+	<< "\nLocation : method : \n" << location.getMethod()												// 	Vector of strings
+	<< "\nLocation : modifier : " << location.getModifier()												//	Character (n = none)			(No function required)
+	<< "\nLocation : redirect_status : " << std::boolalpha << location.getRedirectStatus()				//  bool 							(No function required)
+	<< "\nLocation : redirect_url : " << redirect_url													//	string 							(No function required)
+	<< "\nLocation : root : " << location.getRootDir()													//	string 							(No function required)
+	<< "\nLocation : try_files : \n" << location.getTryFiles()											//	Try Files
+	<< "\nLocation : upload_path : " << location.getUploadPath()										//	string							(No function required) 
+	<< "\nLocation : uri : " << location.getURI()														//	string							(No function required) 
+	<< std::noboolalpha	<< std::endl;
 
 	return os;
 }
 
-std::ostream&	operator<<(std::ostream& os, const std::vector<std::string>& strings){
-
-	size_t size = strings.size();
-
-	for (size_t i = 0; i < size; i++){
-		os << "\t" << strings[i] << std::endl;
-	}
-	return os;
-}
-
+/* VECTOR OF LOCATIONS */
 std::ostream&	operator<<(std::ostream &os, const std::vector<CLocation>& locations){
 
 	std::vector<CLocation>::const_iterator it;
@@ -264,71 +301,108 @@ std::ostream&	operator<<(std::ostream &os, const std::vector<CLocation>& locatio
 	int i = 0;
 	for (it = locations.begin(); it != locations.end(); it++, i++)
 		os << "Location " << i << " : " <<  *it << '\n';
+	if (i == 0){
+		os << "\tNo value(s)" << std::endl;
+		return os;
+	}
 	return os;
 }
 
+/* VECTOR OF SERVERS */
 std::ostream&	operator<<(std::ostream& os, const std::vector<CServer>& servers){
 
 	size_t size = servers.size();
 
+	if (size == 0){
+		os << "\tNo value(s)" << std::endl;
+		return os;
+	}
 	for (size_t i = 0; i < size; i++)
 		std::cout << "\n= Server " << i << " =\n" << servers[i];
 	return os;
 }
 
+/* CGI MAP */
+std::ostream&	operator<<(std::ostream& os, const std::map<std::string, std::string>& cgi_map){
+
+	std::map<std::string, std::string>::const_iterator it;
+
+	int count = 0;
+	for (it = cgi_map.begin(); it != cgi_map.end(); it++, count++){
+		os << "\tCGI type : " << it->first << " \tCGI Location : " << it->second << std::endl;
+	}
+	if (count == 0){
+		os << "\tNo value(s)" << std::endl;
+		return os;
+	}
+	return os;
+}
+
+/* ERROR PAGES */
+std::ostream&	operator<<(std::ostream& os, const std::vector<errorPage_s>& error_pages){
+
+	size_t size = error_pages.size();
+
+	if (size == 0){
+		os << "\tNo value(s)" << std::endl;
+		return os;
+	}
+	for (size_t i = 0; i < size; i++){
+		os << "\tError Num : " << error_pages[i]._error_num << " \tError Page Location : " << error_pages[i]._path << std::endl;
+	}
+	return os;
+}
+
+/* PORT INFO (LISTEN) */
+std::ostream&	operator<<(std::ostream& os, const listen_s& port_info){
+
+	os << "\tIP address : " << port_info.ip
+	<< "\tPort : " << port_info.port
+	<< "\tis default : " << port_info.is_default << std::endl;
+
+	return os;
+}
+
+/* TRY FILES */
+std::ostream&	operator<<(std::ostream& os, const tryFiles_s& try_files){
+
+	size_t size = try_files.try_paths.size();
+
+	if (size == 0){
+		os << "\tNo value(s)" << std::endl;
+		return os;
+	}
+	for (size_t i = 0; i < size; i++)
+		os << "\ttry_file [" << i << "] path : " << try_files.try_paths[i] << std::endl;
+	os << "\ttry_file error_page : " << try_files.default_error << std::endl;
+	return os;
+}
+
+/* VECTOR OF ANYTHING */
 template<typename T>
 std::ostream&	operator<<(std::ostream& os, const std::vector<T> vec){
 	size_t size = vec.size();
 
+	if (size == 0){
+		os << "\tNo value(s)" << std::endl;
+		return os;
+	}
 	for (size_t i = 0; i < size; i++)
 		os << vec[i];
 	return os;
 }
 
-std::ostream& operator<<(std::ostream& os, const Config& config){
-	os << "\nGlobal\n======"
-		<< "\nMax Body size : " << config.getMaxBodySize()
-		<< "\nMax Connections : " << config.getMaxConnections()
-		<< "\nMax Header size : " << config.getMaxHeaderSize()
-		<< "\nTimeout (keep-alive) : " << config.getTimeoutKA() << " seconds"
-		<< "\nTimeout (read-write) : " << config.getTimeoutRW() << " seconds"
-		<< "\n\nCharsets :\n" << config.getCharsets()
-		<< "\nError Pages :\n" << config.getErrorPages()
-		<< "\nServers\n=======\n" << config.getServers();
-	return os;
-}
+/* VECTOR OF STRINGS */
+std::ostream&	operator<<(std::ostream& os, const std::vector<std::string>& strings){
 
-std::ostream&	operator<<(std::ostream& os, const CServer& server){
+	size_t size = strings.size();
 
-	os	<< "\nServer Max Body Size : " << server.getMaxBodySize()
-		<< "\nServer Max Header : " << server.getMaxHeaderSize()
-		<< "\nServer root dir : " << server.getRootDir()
-		<< "\n\nServer error page(s)\n" << server.getErrorPages()
-		<< "\n\nServer accepted method(s)\n" << server.getMethods()
-		<< "\n\nServer name(s)\n" << server.getNames()
-		<< "\n\nServer port(s)\n" << server.getListen()
-		<< "\n\nServer location(s)\n" << server.getLocations()
-		<< "\nTimeout (keep-alive) : " << server.getTimeoutKA() << " seconds"
-		<< "\nTimeout (read-write) : " << server.getTimeoutRW() << " seconds"
-		<< std::endl;
-	return os;
-}
-
-std::ostream&	operator<<(std::ostream& os, const CLocation& location){
-
-	os << "Location\n=========\n"
-		<< "\nLocation alias" << location.getAlias()
-		<< "\nLocation autoindex" << location.getAutoIndex()
-		<< "\nLocation index" << location.getIndex()
-		<< "\nLocation path" << location.getURI()
-		<< "\nLocation redirect status" << location.getRedirectStatus()
-		<< "\nLocation redirect url" << location.getRedirectURL()
-		<< "\nLocation root dir" << location.getRootDir()
-		<< "\nLocation upload path" << location.getUploadPath()
-		<< "\n\nLocation accepted CGI types" << location.getCGIMap()
-		<< "\n\nLocation accepted charset(s)" << location.getCharsets()
-		<< "\n\nLocation accepted method(s)" << location.getMethods()
-		<< std::endl;
-
+	if (size == 0){
+		os << "\tNo value(s)" << std::endl;
+		return os;
+	}
+	for (size_t i = 0; i < size; i++){
+		os << "\t" << strings[i] << std::endl;
+	}
 	return os;
 }

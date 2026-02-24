@@ -12,14 +12,70 @@
 
 #include "CServer.hpp"
 
-CServer::CServer( void ){}
+CServer::CServer( void ) :
+	_autoindex(false), _max_body(DEFAULT_MAX_BODY),	_max_header_size(DEFAULT_MAX_HEAD),
+	_timeout_ka(DEFAULT_TM_KA),	_timeout_rw(DEFAULT_TM_RW), _autoindex_set(false),
+		_charset_set(false), _index_set(false),	_max_body_set(false),_max_header_set(false),
+		_method_set(false),	_ports_set(false), _root_set(false), _timeout_ka_set(false),
+		_timeout_rw_set(false){}
 
 CServer::~CServer( void ){}
 
-CServer::CServer(const CServer &other){(void)other;}
+CServer::CServer(const CServer &other){
+	_autoindex = other._autoindex;
+	_charset = other._charset;
+	_error_pages = other._error_pages;
+	_index = other._index;
+	_locations = other._locations;
+	_max_body = other._max_body;
+	_max_header_size = other._max_header_size;
+	_method = other._method;
+	_ports = other._ports;
+	_root_dir = other._root_dir;
+	_server_names = other._server_names;
+	_timeout_ka = other._timeout_ka;
+	_timeout_rw = other._timeout_rw;
+
+	_autoindex_set = other._autoindex_set;
+	_charset_set = other._charset_set;
+	_index_set = other._index_set;
+	_max_body_set = other._max_body_set;
+	_max_header_set = other._max_header_set;
+	_method_set = other._method_set;
+	_ports_set = other._ports_set;
+	_root_set = other._root_set;
+	_timeout_ka_set = other._timeout_ka_set;
+	_timeout_rw_set = other._timeout_rw_set;
+}
 
 CServer& CServer::operator=(const CServer& other) {
-	(void) other;
+	if (this != &other){
+		_autoindex = other._autoindex;
+		_charset = other._charset;
+		_error_pages = other._error_pages;
+		_index = other._index;
+		_locations = other._locations;
+		_max_body = other._max_body;
+		_max_header_size = other._max_header_size;
+		_method = other._method;
+		_ports = other._ports;
+		_root_dir = other._root_dir;
+		_server_names = other._server_names;
+		_timeout_ka = other._timeout_ka;
+		_timeout_rw = other._timeout_rw;
+
+		_autoindex_set = other._autoindex_set;
+		_charset_set = other._charset_set;
+		_index_set = other._index_set;
+		_max_body_set = other._max_body_set;
+		_max_header_set = other._max_header_set;
+		_method_set = other._method_set;
+		_ports_set = other._ports_set;
+		_root_set = other._root_set;
+		_timeout_ka_set = other._timeout_ka_set;
+		_timeout_rw_set = other._timeout_rw_set;
+		return *this;
+	}
 	return *this;
 }
 
@@ -33,7 +89,7 @@ bool	CServer::isAutoIndexSet(void) const{
 	return _autoindex_set;
 }
 
-bool	CServer::isCharsetSet(void) const{
+bool	CServer::isCharset(void) const{
 	return _charset_set;
 }
 
@@ -48,8 +104,8 @@ bool	CServer::isMaxBodySet(void) const{
 bool	CServer::isMaxHeaderSet(void) const{
 	return _max_header_set;
 }
-bool	CServer::isMethodsSet(void) const{
-	return _methods_set;
+bool	CServer::isMethodSet(void) const{
+	return _method_set;
 }
 bool	CServer::isNamesSet(void) const{
 	return _ports_set;
@@ -68,8 +124,8 @@ bool	CServer::getAutoIndex(void) const{
 	return _autoindex;
 }
 
-std::vector<std::string>	CServer::getCharsets(void) const{
-	return _charsets;
+std::vector<std::string>	CServer::getCharset(void) const{
+	return _charset;
 }
 
 std::vector<errorPage_s>	CServer::getErrorPages(void) const{
@@ -92,8 +148,8 @@ long long	CServer::getMaxHeaderSize(void) const{
 	return _max_header_size;
 }
 
-const std::vector<std::string>	CServer::getMethods(void) const{
-	return _methods;
+const std::vector<std::string>	CServer::getMethod(void) const{
+	return _method;
 }
 
 std::vector<std::string>	CServer::getNames(void) const{
@@ -128,9 +184,9 @@ void 	CServer::setAutoIndex(bool autoindex){
 	_autoindex = autoindex;
 }
 
-void	CServer::setCharsets(std::vector<std::string>& charsets){
+void	CServer::setCharset(std::vector<std::string>& charset){
 	_charset_set = true;
-	_charsets = charsets;
+	_charset = charset;
 }
 
 void	CServer::setErrorPages(const std::vector<errorPage_s>& error_pages){
@@ -156,9 +212,9 @@ void	CServer::setMaxHeaderSize(long long max_header_size){
 	_max_header_size = max_header_size;
 }
 
-void	CServer::setMethods(const std::vector<std::string>& methods){
-	_methods_set = true;
-	_methods = methods;
+void	CServer::setMethod(const std::vector<std::string>& method){
+	_method_set = true;
+	_method = method;
 }
 
 void	CServer::setServerNames(const std::vector<std::string>& names){

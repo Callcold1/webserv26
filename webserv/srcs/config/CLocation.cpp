@@ -12,14 +12,94 @@
 
 #include "CLocation.hpp"
 
-CLocation::CLocation( void ) : _autoindex(false), _modifier(NONE){}
+CLocation::CLocation( void ) : 
+_autoindex(false), 
+_max_body(0),
+_modifier(NONE),
+_alias_set(false),
+_autoindex_set(false),
+_cgi_map_set(false),
+_charset_set(false),
+_error_pages_set(false),
+_index_set(false),
+_max_body_set(false),
+_method_set(false),
+_modifier_set(false),
+_redirect_set(false),
+_root_dir_set(false),
+_try_files_set(false),
+_upload_path_set(false),
+_uri_set(false)
+{}
 
-CLocation::~CLocation( void ){}
+CLocation::~CLocation( void ){
+}
 
-CLocation::CLocation(const CLocation &other){(void)other;}
+CLocation::CLocation(const CLocation &other){
+	_alias = other._alias;			
+	_autoindex = other._autoindex;		
+	_cgi_map = other._cgi_map;		
+	_charset = other._charset;		
+	_error_pages = other._error_pages;	
+	_index = other._index;			
+	_max_body = other._max_body;		
+	_method = other._method;		
+	_modifier = other._modifier;		
+	_redirect = other._redirect;		
+	_root_dir = other._root_dir;		
+	_try_files = other._try_files;		
+	_upload_path = other._upload_path;	
+	_uri = other._uri;			
+	
+	_alias_set = other._alias_set;
+	_autoindex_set = other._autoindex_set;
+	_cgi_map_set = other._cgi_map_set;
+	_charset_set = other._charset_set;
+	_error_pages_set = other._error_pages_set;
+	_index_set = other._index_set;
+	_max_body_set = other._max_body_set;
+	_method_set = other._method_set;
+	_modifier_set = other._modifier_set;
+	_redirect_set = other._redirect_set;
+	_root_dir_set = other._root_dir_set;
+	_try_files_set = other._try_files_set;
+	_upload_path_set = other._upload_path_set;
+	_uri_set = other._uri_set;
+}
 
 CLocation& CLocation::operator=(const CLocation &other) {
-	(void) other;
+	if (this != &other){
+		_alias = other._alias;			
+		_autoindex = other._autoindex;		
+		_cgi_map = other._cgi_map;		
+		_charset = other._charset;		
+		_error_pages = other._error_pages;	
+		_index = other._index;			
+		_max_body = other._max_body;		
+		_method = other._method;		
+		_modifier = other._modifier;		
+		_redirect = other._redirect;		
+		_root_dir = other._root_dir;		
+		_try_files = other._try_files;		
+		_upload_path = other._upload_path;	
+		_uri = other._uri;			
+		
+		_alias_set = other._alias_set;
+		_autoindex_set = other._autoindex_set;
+		_cgi_map_set = other._cgi_map_set;
+		_charset_set = other._charset_set;
+		_error_pages_set = other._error_pages_set;
+		_index_set = other._index_set;
+		_max_body_set = other._max_body_set;
+		_method_set = other._method_set;
+		_modifier_set = other._modifier_set;
+		_redirect_set = other._redirect_set;
+		_root_dir_set = other._root_dir_set;
+		_try_files_set = other._try_files_set;
+		_upload_path_set = other._upload_path_set;
+		_uri_set = other._uri_set;
+		return *this;
+	} 
 	return *this;
 }
 
@@ -35,8 +115,8 @@ bool	CLocation::isCGIMapSet(void) const{
 	return _cgi_map_set;
 }
 
-bool	CLocation::isCharsetSet(void) const{
-	return _charsets_set;
+bool	CLocation::ischarset(void) const{
+	return _charset_set;
 }
 
 bool	CLocation::isErrorPagesSet(void) const{
@@ -51,8 +131,8 @@ bool	CLocation::isMaxBodySet(void) const{
 	return _max_body_set;
 }
 
-bool	CLocation::isMethodsSet(void) const{
-	return _methods_set;
+bool	CLocation::isMethodSet(void) const{
+	return _method_set;
 }
 
 bool	CLocation::isModifierSet(void) const{
@@ -100,8 +180,8 @@ std::map<std::string, std::string>	CLocation::getCGIMap(void) const{
 	return _cgi_map;
 }
 
-std::vector<std::string>	CLocation::getCharsets(void) const{
-	return _charsets;
+std::vector<std::string>	CLocation::getcharset(void) const{
+	return _charset;
 }
 
 std::vector<errorPage_s>	CLocation::getErrorPages(void) const{
@@ -117,12 +197,18 @@ long long	CLocation::getMaxBodySize(void) const{
 	return _max_body;
 }
 
-std::vector<std::string>	CLocation::getMethods(void) const{
-	return _methods;
+std::vector<std::string>	CLocation::getMethod(void) const{
+	return _method;
 }
 
-LocationMatchType_e	CLocation::getModifier(void) const{
-	return _modifier;
+char	CLocation::getModifier(void) const{
+	switch (_modifier){
+		case (0) : { return '='; }
+		case (1) : { return '^'; }
+		case (2) : { return 'n'; }
+		default : { break; }
+	}
+	return 'n';
 }
 
 redirect_s	CLocation::getRedirect(void) const{
@@ -174,9 +260,9 @@ void 	CLocation::setCGIMap(const std::map<std::string, std::string> cgi_map){
 	_cgi_map = cgi_map;
 }
 
-void	CLocation::setCharsets(const std::vector<std::string>& charsets){
-	_charsets_set = true;
-	_charsets = charsets;
+void	CLocation::setcharset(const std::vector<std::string>& charset){
+	_charset_set = true;
+	_charset = charset;
 }
 
 void	CLocation::setErrorPages(const std::vector<errorPage_s>& error_pages){
@@ -194,9 +280,9 @@ void	CLocation::setMaxBodySize(long long max_body_size){
 	_max_body = max_body_size;
 }
 
-void 	CLocation::setMethods(const std::vector<std::string>& methods){
-	_methods_set = true;
-	_methods = methods;
+void 	CLocation::setMethod(const std::vector<std::string>& method){
+	_method_set = true;
+	_method = method;
 }
 
 void 	CLocation::setModifier(const LocationMatchType_e modifier){

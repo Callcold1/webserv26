@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/30 11:28:22 by kmooney           #+#    #+#             */
-/*   Updated: 2025/07/02 20:04:27 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/02/24 13:52:20 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -148,3 +148,18 @@ std::string	Request::getRequestStr(){
 	_req_line = _parser->getParsedString();
 	return _req_line;
 }
+
+std::vector<field_t* >	Request::findRequestHeaderValue(const std::string& header_name){
+	fieldMap_t::iterator header = _headers.find(header_name);
+	return header->second;
+}
+
+// void	Request::iterateOverFieldT(std::vector<field_t*>& vec ){
+	
+// 	size_t size = vec.size();
+	
+// 	for (size_t i = 0; i < size; i++){
+// 		const std::string&	 										val 	= vec[i]->val;
+// 		const std::vector< std::pair<std::string, std::string> >&	options = vec[i]->params;
+// 	}
+// }

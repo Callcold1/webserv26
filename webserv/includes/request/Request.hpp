@@ -45,6 +45,8 @@ class Request {
 	void				setBodyEncoding( const std::string& encoding );
 	void				setBoundaryString( const std::string& boundary );
 	void				setDefaultMultiPartType( const std::string& type );
+
+	std::vector<field_t* >		findRequestHeaderValue(const std::string& header_name);
 	
 	RequestParser*		_parser;
 	RequestValidator*	_validator;

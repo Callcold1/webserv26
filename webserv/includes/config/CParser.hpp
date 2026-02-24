@@ -30,7 +30,7 @@ struct tempConfig_s {
 	std::string							alias;				/*	LOCATION	*/
 	bool								autoindex;			/*	GLOBAL/SERVER/LOCATION	*/
 	std::map<std::string, std::string>	cgi_map;			/*	LOCATION	*/
-	std::vector<std::string>			charsets;			/*	GLOBAL/SERVER/LOCATION	*/
+	std::vector<std::string>			charset;			/*	GLOBAL/SERVER/LOCATION	*/
 	std::vector<errorPage_s> 			error_pages;		/*	GLOBAL/SERVER/LOCATION	*/
 	std::vector<std::string>			index;				/*	GLOBAL/SERVER/LOCATION	*/
 	std::vector<listen_s>				listen;				/*	SERVER	*/
@@ -38,7 +38,7 @@ struct tempConfig_s {
 	long long							max_body;			/*	GLOBAL/SERVER/LOCATION	*/
 	int									max_connections;	/*	GLOBAL/SERVER/LOCATION	*/
 	long long							max_header_size;	/*	GLOBAL/SERVER/LOCATION	*/
-	std::vector<std::string>			methods;			/*	GLOBAL/SERVER/LOCATION	*/
+	std::vector<std::string>			method;				/*	GLOBAL/SERVER/LOCATION	*/
 	LocationMatchType_e					modifier;			/*	LOCATION	*/
 	redirect_s							redirect;			/*	LOCATION	*/
 	bool								redirect_status;	/*	LOCATION	*/	
@@ -63,7 +63,7 @@ struct tempConfig_s {
 	bool	max_body_set;
 	bool	max_connections_set;
 	bool	max_header_set;
-	bool	methods_set;
+	bool	method_set;
 	bool	modifier_set;
 	bool	redirect_set;
 	bool	redirect_status_set;
@@ -96,7 +96,7 @@ struct tempConfig_s {
 		  max_body_set(false),
 		  max_connections_set(false),
 		  max_header_set(false),
-		  methods_set(false),
+		  method_set(false),
 		  modifier_set(false),
 		  redirect_set(false),
 		  redirect_status_set(false),
@@ -159,14 +159,14 @@ class CParser : public Parser
 		void			setConfig(Config& config);
 
 		bool			setAlias(node_t* node, fileInfo_s& alias);
-		bool			setBoolean(node_t* node, bool& state);
+		bool			setBoolean(node_t* node, bool& state, const std::string& var_name);
 		bool			setCGImap(node_t* node, std::map<std::string, std::string>& cgi_map);
-		bool			setCharsets(node_t* node, std::vector<std::string>& charsets);
+		bool			setcharset(node_t* node, std::vector<std::string>& charset);
 		bool			setErrorPage(node_t* node, std::vector<errorPage_s>& error_pages);
 		bool			setGlobalVar(node_t* node, Config& config);
 		bool			setIndex(node_t* node, std::vector<std::string>& index);
 		bool			setLocation(node_t* node, std::vector<CLocation>& locations);
-		bool			setMethods(node_t* node, std::vector<std::string>& methods);
+		bool			setMethod(node_t* node, std::vector<std::string>& method);
 		bool			setModifier(std::string& str, LocationMatchType_e& modifier);
 		bool			setPath(node_t* node, std::string& path);
 		bool			setPorts(node_t* node, std::vector<listen_s>& ports);
@@ -194,7 +194,7 @@ class CParser : public Parser
 		void			handleAutoIndex(node_t* node, T& tmp, HandlerContext_e context);
 
 		template <typename T>
-		void			handleCharsets(node_t* node, T& tmp, HandlerContext_e context);
+		void			handlecharset(node_t* node, T& tmp, HandlerContext_e context);
 
 		template <typename T>
 		void			handleCGIMap(node_t* node, T& tmp, HandlerContext_e context);
@@ -221,7 +221,7 @@ class CParser : public Parser
 		void			handleMaxHeader(node_t* node, T& tmp, HandlerContext_e context);
 
 		template <typename T>
-		void			handleMethods(node_t* node, T& tmp, HandlerContext_e context);
+		void			handleMethod(node_t* node, T& tmp, HandlerContext_e context);
 
 		template <typename T>
 		void			handlePorts(node_t* node, T& tmp, HandlerContext_e context);

@@ -17,7 +17,9 @@ CParser::CParser( const std::string& filename ) : Parser() {
 	openConfigFile(filename);
 }
 
-CParser::~CParser( void ){}
+CParser::~CParser( void ){
+	delete _tokeniser;
+}
 
 CParser::CParser(const CParser &other): Parser(other._tokens){(void)other;}
 
@@ -41,6 +43,7 @@ void	CParser::parseConfigFile(Config& config){
 	parseTokens();
 
 	setConfig(config);
+	delete _rawConfig;
 }
 
 void	CParser::tokeniseStream(void){
@@ -148,10 +151,10 @@ void	CParser::initKeywords(void) {
 	_location_keywords.push_back("alias");
 	_location_keywords.push_back("autoindex");
 	_location_keywords.push_back("cgi_path");
-	_location_keywords.push_back("charsets");
+	_location_keywords.push_back("charset");
 	_location_keywords.push_back("index");
 	_location_keywords.push_back("max_body_size");
-	_location_keywords.push_back("methods");
+	_location_keywords.push_back("method");
 	_location_keywords.push_back("redirect_status");
 	_location_keywords.push_back("redirect_path");
 	_location_keywords.push_back("root");
@@ -160,13 +163,13 @@ void	CParser::initKeywords(void) {
 
 	// SERVER
 	_server_keywords.push_back("autoindex");
-	_server_keywords.push_back("charsets");
+	_server_keywords.push_back("charset");
 	_server_keywords.push_back("error_page");
 	_server_keywords.push_back("index");
 	_server_keywords.push_back("listen");
 	_server_keywords.push_back("max_body_size");
 	_server_keywords.push_back("max_header_size");
-	_server_keywords.push_back("methods");
+	_server_keywords.push_back("method");
 	_server_keywords.push_back("root");
 	_server_keywords.push_back("server_name");
 	_server_keywords.push_back("keepalive_timeout");
@@ -174,13 +177,13 @@ void	CParser::initKeywords(void) {
 
 	// GLOBAL
 	_global_keywords.push_back("autoindex");
-	_global_keywords.push_back("charsets");
+	_global_keywords.push_back("charset");
 	_global_keywords.push_back("error_page");
 	_global_keywords.push_back("index");
 	_global_keywords.push_back("max_body_size");
 	_global_keywords.push_back("max_connections");
 	_global_keywords.push_back("max_header_size");
-	_global_keywords.push_back("methods");
+	_global_keywords.push_back("method");
 	_global_keywords.push_back("root");
 	_global_keywords.push_back("keepalive_timeout");
 	_global_keywords.push_back("read_write_timeout");
@@ -205,7 +208,7 @@ index				multi		yes				std::vector<string>		Append				Replace if redefined	Globa
 max_body			1			no				long long				Overwrite			Replace if redefined	Global/CServer/CLocation
 max_connections		1			no				int						Overwrite			n/a						Global only
 max_header_size		1			no				long long				Overwrite			Replace if redefined	Global/CServer
-methods				multi		yes				vector<string>			Append				Replace if redefined	Global/CServer/CLocation
+method				multi		yes				vector<string>			Append				Replace if redefined	Global/CServer/CLocation
 root				1			no				std::string				Overwrite			Replace if redefined	Global/CServer/CLocation
 server				block		yes				vector<CServer>			Append				n/a						Global only
 timeout_ka			1			no				int						Overwrite			Replace if redefined	Global/CServer
@@ -214,18 +217,22 @@ timeout_rw			1			no				int						Overwrite			Replace if redefined	Global/CServer
 */
 void	CParser::setConfig(Config& config){
 
-	std::vector<CServer>	servers;
+	//std::vector<CServer>	servers;
 	tempConfig_s			tmp;
 
 	for (size_t i = 0; i < _rawConfig->children.size(); i++){
 
 		node_t* node = _rawConfig->children[i];
 
-		if (node->type == "server")
-			tmp.servers_set = setServer(node, servers);
+		if (node->type == "server"){
+			tmp.servers_set = setServer(node, tmp.servers);
+			tmp.servers_set = true;
+		}
 		else
 			setVariable(tmp, node, GLOBAL_HANDLER);
 	}
+	if (!tmp.servers_set)
+		throw std::runtime_error("Error : configuration file must contain at least one 'server' block ");
 	pushToConfig(tmp, config);
 }
 
@@ -241,7 +248,7 @@ listen				multi		yes				vector<listen_s>	Append				No						No						CServer only
 locations			block		yes				vector<Clocation>	Append				No						No						CServer only
 max_body			1			no				long long			Overwrite			Replace if redefined	Replace if redefined	Global/CServer/CLocation
 max_header_size		1			no				long long			Overwrite			Replace if redefined	Replace if redefined	Global/CServer
-methods				multi		yes				vector<string>		Append				Replace if redefined	Replace if redefined	Global/CServer/CLocation
+method				multi		yes				vector<string>		Append				Replace if redefined	Replace if redefined	Global/CServer/CLocation
 root				1			no				std::string			Overwrite			Replace if redefined	Replace if redefined	Global/CServer/CLocation
 server_names		multi		yes				vector<string>		Append				No						No						CServer only
 timeout_ka			1			no				int					Overwrite			Replace if redefined	No						Global/CServer
@@ -258,11 +265,17 @@ bool	CParser::setServer(node_t* server_node, std::vector<CServer>& servers){
 
 		if (node->type == "server")
 			throw std::runtime_error("Error : server blocks cannot contain server blocks");
-		setVariable(tmp, node, SERVER_HANDLER);
+		else if (node->type == "location"){
+			tmp.servers_set = setLocation(node, tmp.locations);
+			tmp.location_set = true;
+		}
+		else
+			setVariable(tmp, node, SERVER_HANDLER);
 	}
 	if (!tmp.listen_set)
 		throw std::runtime_error("Error : server must contain at least one 'Listen' directive ");
-	
+	if (!tmp.location_set)
+		throw std::runtime_error("Error : server must contain at least one 'location' block ");
 	CServer server;
 
 	pushToServer(tmp, server);
@@ -283,7 +296,7 @@ charset				multi		yes				vector<string>				Append				Replace if redefined	Global
 error_page			multi		yes				vector<errorPage_s>	Append	Merge				Merge					Global/CServer/Location
 index				multi		yes				vector<string>				Append				Replace if redefined	Global/CServer/CLocation
 max_body			1			no				long long					Overwrite			Replace if redefined	Global/CServer/CLocation
-methods				multi		yes				vector<string>				Append				Replace if redefined	Global/CServer/CLocation
+method				multi		yes				vector<string>				Append				Replace if redefined	Global/CServer/CLocation
 modifier			1			no				LocationMatchType_e			Overwrite			n/a						Location only
 redirect_status		1			no				redirect_s					Overwrite			n/a						Location only					Combined into redirect_s
 redirect_url		1			no				redirect_s					Overwrite			n/a						Location only					Combined into redirect_s
@@ -297,16 +310,16 @@ uri					1			no				string						Overwrite			n/a						Location only
 
 bool	CParser::setLocation(node_t* location_node, std::vector<CLocation>& locations){
 
-	tempConfig_s	tmp;
+	tempConfig_s	temp;
 
 	if (location_node->args.size() == 1){
-		tmp.uri = location_node->args[0];
-		tmp.uri_set = true;
+		temp.uri = location_node->args[0];
+		temp.uri_set = true;
 	}
 	else if (location_node->args.size() == 2){
-		setModifier(location_node->args[0], tmp.modifier);
-		tmp.uri = location_node->args[1];
-		tmp.uri_set = true;
+		setModifier(location_node->args[0], temp.modifier);
+		temp.uri = location_node->args[1];
+		temp.uri_set = true;
 	}
 	else
 		throw std::runtime_error("Invalid number of arguments provided for location uri");
@@ -315,19 +328,22 @@ bool	CParser::setLocation(node_t* location_node, std::vector<CLocation>& locatio
 
 		node_t* node = location_node->children[i];
 
-		setVariable(tmp, node, LOCATION_HANDLER);
+		setVariable(temp, node, LOCATION_HANDLER);
 	}
-	if (checkAliasRoot(tmp.alias, tmp.root))
+	if (checkAliasRoot(temp.alias, temp.root))
 		throw std::runtime_error("Error: location contains both alias and root directives");
 
-	tmp.redirect.status = tmp.redirect_status;
-	tmp.redirect.url = tmp.redirect_url;
+	temp.redirect.status = temp.redirect_status;
+	temp.redirect.url = temp.redirect_url;
 
 	CLocation	location;
 
-	pushToLocation(tmp, location);
+	pushToLocation(temp, location);
 	locations.push_back(location);
-
+	if (locations.size()){
+		std::cout << "Max Body : " << locations[0].getMaxBodySize() << std::endl;
+		std::cout << "Root dir : " << locations[0].getRootDir() << std::endl;
+	}
 	return true;
 }
 
@@ -341,7 +357,7 @@ void	CParser::setVariable(tempConfig_s& tmp, node_t* node, HandlerContext_e cont
 		}
 
 		else if (node->type == "autoindex")
-			tmp.autoindex_set = setBoolean(node, tmp.autoindex);
+			tmp.autoindex_set = setBoolean(node, tmp.autoindex, "autoindex");
 		
 			else if (node->type == "cgi_path"){
 			if (context == LOCATION_HANDLER)
@@ -351,7 +367,7 @@ void	CParser::setVariable(tempConfig_s& tmp, node_t* node, HandlerContext_e cont
 		}
 		
 		else if (node->type == "charset")
-			tmp.charset_set = setCharsets(node, tmp.charsets);
+			tmp.charset_set = setcharset(node, tmp.charset);
 		
 		else if (node->type == "error_page")
 			tmp.error_pages_set = setErrorPage(node, tmp.error_pages);
@@ -367,9 +383,9 @@ void	CParser::setVariable(tempConfig_s& tmp, node_t* node, HandlerContext_e cont
 		}
 		
 		else if (node->type == "location"){
-			if (context == SERVER_HANDLER)
-				tmp.location_set = setLocation(node, tmp.locations);
-			else
+			// if (context == SERVER_HANDLER)
+			// 	tmp.location_set = setLocation(node, tmp.locations);
+			// else
 				throw std::runtime_error("Error : a 'location' directive can only exist within a server block");
 		}
 		
@@ -391,12 +407,12 @@ void	CParser::setVariable(tempConfig_s& tmp, node_t* node, HandlerContext_e cont
 				throw std::runtime_error("Error : the 'max_header_size' directive cannot be used inside a location block");
 		}		
 		
-		else if (node->type == "methods")
-			tmp.methods_set = setMethods(node, tmp.methods);
+		else if (node->type == "method")
+			tmp.method_set = setMethod(node, tmp.method);
 		
 			else if (node->type == "redirect_status"){
 			if (context == LOCATION_HANDLER)
-				tmp.redirect_status_set = setBoolean(node, tmp.redirect_status);
+				tmp.redirect_status_set = setBoolean(node, tmp.redirect_status, "redirect status");
 			else
 				throw std::runtime_error("Error : the 'redirect_status' directive can only be used inside a Location block");
 		}
@@ -412,9 +428,9 @@ void	CParser::setVariable(tempConfig_s& tmp, node_t* node, HandlerContext_e cont
 			tmp.root_set = setPath(node, tmp.root);
 	
 		else if (node->type == "server"){
-			if (context == SERVER_HANDLER)
-				tmp.servers_set = setServer(node, tmp.servers);
-			else
+			// if (context == SERVER_HANDLER)
+			// 	tmp.servers_set = setServer(node, tmp.servers);
+			// else
 				throw std::runtime_error("Error : the 'server' directive cannot be used inside Location or Server blocks");
 		}
 
@@ -426,14 +442,14 @@ void	CParser::setVariable(tempConfig_s& tmp, node_t* node, HandlerContext_e cont
 		}
 		else if (node->type == "keepalive_timeout"){
 			if (context == GLOBAL_HANDLER || context == SERVER_HANDLER)
-				tmp.timeout_ka = setNumericValue<int>(node, tmp.timeout_ka, 1, SYS_TM_KA);
+				tmp.timeout_ka_set = setNumericValue<int>(node, tmp.timeout_ka, 1, SYS_TM_KA);
 			else
 				throw std::runtime_error("Error : the 'keepalive_timeout' directive cannot be used inside a Location block");
 		}
 
 		else if (node->type == "read_write_timeout"){
 			if (context == GLOBAL_HANDLER || context == SERVER_HANDLER)
-				tmp.timeout_rw = setNumericValue<int>(node, tmp.timeout_rw, 1, SYS_TM_RW);
+				tmp.timeout_rw_set = setNumericValue<int>(node, tmp.timeout_rw, 1, SYS_TM_RW);
 			else
 				throw std::runtime_error("Error : the 'read_write_timeout' directive cannot be used inside a Location block");
 		}
@@ -458,7 +474,7 @@ void	CParser::pushToConfig(tempConfig_s& tmp, Config& dest){
 	if (tmp.autoindex_set)
 		dest.setAutoIndex(tmp.autoindex);
 	if (tmp.charset_set)
-		dest.setCharsets(tmp.charsets);
+		dest.setCharset(tmp.charset);
 	if (tmp.error_pages_set)
 		dest.setErrorPages(tmp.error_pages);
 	if (tmp.index_set)
@@ -469,8 +485,8 @@ void	CParser::pushToConfig(tempConfig_s& tmp, Config& dest){
 		dest.setMaxConnections(tmp.max_connections);
 	if (tmp.max_header_set)
 		dest.setMaxHeaderSize(tmp.max_header_size);
-	if (tmp.methods_set)
-		dest.setMethods(tmp.methods);
+	if (tmp.method_set)
+		dest.setMethod(tmp.method);
 	if (tmp.root_set)
 		dest.setRootDir(tmp.root);
 	if (tmp.servers_set)
@@ -483,7 +499,7 @@ void	CParser::pushToConfig(tempConfig_s& tmp, Config& dest){
 
 void	CParser::pushToServer(tempConfig_s& tmp, CServer& dest){
 	if (tmp.charset_set)
-		dest.setCharsets(tmp.charsets);
+		dest.setCharset(tmp.charset);
 	if (tmp.error_pages_set)
 		dest.setErrorPages(tmp.error_pages);
 	if (tmp.index_set)
@@ -496,8 +512,8 @@ void	CParser::pushToServer(tempConfig_s& tmp, CServer& dest){
 		dest.setMaxBodySize(tmp.max_body);
 	if (tmp.max_header_set)
 		dest.setMaxHeaderSize(tmp.max_header_size);
-	if (tmp.methods_set)
-		dest.setMethods(tmp.methods);
+	if (tmp.method_set)
+		dest.setMethod(tmp.method);
 	if (tmp.root_set)
 		dest.setRootDir(tmp.root);
 	if (tmp.server_names_set)
@@ -517,15 +533,15 @@ void	CParser::pushToLocation(tempConfig_s& tmp, CLocation& dest){
 	if (tmp.cgi_map_set)
 		dest.setCGIMap(tmp.cgi_map);
 	if (tmp.charset_set)
-		dest.setCharsets(tmp.charsets);
+		dest.setcharset(tmp.charset);
 	if (tmp.error_pages_set)
 		dest.setErrorPages(tmp.error_pages);
 	if (tmp.index_set)
 		dest.setIndex(tmp.index);
 	if (tmp.max_body_set)
 		dest.setMaxBodySize(tmp.max_body);
-	if (tmp.methods_set)
-		dest.setMethods(tmp.methods);
+	if (tmp.method_set)
+		dest.setMethod(tmp.method);
 	if (tmp.modifier_set)
 		dest.setModifier(tmp.modifier);
 	if (tmp.redirect_set)
@@ -546,7 +562,7 @@ void	CParser::pushToLocation(tempConfig_s& tmp, CLocation& dest){
 >>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<
 */
 
-bool	CParser::setBoolean(node_t* node, bool& state){
+bool	CParser::setBoolean(node_t* node, bool& state, const std::string& var_name){
 
 	if (!isOnlyArg(node->args))
 		throw std::runtime_error("Error: multiple arguments when only one permitted : " + node->args[0] + " " + createArgsString(node->args));
@@ -557,14 +573,12 @@ bool	CParser::setBoolean(node_t* node, bool& state){
 		state = true;
 	else if (lowercase == "false")
 		state = false;
-	else if (lowercase.length() == 1){
-		if ( lowercase == "1")
+	else if (lowercase.length() == 1 && ( lowercase == "1" || lowercase == "t"))
 			state = true;
-		else if (lowercase == "0")
+	else if (lowercase.length() == 1 && (lowercase == "0" || lowercase == "f"))
 			state = false;
-	}
 	else
-		return false;
+		throw std::runtime_error("Error: value must be boolean (T/F/t/f/true/false/TRUE/FALSE/1/0) : " + var_name + " " +  node->args[0]);
 	return true;
 }
 
@@ -593,7 +607,7 @@ bool	CParser::setCGImap(node_t* node, std::map<std::string, std::string>& cgi_ma
 	return true;
 }
 
-bool	CParser::setCharsets(node_t* node, std::vector<std::string>& charset){
+bool	CParser::setcharset(node_t* node, std::vector<std::string>& charset){
 
 	size_t size = node->args.size();
 
@@ -601,7 +615,7 @@ bool	CParser::setCharsets(node_t* node, std::vector<std::string>& charset){
 		if (isValidCharset(node->args[i]))
 			charset.push_back(node->args[i]);
 		else
-			throw std::runtime_error("Error: invalid method"); // change to log entry for config
+			throw std::runtime_error("Error: invalid directive : unsupported charset : "  + node->type + " " + createArgsString(node->args));
 	}
 	return true;
 }
@@ -651,13 +665,13 @@ bool	CParser::setModifier(std::string& str, LocationMatchType_e& modifier){
 	return true;
 }
 
-bool	CParser::setMethods(node_t* node, std::vector<std::string>& methods){
+bool	CParser::setMethod(node_t* node, std::vector<std::string>& method){
 
 	size_t size = node->args.size();
 
-	for (size_t i = 0; i < size - 1; i++){
+	for (size_t i = 0; i < size; i++){
 		if (isValidMethod(node->args[i]))
-			methods.push_back(node->args[i]);
+			method.push_back(node->args[i]);
 		else
 			throw std::runtime_error("Error: invalid method"); // change to log entry for config
 	}
@@ -720,7 +734,7 @@ bool	CParser::setTryFiles(node_t* node, tryFiles_s& try_files){
 template <typename T>
 bool	CParser::setNumericValue(node_t* node, T& target, T min, T max){
 
-	T val;
+	T val = 0;
 
 	if (isOnlyArg(node->args) && convertToType(val, node->args[0])){
 		if (val <= max && val >= min)
@@ -770,14 +784,14 @@ bool	CParser::checkAliasRoot(const std::string& alias, const std::string& root){
 bool	CParser::setServer(node_t* server_node, std::vector<CServer>& servers){
 	CServer server;
 	bool autoindex = false;
-	std::vector<std::string> charsets;
+	std::vector<std::string> charset;
 	std::vector<errorPage_s> error_pages;
 	std::vector<std::string> index;
 	std::vector<listen_s> listen;
 	std::vector<CLocation> locations;
 	long long max_body;
 	long long max_header;
-	std::vector<std::string> methods;
+	std::vector<std::string> method;
 	std::string root;
 	std::vector<std::string> server_names;
 	int timeout_ka;
@@ -791,7 +805,7 @@ bool	CParser::setServer(node_t* server_node, std::vector<CServer>& servers){
 	bool location_set = false;
 	bool max_body_set = false;
 	bool max_header_set = false;
-	bool methods_set = false;
+	bool method_set = false;
 	bool root_set = false;
 	bool server_names_set = false;
 	bool timeout_ka_set = false;
@@ -805,7 +819,7 @@ bool	CParser::setServer(node_t* server_node, std::vector<CServer>& servers){
 	  	else if (node->type == "autoindex")
 			autoindex_set = setBoolean(node, autoindex);
 	  	else if (node->type == "charset")
-			charset_set = setCharsets(node, charsets);
+			charset_set = setcharset(node, charset);
 	  	else if (node->type == "error_page")
 			error_pages_set = setErrorPage(node, error_pages);
 	  	else if (node->type == "index")
@@ -818,8 +832,8 @@ bool	CParser::setServer(node_t* server_node, std::vector<CServer>& servers){
 			max_body_set = setNumericValue<long long>(node, max_body, 0, SYS_MAX_BODY);
 	  	else if (node->type == "max_header_size")
 			max_header_set = setNumericValue<long long>(node, max_header, 1, SYS_MAX_HEAD);
-	  	else if (node->type == "methods")
-			methods_set = setMethods(node, methods);
+	  	else if (node->type == "method")
+			method_set = setMethod(node, method);
 		else if (node->type == "root")
 			root_set = setPath(node, root);
 		else if (node->type == "server_name")
@@ -832,7 +846,7 @@ bool	CParser::setServer(node_t* server_node, std::vector<CServer>& servers){
 	if (autoindex_set)
 		server.setAutoIndex(autoindex);
 	if (charset_set)
-		server.setCharsets(charsets);
+		server.setcharset(charset);
 	if (error_pages_set)
 		server.setErrorPages(error_pages);
 	if (index_set)
@@ -845,8 +859,8 @@ bool	CParser::setServer(node_t* server_node, std::vector<CServer>& servers){
 		server.setMaxBodySize(max_body);
 	if (max_header_set)
 		server.setMaxHeaderSize(max_header);
-	if (methods_set)
-		server.setMethods(methods);
+	if (method_set)
+		server.setMethod(method);
 	if (root_set)
 		server.setRootDir(root);
 	if (server_names_set)
@@ -867,11 +881,11 @@ bool	CParser::setLocation(node_t* location_node, std::vector<CLocation>& locatio
 	std::string							alias;
 	bool								autoindex;
 	std::map<std::string, std::string>	cgi_map;
-	std::vector<std::string>			charsets;
+	std::vector<std::string>			charset;
 	std::vector<errorPage_s>			error_pages;
 	std::vector<std::string>			index;
 	long long							max_body;
-	std::vector<std::string>			methods;
+	std::vector<std::string>			method;
 	LocationMatchType_e					modifier;
 	redirect_s							redirect;
 	bool								redirect_status;
@@ -900,15 +914,15 @@ bool	CParser::setLocation(node_t* location_node, std::vector<CLocation>& locatio
 		else if (node->type == "cgi_path")
 			setCGImap(node, cgi_map);
 		else if (node->type == "charset")
-			setCharsets(node, charsets);
+			setcharset(node, charset);
 		else if (node->type == "error_page")
 			setErrorPage(node, error_pages);
 		else if (node->type == "index")
 			setIndex(node, index);
 		else if (node->type == "max_body_size")
 			setNumericValue<long long>(node, max_body, 0, SYS_MAX_BODY);
-		else if (node->type == "methods")
-			setMethods(node, methods);
+		else if (node->type == "method")
+			setMethod(node, method);
 		else if (node->type == "redirect_status")
 			setBoolean(node, redirect_status);
 		else if (node->type == "redirect_path")
@@ -926,11 +940,11 @@ bool	CParser::setLocation(node_t* location_node, std::vector<CLocation>& locatio
 
 	location.setAlias(alias);
 	location.setCGIMap(cgi_map);
-	location.setCharsets(charsets);
+	location.setcharset(charset);
 	location.setErrorPages(error_pages);
 	location.setIndex(index);
 	location.setMaxBodySize(max_body);
-	location.setMethods(methods);
+	location.setMethod(method);
 	location.setAutoIndex(autoindex);
 	location.setModifier(modifier);
 	location.setRedirect(redirect);

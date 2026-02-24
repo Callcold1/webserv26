@@ -26,6 +26,12 @@ struct node_t {
 
 	node_t(){}
 	node_t(std::string s, std::vector<std::string> a, std::vector<node_t*> c) : type(s), args(a), children(c){}
+
+	~node_t() {
+        for (size_t i = 0; i < children.size(); ++i) {
+            delete children[i];
+        }
+    }
 };
 
 class Parser {
