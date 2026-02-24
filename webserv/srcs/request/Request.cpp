@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
+/*   By: junruh <junruh@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/30 11:28:22 by kmooney           #+#    #+#             */
-/*   Updated: 2025/07/02 20:04:27 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/02/24 14:56:08 by junruh           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -147,4 +147,29 @@ void	Request::setDefaultMultiPartType( const std::string& type ){
 std::string	Request::getRequestStr(){
 	_req_line = _parser->getParsedString();
 	return _req_line;
+}
+
+std::vector<field_t* >	 Request::findHeader(const std::string& header_name){
+	fieldMap_t::iterator header = _headers.find(header_name);
+	return header->second;
+}
+
+void	 Request::iterateOverFieldT(std::vector<field_t*>& vec ){
+
+	size_t size = vec.size();
+
+	for (size_t i = 0; i < size; i++){
+	const std::string&	 val	 = vec[i]->val;
+	const std::vector< std::pair<std::string, std::string> >&	 options = vec[i]->params;
+	}
+}
+
+std::string Request::findQuery(const std::string id)  //function to get specific query value 
+{
+    for (query_t::iterator it = _uri.queries.begin(); it != _uri.queries.end(); ++it) {
+        if (it->first == id) {
+            return it->second;
+        }
+    }
+    return "";
 }

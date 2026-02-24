@@ -37,7 +37,7 @@ int	CgiResponse::generate()
 	return(0);
 }
 
-int CgiResponse::execute()
+int CgiResponse::execute() //TODO maybe remove one of the pipes 
 {
 	int toCgi[2];
 	int toServer[2];
@@ -75,7 +75,7 @@ int CgiResponse::execute()
 		};
 
 		const char *envp[] = {
-			_request._uri.query.c_str(),  //TODO get query string, maybe get only query string from parent
+			_request._uri.query.c_str(),
 			NULL
 		};
 		execve(_path.c_str(), args, const_cast<char * const *>(envp)); 
@@ -103,6 +103,12 @@ int CgiResponse::execute()
 			total_bytes += bytes_read;
 		}
 		if (bytes_read < 0)
+		{
+			close(toCgi[1]); close(toServer[0]);
+			waitpid(pid, NULL, 0);
+			return(4);
+		}
+		if (total_bytes <= 0)
 		{
 			close(toCgi[1]); close(toServer[0]);
 			waitpid(pid, NULL, 0);

@@ -8,7 +8,10 @@
 #include "helpers.hpp"
 
 #define HTTP_VERSION "HTTP/1.1"
+#define CGI_PATH "www/cgi-bin/"
+#define HTML_PATH "www/html"
 #define NOT_FOUND_ERROR 404
+#define BAD_REQUEST_ERROR 400
 
 typedef std::map<std::string, std::string> HeaderMap_t;
 

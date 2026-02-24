@@ -68,8 +68,8 @@ std::string Response::status_text()
 		case 405: return "Method Not Allowed";
 
 		case 500: return "Internal Server Error";
-		case 501: return "Not Implemented";
-		case 502: return "Bad Gateway";
+		case 501: return "Not Implemented"; //TODO where do we check if requested method is implemented
+		//case 502: return "Bad Gateway";
 		case 503: return "Service Unavailable";
 		//etc
 		default: return "Unknown Error";

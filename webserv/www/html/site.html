@@ -7,14 +7,35 @@
 			<h1>The best website in existence!</h1>
 			<h2>Meme generator</h2>
 			<img src="../cgi-bin/assets/officememe.png" alt="could not find the office meme template" style="width:400px;height:500px;">
+			<form action="../cgi-bin/meme.py" method="GET">
+				<div>
+					<label for="jimtext">Jim(left):</label><br>
+					<input type="text" id="jimtext" name="jimtext" maxlength="200" size="50"><br>
+					<label for="dwighttext">dwight(middle):</label><br>
+					<input type="text" id="dwighttext" name="dwighttext" maxlength="200" size="50"><br>
+					<label for="michaeltext">michael(right):</label><br>
+					<input type="text" id="michaeltext" name="michaeltext" maxlength="200" size="50"><br>
+					<button type="submit">submit</button>
+				</div> 
+			</form>
+			<p></p>
+			<h2>Submit File</h2>
 			<form>
-				<label for="jimtext">Jim(left):</label><br>
-				<input type="text" id="jimtext" name="jimtext" maxlength="200" size="50"><br>
-				<label for="dwighttext">dwight(middle):</label><br>
-				<input type="text" id="dwighttext" name="dwighttext" maxlength="200" size="50"><br>
-				<label for="michaeltext">michael(right):</label><br>
-				<input type="text" id="michaeltext" name="michaeltext" maxlength="200" size="50"><br>
-				 <button type="submit">submit</button> 
-			</form> 
+				<div>
+					<input id="ImportFile"
+						type="file"
+						name="ImportFile"
+						data-val="true"
+						data-val-required="Please select a file"
+						title="Browse for a file to upload"
+						accept=".pdf,.html"/>
+				</div>
+				<div>
+					<p>Accepted file types: .pdf, .html</p>
+				</div>
+				<div>
+					<button type="submit">Submit</button>
+				</div>
+			</form>
 		</body>
 	</html>

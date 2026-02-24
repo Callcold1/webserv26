@@ -6,7 +6,7 @@
 /*   By: junruh <junruh@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/07 10:25:15 by kmooney           #+#    #+#             */
-/*   Updated: 2026/02/23 16:30:06 by junruh           ###   ########.fr       */
+/*   Updated: 2026/02/24 12:13:14 by junruh           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,7 +32,7 @@ int	main()
 
 	// RediResponse rr(300);
 	// ErrorResponse er(404);
-	CgiResponse cr(200);
+	CgiResponse cr(200, request);
 	cr.generate();
 	
 
