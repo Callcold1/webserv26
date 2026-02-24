@@ -34,13 +34,19 @@ jim_text = env.getvalue('jimtext', 'JIM')
 dwight_text = env.getvalue('dwighttext', 'DWIGHT')
 michael_text = env.getvalue('michaeltext', 'MICHAEL')
 
-img_path = os.path.join(os.path.dirname(__file__), "assets", "officememe.png")
-img = Image.open(img_path)
+try:
+	img_path = os.path.join(os.path.dirname(__file__), "assets", "officememe.png")	
+	img = Image.open(img_path)
+except:
+	sys.exit()
 
 draw = ImageDraw.Draw(img)
 
-font_path = os.path.join(os.path.dirname(__file__), "assets", "open-sans", "static", "OpenSans-SemiBold.ttf")
-font = ImageFont.truetype(font_path, 14)
+#try:
+#	font_path = os.path.join(os.path.dirname(__file__), "assets", "open-sans", "static", "OpenSans-SemiBold.ttf")
+#	font = ImageFont.truetype(font_path, 14)
+#except:
+font = ImageFont.load_default(size=14)
 
 j_box = (50, 130, 130, 200)
 d_box = (260, 600, 220, 170)
