@@ -60,6 +60,8 @@ class Config {
 		bool						_servers_set;
 		bool						_timeout_ka_set;
 		bool						_timeout_rw_set;
+
+		int							_port_count;
 		
 	public:
 									// Constructors/Destructor/Copy
@@ -97,8 +99,7 @@ class Config {
 		int							getTimeoutKA(void) const;
 		int							getTimeoutRW(void) const;
 
-		int							getClientSocketMax(void) const;
-		int							getServerSocketMax(void) const;
+		int							getServerPortCount(void) const;
 
 									/*	SETTERS	*/
 		void 						setAutoIndex(bool autoindex, bool set_from_config_file);
@@ -114,6 +115,8 @@ class Config {
 		void						setTimeoutKA(int timeout_in_seconds, bool set_from_config_file);
 		void						setTimeoutRW(int timeout_in_seconds, bool set_from_config_file);
 
+		void						setServerPortCount(int count);
+		
 									/*	PROPAGATE INHERITABLE VARIABLES	*/
 		void						propagateVarsToChildren();
 		void						propagateServerToLocations(CServer& server);

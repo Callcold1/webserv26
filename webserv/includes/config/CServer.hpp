@@ -27,11 +27,11 @@ class CServer {
 		std::vector<std::string>		_charset;			// charset(s) that can be handled
 		std::map<int, std::string>		_error_pages;		// Map of error_page_number and corresponding path
  		std::vector<std::string>		_index;				// ordered list of possible index filenames - first one that works is returned
+		 std::vector<listen_s> 			_listen;			// Connection info (port/ip/default_flag)
 		std::vector<CLocation>	 		_locations;			// Vector of location class objects
 		long long						_max_body;			// Max acceptable body size in bytes
 		long long						_max_header_size;	// Max acceptable header size in bytes
 		std::vector<std::string>		_method;			// Method permitted for all locations on server (can be superceded by location_method)
-		std::vector<listen_s> 			_ports;				// Connection info (port/ip/default_flag)
 		std::string	 					_root_dir;			// Root directory for server - overrides global value
 		std::vector<std::string> 		_server_name;		// Server names
 		int								_timeout_ka;		// Length of time before keep-alive timeout (seconds)
@@ -46,7 +46,6 @@ class CServer {
 		bool							_max_body_set;
 		bool							_max_header_set;
 		bool							_method_set;
-		bool							_ports_set;
 		bool							_root_set;
 		bool							_server_name_set;
 		bool							_timeout_ka_set;
@@ -98,12 +97,12 @@ class CServer {
 		void							setCharset(std::vector<std::string>& charset, bool set_from_config_file);
 		void 							setErrorPage(const std::map<int, std::string>& error_pages, bool set_from_config_file);
 		void							setIndex(const std::vector<std::string>& index, bool set_from_config_file);
+		void 							setListen(const std::vector<listen_s>& ports, bool set_from_config_file);
 		void 							setLocations(const std::vector<CLocation>& locations, bool set_from_config_file);
 		void 							setMaxBodySize(long long max_body_size, bool set_from_config_file);
 		void 							setMaxHeaderSize(long long max_header_size, bool set_from_config_file);
 		void 							setMethod(const std::vector<std::string>& method, bool set_from_config_file);
 		void 							setServerName(const std::vector<std::string>& names, bool set_from_config_file);
-		void 							setListen(const std::vector<listen_s>& ports, bool set_from_config_file);
 		void 							setRootDir(std::string& root, bool set_from_config_file);
 		void							setTimeoutKA(int timeout_in_seconds, bool set_from_config_file);
 		void							setTimeoutRW(int timeout_in_seconds, bool set_from_config_file);

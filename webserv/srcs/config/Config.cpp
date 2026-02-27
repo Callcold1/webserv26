@@ -139,12 +139,8 @@ int    Config::getTimeoutRW(void) const{
 	return _timeout_rw;
 }
 
-int    Config::getClientSocketMax(void) const{
-	return _timeout_rw;
-}
-
-int    Config::getServerSocketMax(void) const{
-	return _timeout_rw;
+int    Config::getServerPortCount(void) const{
+	return _port_count;
 }
 
 /*
@@ -213,6 +209,10 @@ void    Config::setTimeoutRW(int timeout_in_seconds, bool set_from_config_file) 
 	_timeout_rw = timeout_in_seconds;
 }
 
+void	Config::setServerPortCount(int count) {
+	_port_count = count;
+}
+
 /*
 >>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<
 >>>>>>		CONFIG PROPAGATION 		<<<<<<
@@ -232,7 +232,7 @@ void    Config::propagateVarsToChildren(){
 		if (_servers[i].isCharsetSet() == false)
 			_servers[i].setCharset(_charset, false);
 		if (_servers[i].isIndexSet() == false)
-			_servers[i].setIndex(_index, false);
+			_servers[i].setIndex(_index, false);	
 		if (_servers[i].isMaxBodySet() == false)
 			_servers[i].setMaxBodySize(_max_body, false);
 		if (_servers[i].isMaxHeaderSet() == false)

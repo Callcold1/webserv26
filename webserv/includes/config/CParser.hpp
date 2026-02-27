@@ -181,74 +181,31 @@ class CParser : public Parser
 
 		template<typename T>
 		bool			setNumericValue(node_t* node, T& target, T min, T max);
-
-		void	deleteNodes(node_t* node);
 		
 						/* HANDLERS */
-	
-		template <typename T>
-		bool			handleDirective(node_t* node, T& tmp, HandlerContext_e context);
-
-		template <typename T>
-		void			handleAlias(node_t* node, T& tmp, HandlerContext_e context);
-
-		template <typename T>
-		void			handleAutoIndex(node_t* node, T& tmp, HandlerContext_e context);
-
-		template <typename T>
-		void			handlecharset(node_t* node, T& tmp, HandlerContext_e context);
-
-		template <typename T>
-		void			handleCGIMap(node_t* node, T& tmp, HandlerContext_e context);
-
-		template <typename T>
-		void			handleErrorPages(node_t* node, T& tmp, HandlerContext_e context);
-
-		template <typename T>
-		void			handleIndex(node_t* node, T& tmp, HandlerContext_e context);
-
-		template <typename T>
-		void			handleLocation(node_t* node, T& tmp, HandlerContext_e context);
-
-		template <typename T>
-		void			handleModifier(node_t* node, T& tmp, HandlerContext_e context);
-
-		template <typename T>
-		void			handleMaxBody(node_t* node, T& tmp, HandlerContext_e context);
-		
-		template <typename T>
-		void			handleMaxConnections(node_t* node, T& tmp, HandlerContext_e context);
-
-		template <typename T>
-		void			handleMaxHeader(node_t* node, T& tmp, HandlerContext_e context);
-
-		template <typename T>
-		void			handleMethod(node_t* node, T& tmp, HandlerContext_e context);
-
-		template <typename T>
-		void			handlePorts(node_t* node, T& tmp, HandlerContext_e context);
-
-		template <typename T>
-		void			handleRedirect(node_t* node, T& tmp, HandlerContext_e context);
-
-		template <typename T> 
-		void			handleRedirectStatus(node_t* node, T& tmp, HandlerContext_e context);
-
-		template <typename T> 
-		void			handleRedirectURL(node_t* node, T& tmp, HandlerContext_e context);
-
-		template <typename T>
-		void			handleRoot(node_t* node, T& tmp, HandlerContext_e context);
-
-		template <typename T>
-		void			handleServerNames(node_t* node, T& tmp, HandlerContext_e context);
-
-		template <typename T>
-		void			handleTimeoutKA(node_t* node, T& tmp, HandlerContext_e context);
-
-		template <typename T>
-		void			handleTimeoutRW(node_t* node, T& tmp, HandlerContext_e context);
-
+		void			handleAlias(node_t* node, tempConfig_s& tmp, HandlerContext_e context);
+		void			handleAutoIndex(node_t* node, tempConfig_s& tmp);
+		void			handleCharset(node_t* node, tempConfig_s& tmp);
+		void			handleCGIMap(node_t* node, tempConfig_s& tmp, HandlerContext_e context);
+		void			handleErrorPages(node_t* node, tempConfig_s& tmp);
+		void			handleIndex(node_t* node, tempConfig_s& tmp);
+		void			handleListen(node_t* node, tempConfig_s& tmp, HandlerContext_e context);
+		void			handleLocation(node_t* node, tempConfig_s& tmp, HandlerContext_e context);
+		void			handleMaxBody(node_t* node, tempConfig_s& tmp);
+		void			handleMaxConnections(node_t* node, tempConfig_s& tmp, HandlerContext_e context);
+		void			handleMaxHeader(node_t* node, tempConfig_s& tmp, HandlerContext_e context);
+		void			handleMethod(node_t* node, tempConfig_s& tmp);
+		void			handlePorts(node_t* node, tempConfig_s& tmp, HandlerContext_e context);
+		void			handleRedirectStatus(node_t* node, tempConfig_s& tmp, HandlerContext_e context); 
+		void			handleRedirectURL(node_t* node, tempConfig_s& tmp, HandlerContext_e context);
+		void			handleRoot(node_t* node, tempConfig_s& tmp);
+		void			handleServer(node_t* node, tempConfig_s& tmp, HandlerContext_e context);
+		void			handleServerNames(node_t* node, tempConfig_s& tmp, HandlerContext_e context);
+		void			handleTimeoutKA(node_t* node, tempConfig_s& tmp, HandlerContext_e context);
+		void			handleTimeoutRW(node_t* node, tempConfig_s& tmp, HandlerContext_e context);
+		void			handleTryFiles(node_t* node, tempConfig_s& tmp, HandlerContext_e context);
+		void			handleUploadPath(node_t* node, tempConfig_s& tmp, HandlerContext_e context);
+						
 						/* VALIDATION */
 		std::vector<std::string>	_global_keywords;
 		std::vector<std::string>	_server_keywords;

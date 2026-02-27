@@ -250,13 +250,7 @@ void	CParser::setConfig(Config& config){
 	for (size_t i = 0; i < _rawConfig->children.size(); i++){
 
 		node_t* node = _rawConfig->children[i];
-
-		if (node->type == "server"){
-			tmp.servers_set = setServer(node, tmp.servers);
-			tmp.servers_set = true;
-		}
-		else
-			setVariable(tmp, node, GLOBAL_HANDLER);
+		setVariable(tmp, node, GLOBAL_HANDLER);
 	}
 	if (!tmp.servers_set)
 		throw std::runtime_error("Configuration file must contain at least one 'server' block");
@@ -280,6 +274,7 @@ root				1			no				std::string			Overwrite			Replace if redefined	Replace if rede
 server_names		multi		yes				vector<string>		Append				No						No						CServer only
 timeout_ka			1			no				int					Overwrite			Replace if redefined	No						Global/CServer
 timeout_rw			1			no				int					Overwrite			Replace if redefined	No						Global/CServer
+
 */
 
 bool	CParser::setServer(node_t* server_node, std::vector<CServer>& servers){
@@ -289,15 +284,7 @@ bool	CParser::setServer(node_t* server_node, std::vector<CServer>& servers){
 	for (size_t i = 0; i < server_node->children.size(); i++){
 
 		node_t* node = server_node->children[i];
-
-		if (node->type == "server")
-			throw std::runtime_error("Server blocks cannot contain server blocks");
-		else if (node->type == "location"){
-			tmp.servers_set = setLocation(node, tmp.locations);
-			tmp.location_set = true;
-		}
-		else
-			setVariable(tmp, node, SERVER_HANDLER);
+		setVariable(tmp, node, SERVER_HANDLER);
 	}
 	if (!tmp.listen_set)
 		throw std::runtime_error("Server must contain at least one 'Listen' directive ");
@@ -332,7 +319,6 @@ try_files			multi		yes				TryFiles_s					Overwrite			n/a						Location only
 upload_path			1			no				string						Overwrite			n/a						Location only
 uri					1			no				string						Overwrite			n/a						Location only
 
-
 */
 
 bool	CParser::setLocation(node_t* location_node, std::vector<CLocation>& locations){
@@ -354,7 +340,6 @@ bool	CParser::setLocation(node_t* location_node, std::vector<CLocation>& locatio
 	for (size_t i = 0; i < location_node->children.size(); i++){
 
 		node_t* node = location_node->children[i];
-
 		setVariable(temp, node, LOCATION_HANDLER);
 	}
 	if (checkAliasRoot(temp.alias, temp.root))
@@ -370,119 +355,185 @@ bool	CParser::setLocation(node_t* location_node, std::vector<CLocation>& locatio
 	return true;
 }
 
+/*
+>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<
+>>>>>>		HANDLERS 		<<<<<<
+>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<
+*/
+
+void	CParser::handleAlias(node_t* node, tempConfig_s& tmp, HandlerContext_e context){
+	if (context == LOCATION_HANDLER)
+		tmp.alias_set = setPath(node, tmp.alias);
+	else
+		throw std::runtime_error("the 'alias' directive can only be used inside a Location block");
+}
+
+void	CParser::handleAutoIndex(node_t* node, tempConfig_s& tmp){
+	tmp.autoindex_set = setBoolean(node, tmp.autoindex);
+}
+
+void	CParser::handleCharset(node_t* node, tempConfig_s& tmp){
+	tmp.charset_set = setCharset(node, tmp.charset);
+}
+
+void	CParser::handleCGIMap(node_t* node, tempConfig_s& tmp, HandlerContext_e context){
+	if (context == LOCATION_HANDLER)
+		tmp.cgi_map_set = setCGImap(node, tmp.cgi_map);
+	else
+		throw std::runtime_error("Invalid context for cgi_map directive");
+}
+
+void	CParser::handleErrorPages(node_t* node, tempConfig_s& tmp){
+	tmp.error_page_set = setErrorPage(node, tmp.error_pages);
+}
+
+void	CParser::handleIndex(node_t* node, tempConfig_s& tmp){
+	tmp.index_set = setIndex(node, tmp.index);
+}
+
+void	CParser::handleListen(node_t* node, tempConfig_s& tmp, HandlerContext_e context){
+	if (context == SERVER_HANDLER)
+		tmp.listen_set = setPorts(node, tmp.listen);
+	else
+		throw std::runtime_error("a 'listen' directive can only exist within a server block");
+}
+
+void	CParser::handleLocation(node_t* node, tempConfig_s& tmp, HandlerContext_e context){
+	if (context == SERVER_HANDLER)
+		tmp.location_set = setLocation(node, tmp.locations);
+	else
+		throw std::runtime_error("Invalid context for location directive : a 'location' directive can only exist within a server block");
+}
+
+void	CParser::handleMaxBody(node_t* node, tempConfig_s& tmp){
+	tmp.max_body_set = setNumericValue<long long>(node, tmp.max_body, 0, SYS_MAX_BODY);
+}
+
+void	CParser::handleMaxConnections(node_t* node, tempConfig_s& tmp, HandlerContext_e context){
+	if (context == GLOBAL_HANDLER)
+		tmp.max_connections_set = setNumericValue<int>(node, tmp.max_connections, 1, SYS_MAX_CONN);
+	else
+		throw std::runtime_error("Invalid context for max_connections directive : the 'max_connections' directive cannot be used inside server or location blocks");
+}
+
+void	CParser::handleMaxHeader(node_t* node, tempConfig_s& tmp, HandlerContext_e context){
+	if (context == GLOBAL_HANDLER || context == SERVER_HANDLER)
+		tmp.max_header_set = setNumericValue<long long>(node, tmp.max_header_size, 1, SYS_MAX_HEAD);
+	else
+		throw std::runtime_error("Invalid context for max_header_size directive");
+}		
+
+void	CParser::handleMethod(node_t* node, tempConfig_s& tmp){
+	tmp.method_set = setMethod(node, tmp.method);
+}
+
+void	CParser::handleRedirectStatus(node_t* node, tempConfig_s& tmp, HandlerContext_e context){
+	if (context == LOCATION_HANDLER)
+		tmp.redirect_status_set = setBoolean(node, tmp.redirect_status);
+	else
+		throw std::runtime_error("the 'redirect_status' directive can only be used inside a Location block");
+}
+
+void	CParser::handleRedirectURL(node_t* node, tempConfig_s& tmp, HandlerContext_e context){
+	if (context == LOCATION_HANDLER)
+		tmp.redirect_url_set = setPath(node, tmp.redirect_url);
+	else
+		throw std::runtime_error("the 'redirect_path' directive can only be used inside a Location block");
+}
+
+void	CParser::handleRoot(node_t* node, tempConfig_s& tmp){
+	tmp.root_set = setPath(node, tmp.root);
+}
+
+void	CParser::handleServer(node_t* node, tempConfig_s& tmp, HandlerContext_e context){
+	if (context == GLOBAL_HANDLER)
+		tmp.servers_set = setServer(node, tmp.servers);
+	else
+		throw std::runtime_error("Invalid context for server block : a 'server' block can only exist in the global context");
+}
+
+void	CParser::handleServerNames(node_t* node, tempConfig_s& tmp, HandlerContext_e context){
+	if (context == SERVER_HANDLER)
+		tmp.server_name_set = setServerName(node, tmp.server_names);
+	else
+		throw std::runtime_error("the 'server' directive cannot be used inside Location or Server blocks");
+}
+
+void	CParser::handleTimeoutKA(node_t* node, tempConfig_s& tmp, HandlerContext_e context){
+	if (context == GLOBAL_HANDLER || context == SERVER_HANDLER)
+		tmp.timeout_ka_set = setNumericValue<int>(node, tmp.timeout_ka, 1, SYS_TM_KA);
+	else
+		throw std::runtime_error("Invalid context for keepalive_timeout directive : the 'keepalive_timeout' directive cannot be used inside a Location block");
+}
+
+void	CParser::handleTimeoutRW(node_t* node, tempConfig_s& tmp, HandlerContext_e context){
+	if (context == GLOBAL_HANDLER || context == SERVER_HANDLER)
+		tmp.timeout_rw_set = setNumericValue<int>(node, tmp.timeout_rw, 1, SYS_TM_RW);
+	else
+		throw std::runtime_error("Invalid context for read_write_timeout directive : the 'read_write_timeout' directive cannot be used inside a Location block");
+}
+
+void	CParser::handleTryFiles(node_t* node, tempConfig_s& tmp, HandlerContext_e context){
+	if (context == LOCATION_HANDLER)
+		tmp.try_files_set = setTryFiles(node, tmp.try_files);
+	else
+		throw std::runtime_error("Invalid context for try_files directive : the 'try_files' directive can only be used inside a Location block");
+}
+
+void	CParser::handleUploadPath(node_t* node, tempConfig_s& tmp, HandlerContext_e context){
+	if (context == LOCATION_HANDLER)
+		tmp.upload_path_set = setPath(node, tmp.upload_path);
+	else
+		throw std::runtime_error("Invalid context for upload_path directive : the 'upload_path' directive can only be used inside a Location block");
+}
+
+
 void	CParser::setVariable(tempConfig_s& tmp, node_t* node, HandlerContext_e context){
 	try{
-		if (node->type == "alias"){
-			if (context == LOCATION_HANDLER)
-				tmp.alias_set = setPath(node, tmp.alias);
-			else
-				throw std::runtime_error("the 'alias' directive can only be used inside a Location block");
-		}
-
+		if (node->type == "alias")
+			handleAlias(node, tmp, context);
 		else if (node->type == "autoindex")
-			tmp.autoindex_set = setBoolean(node, tmp.autoindex);
-		
-			else if (node->type == "cgi_path"){
-			if (context == LOCATION_HANDLER)
-				tmp.cgi_map_set = setCGImap(node, tmp.cgi_map);
-			else
-				throw std::runtime_error("the 'cgi_path' directive can only be used inside a Location block");
-		}
-		
+			handleAutoIndex(node, tmp);
+		else if (node->type == "cgi_path")
+			handleCGIMap(node, tmp, context);		
 		else if (node->type == "charset")
-			tmp.charset_set = setCharset(node, tmp.charset);
-		
+			handleCharset(node, tmp);
 		else if (node->type == "error_page")
-			tmp.error_page_set = setErrorPage(node, tmp.error_pages);
-		
+			handleErrorPages(node, tmp);
 		else if (node->type == "index")
-			tmp.index_set = setIndex(node, tmp.index);
-
-		else if (node->type == "listen"){
-			if (context == SERVER_HANDLER)
-				tmp.listen_set = setPorts(node, tmp.listen);
-			else
-				throw std::runtime_error("a 'listen' directive can only exist within a server block");
-		}
-		
-		else if (node->type == "location"){
-			throw std::runtime_error("a 'location' directive can only exist within a server block");
-		}
-		
+			handleIndex(node, tmp);
+		else if (node->type == "listen")
+			handleListen(node, tmp, context);
+		else if (node->type == "location")
+			handleLocation(node, tmp, context);
 		else if (node->type == "max_body_size")
-			tmp.max_body_set = setNumericValue<long long>(node, tmp.max_body, 0, SYS_MAX_BODY);
-		
-		else if (node->type == "max_connections"){
-			if (context == GLOBAL_HANDLER)
-				tmp.max_connections_set = setNumericValue<int>(node, tmp.max_connections, 1, SYS_MAX_CONN);
-			else
-				throw std::runtime_error("the 'max_connections' directive cannot be used inside server or location blocks");
-		}
-		
-		else if (node->type == "max_header_size"){
-			if (context == GLOBAL_HANDLER || context == SERVER_HANDLER)
-				tmp.max_header_set = setNumericValue<long long>(node, tmp.max_header_size, 1, SYS_MAX_HEAD);
-			else
-				throw std::runtime_error("the 'max_header_size' directive cannot be used inside a location block");
-		}		
-		
+			handleMaxBody(node, tmp);
+		else if (node->type == "max_connections")
+			handleMaxConnections(node, tmp, context);
+		else if (node->type == "max_header_size")
+			handleMaxHeader(node, tmp, context);
 		else if (node->type == "method")
-			tmp.method_set = setMethod(node, tmp.method);
-		
-			else if (node->type == "redirect_status"){
-			if (context == LOCATION_HANDLER)
-				tmp.redirect_status_set = setBoolean(node, tmp.redirect_status);
-			else
-				throw std::runtime_error("the 'redirect_status' directive can only be used inside a Location block");
-		}
-		
-		else if (node->type == "redirect_path"){
-			if (context == LOCATION_HANDLER)
-				tmp.redirect_url_set = setPath(node, tmp.redirect_url);
-			else
-				throw std::runtime_error("the 'redirect_path' directive can only be used inside a Location block");
-		}
-		
+			handleMethod(node, tmp);
+		else if (node->type == "redirect_status")
+			handleRedirectStatus(node, tmp, context);
+		else if (node->type == "redirect_path")
+			handleRedirectURL(node, tmp, context);	
 		else if (node->type == "root")
-			tmp.root_set = setPath(node, tmp.root);
-	
-		else if (node->type == "server"){
-				throw std::runtime_error("the 'server' directive cannot be used inside Location or Server blocks");
-		}
-
-		else if (node->type == "server_name"){
-			if (context == SERVER_HANDLER)
-				tmp.server_name_set = setServerName(node, tmp.server_names);
-			else
-				throw std::runtime_error("the 'server' directive cannot be used inside Location or Server blocks");
-		}
-		else if (node->type == "keepalive_timeout"){
-			if (context == GLOBAL_HANDLER || context == SERVER_HANDLER)
-				tmp.timeout_ka_set = setNumericValue<int>(node, tmp.timeout_ka, 1, SYS_TM_KA);
-			else
-				throw std::runtime_error("the 'keepalive_timeout' directive cannot be used inside a Location block");
-		}
-
-		else if (node->type == "read_write_timeout"){
-			if (context == GLOBAL_HANDLER || context == SERVER_HANDLER)
-				tmp.timeout_rw_set = setNumericValue<int>(node, tmp.timeout_rw, 1, SYS_TM_RW);
-			else
-				throw std::runtime_error("the 'read_write_timeout' directive cannot be used inside a Location block");
-		}
-
-		else if (node->type == "try_files"){
-			if (context == LOCATION_HANDLER)
-				tmp.try_files_set = setTryFiles(node, tmp.try_files);
-			else
-				throw std::runtime_error("the 'try_files' directive can only be used inside a Location block");
-		}
-
-		else if (node->type == "upload_path"){
-			if (context == LOCATION_HANDLER)
-				tmp.upload_path_set = setPath(node, tmp.upload_path);
-			else
-				throw std::runtime_error("the 'upload_path' directive can only be used inside a Location block");
-		}
+			handleRoot(node, tmp);
+		else if (node->type == "server")
+			handleServer(node, tmp, context);
+		else if (node->type == "server_name")
+			handleServerNames(node, tmp, context);
+		else if (node->type == "keepalive_timeout")
+			handleTimeoutKA(node, tmp, context);
+		else if (node->type == "read_write_timeout")
+			handleTimeoutRW(node, tmp, context);
+		else if (node->type == "try_files")
+			handleTryFiles(node, tmp, context);
+		else if (node->type == "upload_path")
+			handleUploadPath(node, tmp, context);
+		else
+			throw std::runtime_error("Unknown directive '" + node->type + "' in line number : " + node->line_num);
 	}
 	catch (std::exception& e){
 		throw std::runtime_error(e.what());
@@ -585,7 +636,7 @@ void	CParser::pushToLocation(tempConfig_s& tmp, CLocation& dest){
 bool	CParser::setBoolean(node_t* node, bool& state){
 
 	if (!isOnlyArg(node->args))
-		throw std::runtime_error("multiple arguments when only one permitted : " + node->type + " " + createArgsString(node->args) + " : line " + node->line_num);
+		throw std::runtime_error("Multiple arguments when only one permitted : " + node->type + " " + createArgsString(node->args) + " : line " + node->line_num);
 
 	std::string lowercase = to_lower(node->args[0]);
 
@@ -611,7 +662,7 @@ bool	CParser::setCGImap(node_t* node, std::map<std::string, std::string>& cgi_ma
 	std::string path = node->args[0];
 	std::string ext;
 	for (size_t i = 1; i < size; i++){
-		if (node->args[i][0] == '.') // consider anything starting '.' a valid cgi type
+		if (node->args[i][0] == '.')
 			cgi_map[node->args[i]] = path;
 		else
 			throw std::runtime_error("invalid cgi_path : " + node->type + " " + createArgsString(node->args));

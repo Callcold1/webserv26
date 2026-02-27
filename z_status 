@@ -14,7 +14,7 @@ WIP
 
 7) Fully test config (write test config files and tests)
 
-8) Sort out config error handling
+8) Sort out config error handling (Partially done)
 
 9) Assign a default server when parsing config
 
