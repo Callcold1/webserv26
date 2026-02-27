@@ -30,9 +30,10 @@ enum TokenType_e {
 struct tokeniser_s {
 	TokenType_e type;
 	std::string value;
+	size_t		line_num;
 
-	tokeniser_s(TokenType_e k, const std::string& v)
-		: type(k), value(v) {}
+	tokeniser_s(TokenType_e k, const std::string& v, size_t line_count)
+		: type(k), value(v), line_num(line_count) {}
 };
 
 struct tokenContext_t {
@@ -54,12 +55,15 @@ public:
 	~Tokeniser();
 
 	const std::vector<tokeniser_s>&	getTokens() const;
+	static size_t	getLineCount();
+	static void	setLineCount();
 
 private:
 
 	tokenContext_t          _context;
 	std::stringstream       _stream;
 	std::vector<tokeniser_s>   _tokens;
+	static size_t _line_count;
 
 	void	tokenise();
 	tokeniser_s	nextToken();

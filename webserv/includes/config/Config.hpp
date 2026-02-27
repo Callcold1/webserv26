@@ -18,6 +18,7 @@
 #include <map>
 #include <vector>
 
+#include "PrintUtils.hpp"
 #include "Parser.hpp"
 #include "configDefs.hpp"
 #include "utilityFunctions.hpp"
@@ -31,9 +32,12 @@ class Config {
 	
 	private:
 
+		int							_server_socket_max;
+		int							_client_socket_max;
+
 		bool						_autoindex;				// indicates global autoindex setting (true = on, false = off)
 		std::vector<std::string>	_charset;				// charset(s) that can be handled
-		std::vector<errorPage_s> 	_error_pages;			// Map of error pages to generate
+		std::map<int, std::string> 	_error_pages;			// Map of error pages to generate
  		std::vector<std::string>	_index;					// ordered list of possible index filenames - first one that works is returned
 		long long					_max_body;				// Max acceptable body size in bytes
 		int							_max_connections; 		// Max connections to all servers
@@ -46,7 +50,7 @@ class Config {
 
 		bool						_autoindex_set;
 		bool						_charset_set;
-		bool						_error_pages_set;
+		bool						_error_page_set;
 		bool						_index_set;
 		bool						_max_body_set;
 		bool						_max_connections_set;
@@ -56,9 +60,6 @@ class Config {
 		bool						_servers_set;
 		bool						_timeout_ka_set;
 		bool						_timeout_rw_set;
-
-									/* PROPAGATE VARIABLES TO LOWER LEVEL (CONFIG -> CSERVER) */
-		void						propagateGlobalToServer();
 		
 	public:
 									// Constructors/Destructor/Copy
@@ -70,7 +71,7 @@ class Config {
 
 									/* CHECK IF VARIABLE SET*/
 		bool						isAutoIndexSet(void) const;
-		bool						isCharset(void) const;
+		bool						isCharsetSet(void) const;
 		bool						isErrorPageSet(void) const;
 		bool						isIndexSet(void) const;
 		bool						isMaxBodySet(void) const;
@@ -85,7 +86,7 @@ class Config {
 									/*	GETTERS	*/
 		bool						getAutoIndex(void) const;
 		std::vector<std::string>	getCharset(void) const;
-		std::vector<errorPage_s>	getErrorPages(void) const;
+		std::map<int, std::string>	getErrorPages(void) const;
 		std::vector<std::string>	getIndex(void) const;
 		long long					getMaxBodySize(void) const;
 		int							getMaxConnections(void) const;
@@ -96,20 +97,29 @@ class Config {
 		int							getTimeoutKA(void) const;
 		int							getTimeoutRW(void) const;
 
-									/*	SETTERS	*/
-		void 						setAutoIndex(bool autoindex);
-		void						setCharset(std::vector<std::string>& charset);
-		void						setErrorPages(std::vector<errorPage_s>& error_pages);
-		void						setIndex(const std::vector<std::string>& index);
-		void 						setMaxBodySize(long long max_body_size);
-		void 						setMaxConnections(int max_connections);
-		void 						setMaxHeaderSize(long long max_header_size);
-		void 						setMethod(const std::vector<std::string>& method);
-		void 						setRootDir(std::string& root);
-		void						setServers(std::vector<CServer>& servers);
-		void						setTimeoutKA(int timeout_in_seconds);
-		void						setTimeoutRW(int timeout_in_seconds);
+		int							getClientSocketMax(void) const;
+		int							getServerSocketMax(void) const;
 
+									/*	SETTERS	*/
+		void 						setAutoIndex(bool autoindex, bool set_from_config_file);
+		void						setCharset(std::vector<std::string>& charset, bool set_from_config_file);
+		void						setErrorPage(std::map<int, std::string>& error_pages, bool set_from_config_file);
+		void						setIndex(const std::vector<std::string>& index, bool set_from_config_file);
+		void 						setMaxBodySize(long long max_body_size, bool set_from_config_file);
+		void 						setMaxConnections(int max_connections, bool set_from_config_file);
+		void 						setMaxHeaderSize(long long max_header_size, bool set_from_config_file);
+		void 						setMethod(const std::vector<std::string>& method, bool set_from_config_file);
+		void 						setRootDir(std::string& root, bool set_from_config_file);
+		void						setServers(std::vector<CServer>& servers, bool set_from_config_file);
+		void						setTimeoutKA(int timeout_in_seconds, bool set_from_config_file);
+		void						setTimeoutRW(int timeout_in_seconds, bool set_from_config_file);
+
+									/*	PROPAGATE INHERITABLE VARIABLES	*/
+		void						propagateVarsToChildren();
+		void						propagateServerToLocations(CServer& server);
+		
+		template <typename T>
+		std::map<int, std::string>	mergeErrorPage(T&, std::map<int, std::string> error_pages);
 };
 
 std::ostream&	operator<<(std::ostream& os, const Config& config);
@@ -120,11 +130,6 @@ std::ostream&	operator<<(std::ostream& os, const CServer& server);
 std::ostream&	operator<<(std::ostream& os, const CLocation& location);
 
 std::ostream&	operator<<(std::ostream& os, const std::map<std::string, std::string>& cgi_map);
-std::ostream&	operator<<(std::ostream& os, const std::vector<errorPage_s>& error_pages);
+std::ostream&	operator<<(std::ostream& os, const std::map<int, std::string>& error_pages);
 std::ostream&	operator<<(std::ostream& os, const listen_s& port_info);
 std::ostream&	operator<<(std::ostream& os, const tryFiles_s& try_files);
-
-template<typename T>
-std::ostream&	operator<<(std::ostream& os, const std::vector<T> vec);
-
-std::ostream&	operator<<(std::ostream& os, const std::vector<std::string>& strings);

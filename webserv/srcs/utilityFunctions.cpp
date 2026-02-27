@@ -801,7 +801,7 @@ const std::set<std::string> &getHeaderTransferEncodings()
 */
 
 bool	isOnlyArg(std::vector<std::string>& args){
-	return args.size() == 1;
+	return args.size() < 2;
 }
 
 std::string	createArgsString(std::vector<std::string> args){

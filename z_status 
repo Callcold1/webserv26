@@ -1,9 +1,22 @@
-1) Update printing to ensure variables are set correctly
+WIP
+===
+1) Update Server class so that it works with Config
 
-2)  Variable propagation : Config -> CServer -> CLocation
+2) Amend Client class to work with Config, Request and Response
 
-				Update CServer and CLocation variables after parsing/validation
+3) Update logging
 
-3) Update Server class so that it works with Config
+4) Finish multipart
 
-4) Amend Client class to work with Config, Request and Response
+5) Update printing functions to use logs to record config settings
+
+6) Validate config : e.g. root must start with '/'?
+
+7) Fully test config (write test config files and tests)
+
+8) Sort out config error handling
+
+9) Assign a default server when parsing config
+
+Questions we need to consider
+=============================

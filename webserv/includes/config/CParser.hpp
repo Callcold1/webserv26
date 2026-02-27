@@ -31,7 +31,7 @@ struct tempConfig_s {
 	bool								autoindex;			/*	GLOBAL/SERVER/LOCATION	*/
 	std::map<std::string, std::string>	cgi_map;			/*	LOCATION	*/
 	std::vector<std::string>			charset;			/*	GLOBAL/SERVER/LOCATION	*/
-	std::vector<errorPage_s> 			error_pages;		/*	GLOBAL/SERVER/LOCATION	*/
+	std::map<int, std::string> 			error_pages;		/*	GLOBAL/SERVER/LOCATION	*/
 	std::vector<std::string>			index;				/*	GLOBAL/SERVER/LOCATION	*/
 	std::vector<listen_s>				listen;				/*	SERVER	*/
 	std::vector<CLocation>				locations;			/*	SERVER	*/
@@ -56,7 +56,7 @@ struct tempConfig_s {
 	bool	autoindex_set;
 	bool	cgi_map_set;
 	bool	charset_set;
-	bool	error_pages_set;
+	bool	error_page_set;
 	bool	index_set;
 	bool	listen_set;
 	bool	location_set;
@@ -69,7 +69,7 @@ struct tempConfig_s {
 	bool	redirect_status_set;
 	bool	redirect_url_set;
 	bool	root_set;
-	bool	server_names_set;
+	bool	server_name_set;
 	bool	servers_set;
 	bool	timeout_ka_set;
 	bool	timeout_rw_set;
@@ -89,7 +89,7 @@ struct tempConfig_s {
 		  autoindex_set(false),
 		  cgi_map_set(false),
 		  charset_set(false),
-		  error_pages_set(false),
+		  error_page_set(false),
 		  index_set(false),
 		  listen_set(false),
 		  location_set(false),
@@ -102,7 +102,7 @@ struct tempConfig_s {
 		  redirect_status_set(false),
 		  redirect_url_set(false),
 		  root_set(false),
-		  server_names_set(false),
+		  server_name_set(false),
 		  servers_set(false),
 		  timeout_ka_set(false),
 		  timeout_rw_set(false),
@@ -137,7 +137,7 @@ class CParser : public Parser
 		void			parseTokens(void);
 
 		void			parseNext(node_t* parent, tokeniser_s awaited);
-		node_t*			addNode(const std::string& node_type);
+		node_t*			addNode(const std::string& node_type, const std::string& line_num);
 		void			populateHandlers(void);
 		bool			checkKeywords(const std::string& context, const std::string& value);
 		bool			isValidMethod(const std::string& str);
@@ -145,9 +145,9 @@ class CParser : public Parser
 
 	private:
 
-		std::ifstream							_stream;
-		Tokeniser*								_tokeniser;
-		node_t*									_rawConfig;
+		std::ifstream	_stream;
+		Tokeniser*		_tokeniser;
+		node_t*			_rawConfig;
 
 						/* CONSTRUCTORS */
 						CParser( void );
@@ -159,10 +159,10 @@ class CParser : public Parser
 		void			setConfig(Config& config);
 
 		bool			setAlias(node_t* node, fileInfo_s& alias);
-		bool			setBoolean(node_t* node, bool& state, const std::string& var_name);
+		bool			setBoolean(node_t* node, bool& state);
 		bool			setCGImap(node_t* node, std::map<std::string, std::string>& cgi_map);
-		bool			setcharset(node_t* node, std::vector<std::string>& charset);
-		bool			setErrorPage(node_t* node, std::vector<errorPage_s>& error_pages);
+		bool			setCharset(node_t* node, std::vector<std::string>& charset);
+		bool			setErrorPage(node_t* node, std::map<int, std::string>& error_pages);
 		bool			setGlobalVar(node_t* node, Config& config);
 		bool			setIndex(node_t* node, std::vector<std::string>& index);
 		bool			setLocation(node_t* node, std::vector<CLocation>& locations);
@@ -171,7 +171,7 @@ class CParser : public Parser
 		bool			setPath(node_t* node, std::string& path);
 		bool			setPorts(node_t* node, std::vector<listen_s>& ports);
 		bool			setServer(node_t* node, std::vector<CServer>& servers);
-		bool			setServerNames(node_t* node, std::vector<std::string>& server_names);
+		bool			setServerName(node_t* node, std::vector<std::string>& server_names);
 		bool			setTryFiles(node_t* node, tryFiles_s& try_files);
 		void			setVariable(tempConfig_s& tmp, node_t* node, HandlerContext_e context);
 		
@@ -182,6 +182,8 @@ class CParser : public Parser
 		template<typename T>
 		bool			setNumericValue(node_t* node, T& target, T min, T max);
 
+		void	deleteNodes(node_t* node);
+		
 						/* HANDLERS */
 	
 		template <typename T>

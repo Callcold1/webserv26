@@ -34,14 +34,6 @@
 #define SYS_TM_KA 			1000				// maximum permissible keep-alive timeout in seconds (if given size is higher, this value is applied)
 #define SYS_TM_RW 			1000				// maximum permissible read-write timeout in seconds (if given size is higher, this value is applied)
 
-struct errorPage_s {
-	int			_error_num;
-	std::string	_path;
-	
-	errorPage_s(void){}
-	errorPage_s(int num, const std::string& path) : _error_num(num), _path(path){}
-};
-
 struct listen_s {
 	
 	uint32_t	ip;

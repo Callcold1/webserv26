@@ -98,12 +98,3 @@ typedef struct file_s {
 	file_s(){}
 	file_s(str_t name) : filename(name){}
 } file_t;
-
-typedef struct log_s {
-	void*			data;
-	int				data_type;
-	int				entry_type;
-	
-	log_s(void *data, int data_type, int log_type ) : data(data), data_type (data_type), entry_type(log_type){}
-} log_t;
-

@@ -20,7 +20,7 @@ class CLocation {
 	bool									_autoindex;			// indicates if the location has autoindex ()
 	std::map<std::string, std::string>		_cgi_map;			// cgi map (extension/path)
 	std::vector<std::string>				_charset;			// charset(s) that can be handled
-	std::vector<errorPage_s>				_error_pages;		// Vector of error_page structs
+	std::map<int, std::string>				_error_pages;		// Map of error_page_number and corresponding path
 	std::vector<std::string>				_index;				// ordered list of possible index filenames - first one that works is returned
 	long long								_max_body;			// Max acceptable body size in bytes
 	std::vector<std::string>				_method;			// method permitted for this locations on server (supercedes by global/server method)
@@ -35,7 +35,7 @@ class CLocation {
 	bool									_autoindex_set;
 	bool									_cgi_map_set;
 	bool									_charset_set;
-	bool									_error_pages_set;
+	bool									_error_page_set;
 	bool									_index_set;
 	bool									_max_body_set;
 	bool									_method_set;
@@ -61,8 +61,8 @@ class CLocation {
 		bool								isAliasSet(void) const;
 		bool								isAutoIndexSet(void) const;
 		bool								isCGIMapSet(void) const;
-		bool								ischarset(void) const;
-		bool								isErrorPagesSet(void) const;
+		bool								isCharsetSet(void) const;
+		bool								isErrorPageSet(void) const;
 		bool								isIndexSet(void) const;
 		bool								isMaxBodySet(void) const;
 		bool								isMethodSet(void) const;
@@ -78,12 +78,12 @@ class CLocation {
 		bool								getAutoIndex(void) const;
 		bool								getCGIEnabled(void) const;
 		std::map<std::string, std::string>	getCGIMap(void) const;
-		std::vector<std::string>			getcharset(void) const;
-		std::vector<errorPage_s>			getErrorPages(void) const;
+		std::vector<std::string>			getCharset(void) const;
+		std::map<int, std::string>			getErrorPages(void) const;
 		std::vector<std::string>			getIndex(void) const;
 		long long							getMaxBodySize(void) const;
 		std::vector<std::string>			getMethod(void) const;
-		char								getModifier(void) const;
+		std::string							getModifier(void) const;
 		redirect_s							getRedirect(void) const;
 		bool								getRedirectStatus(void) const;
 		std::string							getRedirectURL(void) const;
@@ -93,19 +93,19 @@ class CLocation {
 		std::string							getURI(void) const;
 
 											/* SETTERS */
-		void								setAlias(const std::string& alias);
-		void 								setAutoIndex(bool autoindex);
-		void 								setCGIMap(const std::map<std::string, std::string> cgi_map);
-		void								setcharset(const std::vector<std::string>& charset);
-		void								setErrorPages(const std::vector<errorPage_s>& error_pages);
-		void 								setIndex(const std::vector<std::string>& index);
-		void 								setMaxBodySize(long long max_body_size);
-		void 								setMethod(const std::vector<std::string>& method);
-		void 								setModifier(const LocationMatchType_e modifier);
-		void 								setName(const std::string& name);
-		void								setRedirect(const redirect_s& redirect);
-		void 								setRootDir(const std::string& root);
-		void								setTryFiles(const tryFiles_s& try_files);
-		void								setUploadPath(const std::string& path);
-		void								setURI(const std::string& uri);
+		void								setAlias(const std::string& alias, bool set_from_config_file);
+		void 								setAutoIndex(bool autoindex, bool set_from_config_file);
+		void 								setCGIMap(const std::map<std::string, std::string> cgi_map, bool set_from_config_file);
+		void								setCharset(const std::vector<std::string>& charset, bool set_from_config_file);
+		void								setErrorPage(const std::map<int, std::string>& error_pages, bool set_from_config_file);
+		void 								setIndex(const std::vector<std::string>& index, bool set_from_config_file);
+		void 								setMaxBodySize(long long max_body_size, bool set_from_config_file);
+		void 								setMethod(const std::vector<std::string>& method, bool set_from_config_file);
+		void 								setModifier(const LocationMatchType_e modifier, bool set_from_config_file);
+		void 								setName(const std::string& name, bool set_from_config_file);
+		void								setRedirect(const redirect_s& redirect, bool set_from_config_file);
+		void 								setRootDir(const std::string& root, bool set_from_config_file);
+		void								setTryFiles(const tryFiles_s& try_files, bool set_from_config_file);
+		void								setUploadPath(const std::string& path, bool set_from_config_file);
+		void								setURI(const std::string& uri, bool set_from_config_file);
 };

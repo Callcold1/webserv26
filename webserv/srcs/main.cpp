@@ -43,9 +43,8 @@ int	main(int argc, char** argv){
 		CParser p(config_path);
 		Config config;
 
-		p.parseConfigFile(config); 
-		std::cout << config << std::endl;
-		Server server(config);
+		p.parseConfigFile(config);
+		// Server server(config);
 	}
 
 	catch (const std::exception& e){
