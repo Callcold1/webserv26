@@ -16,7 +16,7 @@ WIP
 
 8) Sort out config error handling (Partially done)
 
-9) Assign a default server when parsing config
+9) Assign a default server when parsing config (Partially done - if one is present - need to assign one otherwise)
 
 Questions we need to consider
 =============================
