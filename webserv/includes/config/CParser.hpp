@@ -211,7 +211,14 @@ class CParser : public Parser
 		std::vector<std::string>	_server_keywords;
 		std::vector<std::string>	_location_keywords;
 
+		bool			checkDuplicatePorts(const std::vector<listen_s>& ports);
 		bool			checkAliasRoot(const std::string& alias, const std::string& root); //Check that only one of the two is present
+
+		// To be written
+		void 			validateConfig(Config& config);
+		void 			validateServer(const CServer& server);
+		void 			validateLocation(const CLocation& location);
+	
 };
 
 template <typename T>

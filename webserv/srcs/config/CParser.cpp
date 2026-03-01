@@ -45,6 +45,9 @@ void	CParser::parseConfigFile(Config& config){
 		std::cout << config << std::endl;
 		config.propagateVarsToChildren();
 		std::cout << config << std::endl;
+		config.mapServersToPorts();
+		config.checkForOverlappingPorts();
+		std::cout << config.getPortServerMap();
 		delete _rawConfig;
 	}
 	catch (std::exception& e){

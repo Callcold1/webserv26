@@ -14,7 +14,7 @@
 
 Config::Config() : _max_body(DEFAULT_MAX_BODY), _max_connections(DEFAULT_MAX_CONN),
 					_max_header_size(DEFAULT_MAX_HEAD), _timeout_ka(DEFAULT_TM_KA),
-					_timeout_rw(DEFAULT_TM_RW), _autoindex_set(false), _charset_set(false), 
+					_timeout_rw(DEFAULT_TM_RW), _autoindex_set(false), _charset_set(false),
 					_error_page_set(false), _index_set(false), _max_body_set(false),
 					_max_connections_set(false), _max_header_set(false), _method_set(false),
 					 _root_set(false), _servers_set(false), _timeout_ka_set(false), _timeout_rw_set(false){}
@@ -143,6 +143,29 @@ int    Config::getServerPortCount(void) const{
 	return _port_count;
 }
 
+std::map<listen_s, std::vector<CServer*> >	Config::getPortServerMap(void) const{
+	return _port_server_map;
+}
+
+void	Config::checkForOverlappingPorts(void) const{
+
+	std::map<listen_s, std::vector<CServer*> >::const_iterator it;
+	std::map<listen_s, std::vector<CServer*> >::const_iterator stop;
+	std::map<listen_s, std::vector<CServer*> >::const_iterator compare;
+
+	for (it = _port_server_map.begin(); it != _port_server_map.end(); it++) {
+		if (it->first.ip == 0){
+			stop = it;
+			stop++;
+			continue;
+		}
+		for (compare = _port_server_map.begin(); compare != stop; compare++) {
+			if (it->first.port == compare->first.port)
+				throw std::runtime_error("Overlapping ip:port combination found between servers, please resolve!");
+		}
+	}
+}
+
 /*
 >>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<
 >>>>>>		SETTERS 		<<<<<<
@@ -232,7 +255,7 @@ void    Config::propagateVarsToChildren(){
 		if (_servers[i].isCharsetSet() == false)
 			_servers[i].setCharset(_charset, false);
 		if (_servers[i].isIndexSet() == false)
-			_servers[i].setIndex(_index, false);	
+			_servers[i].setIndex(_index, false);
 		if (_servers[i].isMaxBodySet() == false)
 			_servers[i].setMaxBodySize(_max_body, false);
 		if (_servers[i].isMaxHeaderSet() == false)
@@ -278,6 +301,42 @@ void    Config::propagateServerToLocations(CServer& server){
 			locations[i].setErrorPage(mergeErrorPage(locations[i], server.getErrorPages()), false);
 	}
 	server.setLocations(locations, true);
+}
+
+bool	Config::mapServersToPorts(void){
+
+	for (size_t i = 0; i < _servers.size(); i++) {
+
+		CServer* s = &_servers[i];
+		std::vector<listen_s> listens = s->getListen();
+
+		for (size_t j = 0; j < s->getListen().size(); j++) {
+
+			listen_s ls = listens[j];
+			std::map<listen_s, std::vector<CServer*> >::iterator it = _port_server_map.find(ls);
+
+			if (it != _port_server_map.end()) {
+
+				if (ls.is_default && it->first.is_default)
+					throw std::runtime_error("Two listen directives with same IP and port marked default");
+				it->second.push_back(s);
+			}
+			else {
+				_port_server_map[ls].push_back(s);
+			}
+		}
+	}
+	_port_count = _port_server_map.size();
+	return true;
+}
+
+// Needed to compare listen_s structs as keys in map as map uses < operator to compare keys
+bool operator<(const listen_s& a, const listen_s& b){
+    if (a.ip != b.ip)
+        return a.ip < b.ip;
+    if (a.port != b.port)
+        return a.port < b.port;
+    return false;
 }
 
 /*
@@ -460,4 +519,25 @@ std::map<int, std::string>	Config::mergeErrorPage(T& child, std::map<int, std::s
 		_error_pages[it->first] = it->second;
 	}
 	return _error_pages;
+}
+
+std::ostream&	operator<<(std::ostream& os, const std::map <listen_s, std::vector<CServer*> >& port_server_map){
+	
+	if (port_server_map.size() == 0){
+		os << " no value(s)" << std::endl;
+		return os;
+	}
+	
+	std::map <listen_s, std::vector<CServer*> >::const_iterator it;
+
+	for (it = port_server_map.begin(); it != port_server_map.end(); it++){
+		
+		os << "Port info : " << it->first << std::endl;
+		
+		for (size_t i = 0; i < it->second.size(); i++){
+			os << "Server [" << i << "] " << std::endl;
+		}
+		os << std::endl;
+	}
+	return os;
 }

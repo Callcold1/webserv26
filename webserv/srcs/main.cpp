@@ -44,7 +44,8 @@ int	main(int argc, char** argv){
 		Config config;
 
 		p.parseConfigFile(config);
-		// Server server(config);
+		Server server(config);
+		server.loop();
 	}
 
 	catch (const std::exception& e){

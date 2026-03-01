@@ -17,7 +17,7 @@ CServer::CServer( void ) :
 	_timeout_ka(DEFAULT_TM_KA),	_timeout_rw(DEFAULT_TM_RW), _autoindex_set(false),
 		_charset_set(false), _error_page_set(false), _index_set(false), _listen_set(false), 
 		_max_body_set(false),_max_header_set(false),_method_set(false), _root_set(false), 
-		_timeout_ka_set(false),	_timeout_rw_set(false){}
+		_server_name_set(false), _timeout_ka_set(false), _timeout_rw_set(false){}
 
 CServer::~CServer( void ){}
 
@@ -45,6 +45,7 @@ CServer::CServer(const CServer &other){
 	_max_header_set = other._max_header_set;
 	_method_set = other._method_set;
 	_root_set = other._root_set;
+	_server_name_set = other._server_name_set;
 	_timeout_ka_set = other._timeout_ka_set;
 	_timeout_rw_set = other._timeout_rw_set;
 }
