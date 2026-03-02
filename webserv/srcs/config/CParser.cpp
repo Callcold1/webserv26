@@ -15,6 +15,7 @@
 
 CParser::CParser( const std::string& filename ) : Parser(){
 	openConfigFile(filename);
+	Log::instance().log(Log::INFO, Log::TYPE_CLASS, "Config file successfully opened : " + filename);
 }
 
 CParser::~CParser( void ){
@@ -32,26 +33,40 @@ void	CParser::openConfigFile(const std::string& filename)
 {
 	_stream.open(filename.c_str());
 
-	if (!_stream.is_open())
+	if (!_stream.is_open()){
 		throw std::runtime_error("Could not open configuration file : " + filename);
+	}
 }
 
 void	CParser::parseConfigFile(Config& config){
+	
+	Log::instance().log(Log::INFO, Log::TYPE_CLASS, "Config parsing started....");
+	std::ostringstream oss;
 	try {
 		tokeniseStream();
 		initKeywords();
+
 		parseTokens();
+		Log::instance().log(Log::INFO, Log::TYPE_CONF, "Parsed to _raw_config");
+		
 		setConfig(config);
-		std::cout << config << std::endl;
+		Log::instance().log(Log::DEBUG, Log::TYPE_CONF, "Config object created : initial parsing complete : \n\n" + printstream(config));
+
 		config.propagateVarsToChildren();
-		std::cout << config << std::endl;
+		//os << config << std::endl;
+		Log::instance().log(Log::DEBUG, Log::TYPE_CONF, "Variables propagated from global -> server -> location : \n\n" + printstream(config));
+		
 		config.mapServersToPorts();
 		config.checkForOverlappingPorts();
-		std::cout << config.getPortServerMap();
+		oss << config.getPortServerMap() << std::endl;
+		Log::instance().log(Log::INFO, Log::TYPE_CONF, "ip:port to server map created : \n\n" + oss.str());
+
 		delete _rawConfig;
+		Log::instance().log(Log::INFO, Log::TYPE_CLASS, "Config parsing successfully completed....");
 	}
 	catch (std::exception& e){
 		delete _rawConfig;
+		Log::instance().log(Log::ERROR, Log::TYPE_CONF, e.what());
 		throw std::runtime_error(e.what());
 	}
 }
@@ -63,15 +78,17 @@ void	CParser::tokeniseStream(void){
 		_tokens = tokeniser.getTokens();
 	}
 	catch ( std::exception& e){
+		Log::instance().log(Log::ERROR, Log::TYPE_CONF, e.what());
 		throw std::runtime_error(e.what());
 	} 
 }
 
 void	CParser::parseTokens(void){
-	try{
+	try {
 		_rawConfig = parse();
 	}
 	catch (std::exception& e) {
+		Log::instance().log(Log::ERROR, Log::TYPE_CONF, e.what());
 		throw std::runtime_error(e.what());
 	}
 }
@@ -92,6 +109,7 @@ node_t*	CParser::parse(void) {
 	}
 	catch (const std::exception& e){
 		delete root;
+		Log::instance().log(Log::ERROR, Log::TYPE_CONF, e.what());
 		throw std::runtime_error(e.what());
 	}
 	return root;
@@ -220,14 +238,6 @@ void	CParser::initKeywords(void) {
 	_global_keywords.push_back("read_write_timeout");
 }
 
-template <typename T>
-std::string toString(const T val)
-{
-	std::stringstream stream;
-	stream << val;
-	return stream.str();
-}
-
 /*	GLOBAL
 
 Directive			Args		Multi Allowed	Type					Duplicate Behavior	Inherited				Context(s)
@@ -246,6 +256,7 @@ timeout_ka			1			no				int						Overwrite			Replace if redefined	Global/CServer
 timeout_rw			1			no				int						Overwrite			Replace if redefined	Global/CServer
 
 */
+
 void	CParser::setConfig(Config& config){
 
 	tempConfig_s	tmp;

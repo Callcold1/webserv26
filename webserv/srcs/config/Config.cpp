@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/14 09:52:13 by kmooney           #+#    #+#             */
-/*   Updated: 2026/02/24 15:14:37 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/03/02 14:24:02 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -303,6 +303,18 @@ void    Config::propagateServerToLocations(CServer& server){
 	server.setLocations(locations, true);
 }
 
+template <typename T>
+std::map<int, std::string>	Config::mergeErrorPage(T& child, std::map<int, std::string> _error_pages){
+
+	std::map<int, std::string> child_error_pages = child.getErrorPages();
+	std::map<int, std::string>::iterator it;
+
+	for (it = child_error_pages.begin(); it != child_error_pages.end(); it++){
+		_error_pages[it->first] = it->second;
+	}
+	return _error_pages;
+}
+
 bool	Config::mapServersToPorts(void){
 
 	for (size_t i = 0; i < _servers.size(); i++) {
@@ -433,7 +445,7 @@ std::ostream&	operator<<(std::ostream &os, const std::vector<CLocation>& locatio
 /* VECTOR OF SERVERS */
 std::ostream& operator<<(std::ostream& os, const std::vector<CServer>& servers) {
 	if (servers.empty()){
-		os << PrintUtils::indent(1) << "servers : [ empty ]\n";
+		os << PrintUtils::indent(2) << "servers : [ empty ]\n";
 		return os;
 	}
 	os << std::endl;
@@ -452,10 +464,10 @@ std::ostream&	operator<<(std::ostream& os, const std::map<std::string, std::stri
 
 	int count = 0;
 	for (it = cgi_map.begin(); it != cgi_map.end(); it++, count++){
-		os << "CGI type : " << it->first << " \tCGI Location : " << it->second << std::endl;
+		os << "\n" << PrintUtils::indent(14) << "CGI type : " << it->first << " \tCGI Location : " << it->second << std::endl;
 	}
 	if (count == 0){
-		os << " no value(s)" << std::endl;
+		os << PrintUtils::indent(0) << "CGI Map : [ empty ]\n";
 		return os;
 	}
 	return os;
@@ -464,32 +476,31 @@ std::ostream&	operator<<(std::ostream& os, const std::map<std::string, std::stri
 /* ERROR PAGES */
 std::ostream&	operator<<(std::ostream& os, const std::map<int, std::string>& error_pages){
 
-	size_t size = error_pages.size();
 	std::map<int, std::string>::const_iterator it;
 
-	if (size == 0){
-		os << " no value(s)" << std::endl;
+	int count = 0;
+	for (it = error_pages.begin(); it != error_pages.end(); it++, count++){
+		os << "\n" << PrintUtils::indent(14) << "Error Num : " << it->first << " \tError Page Location : " << it->second;
+	}
+	if (count == 0){
+		os << PrintUtils::indent(0) << " Error Page : [ empty ]\n";
 		return os;
 	}
-	for (it = error_pages.begin(); it != error_pages.end(); it++){
-		os << "\nError Num : " << it->first << " \tError Page Location : " << it->second;
-	}
+	os << "\n";
 	return os;
 }
 
 /* PORT INFO (LISTEN) */
 std::ostream&	operator<<(std::ostream& os, const listen_s& port_info){
 
-
 	os
-	<< "( IP : "
-	<< ((port_info.ip >> 24) & 0xFF) << "."
-	<< ((port_info.ip >> 16) & 0xFF) << "."
+	<< " IP : "
+	<< ( port_info.ip & 0xFF) << "."
 	<< ((port_info.ip >> 8)  & 0xFF) << "."
-	<< ( port_info.ip & 0xFF)
+	<< ((port_info.ip >> 16) & 0xFF) << "."
+	<< ((port_info.ip >> 24) & 0xFF)
 	<< ", Port : " << port_info.port
-	<< ", is default : " << port_info.is_default
-	<< " )";
+	<< ", is default : " << port_info.is_default;
 
 	return os;
 }
@@ -507,18 +518,6 @@ std::ostream&	operator<<(std::ostream& os, const tryFiles_s& try_files){
 		os << "\ntry_file [" << i << "] path : " << try_files.try_paths[i];
 	os << "try_file error_page : " << try_files.default_error;
 	return os;
-}
-
-template <typename T>
-std::map<int, std::string>	Config::mergeErrorPage(T& child, std::map<int, std::string> _error_pages){
-
-	std::map<int, std::string> child_error_pages = child.getErrorPages();
-	std::map<int, std::string>::iterator it;
-
-	for (it = child_error_pages.begin(); it != child_error_pages.end(); it++){
-		_error_pages[it->first] = it->second;
-	}
-	return _error_pages;
 }
 
 std::ostream&	operator<<(std::ostream& os, const std::map <listen_s, std::vector<CServer*> >& port_server_map){

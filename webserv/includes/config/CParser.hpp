@@ -220,6 +220,3 @@ class CParser : public Parser
 		void 			validateLocation(const CLocation& location);
 	
 };
-
-template <typename T>
-std::string toString(const T val);

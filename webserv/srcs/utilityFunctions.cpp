@@ -6,25 +6,11 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/16 15:33:48 by kmooney           #+#    #+#             */
-/*   Updated: 2026/02/19 14:09:31 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/03/02 12:08:45 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "utilityFunctions.hpp"
-
-/*
->>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<
->>>>>>		CONVERSION TO STRING	<<<<<<
->>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<
-*/
-
-template <typename T>
-std::string toString(const T val)
-{
-	std::stringstream stream;
-	stream << val;
-	return stream.str();
-}
 
 /*
 >>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<
