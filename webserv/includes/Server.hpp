@@ -40,6 +40,9 @@ class Server {
 	};
 
 	public:
+		void	init();
+		void	run();
+		void	shutdown();
 
 		/* Constructors and destructor */
 		Server(Config &config);
@@ -49,12 +52,11 @@ class Server {
 		~Server(void);
 
 		//int get_socket(int index);
-		int loop();
-		void conn_new_clients();
-		void client_read();
-		void client_write();
-
-		void update_poll_events();
+		void 	loop();
+		void 	conn_new_clients();
+		void 	client_read();
+		void 	client_write();
+		void 	update_poll_events();
 
 
 		std::map<int, Client> 			_clients;				// Map of client file descriptors to Client objects, used for managing client connections and their associated data
@@ -67,9 +69,26 @@ class Server {
 		void	addListeningSocketsToPoll(void);
 		void	addClientSockets(void);
 
+		void	handleEvents(void);
+		
+		void	handleAccept(int index);
+		void	setNonBlocking(int fd);
+		void 	addClient(int client_fd);
+		
+		void	handleClientRead(int fd);
+		void	handleClientWrite(int fd);
+		
+		void	disconnectClient(int fd);
+		void	removeClientFromPoll(int fd);
+
+		int 	getSocketsPosition(int fd);
+
+		Config*							_config;				// Reference to the server's configuration object	
+		bool							_running;				// Indicates if the server is currently running	
 		int 							_max_conn;				// The maximum number of client connections (from config file)
 		int 							_port_count; 			// The sum of the ports from all server blocks
 		std::vector<listenInstance_s>	_listen_sockets;		// Vector of listening socket info (fd, port, ip, server config(s) listening on that port)
 		std::vector<pollfd> 			_sockets;				// _sockets position is == to _listeningServers position for listening sockets, and is == to client fd for client sockets
+
 };
  

@@ -24,6 +24,7 @@ class RequestValidator;
 class Request {
 	
 	public:
+						Request();
 						Request(Config* config);
 						~Request(void);
 	void	    		clear();
@@ -51,6 +52,7 @@ class Request {
 	RequestParser*		_parser;
 	RequestValidator*	_validator;
 	//RequestHandler*		_requestHandler;
+	CServer				_matched_server;	
 	Config*			    _config;// really the server block info
 	std::deque<char>	_buffer;
 	token_s				_unparsed;
@@ -72,7 +74,7 @@ class Request {
 	eParse				_p_state;
 	eReqState			_r_state;
 	
-	uint64_t			_content_length, _body_length, _unparsed_length; //_content_length is used when content length is provided. body_length is used to track kegnth parsed
+	uint64_t			_content_length, _body_length, _unparsed_length; //_content_length is used when content length is provided. body_length is used to track length parsed
 
 	bool 				_hasBody, _isChunked, _isMultiPart, _bodyUTF8;
 };

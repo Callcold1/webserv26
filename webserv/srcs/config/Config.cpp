@@ -449,7 +449,7 @@ std::ostream& operator<<(std::ostream& os, const std::vector<CServer>& servers) 
 		return os;
 	}
 	os << std::endl;
-	for (size_t i = 0; i < servers.size(); ++i){
+	for (size_t i = 0; i < servers.size(); i++){
 		os << PrintUtils::indent(1)
 		   << "Server [" << i << "]\n\n";
 		os << servers[i];

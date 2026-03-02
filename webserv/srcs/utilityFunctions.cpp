@@ -19,21 +19,21 @@
 */
 std::string to_lower(std::string str)
 {
-	for (size_t i = 0; i < str.size(); ++i)
+	for (size_t i = 0; i < str.size(); i++)
 		str[i] = std::tolower(static_cast<unsigned char>(str[i]));
 	return str;
 }
 
 std::string to_upper(std::string str)
 {
-	for (size_t i = 0; i < str.size(); ++i)
+	for (size_t i = 0; i < str.size(); i++)
 		str[i] = std::toupper(static_cast<unsigned char>(str[i]));
 	return str;
 }
 
 void to_lower_ref(std::string &str)
 {
-	for (size_t i = 0; i < str.size(); ++i)
+	for (size_t i = 0; i < str.size(); i++)
 		str[i] = std::tolower(static_cast<unsigned char>(str[i]));
 }
 
@@ -636,7 +636,7 @@ bool isQuotedParamKeyChar(unsigned char c) {
 template <typename Container, typename Func>
 bool	iterate(const Container& container, Func f) {
 	typename Container::const_iterator it;
-	for (it = container.begin(); it != container.end(); ++it) {
+	for (it = container.begin(); it != container.end(); it++) {
 		if (!f(*it))
 			return false;
 	}

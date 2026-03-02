@@ -15,6 +15,10 @@
 #include "RequestValidator.hpp" 
 
 /* CONSTRUCTORS */
+Request::Request(void) : _parser(NULL), _validator(NULL), _config(NULL), _method(""), _uri_str(""), _version(""),
+		_errNum(200), _errMess(""), _p_state (P_PARSE), _r_state (P_REQLINE), _content_length(0),
+		_unparsed_length(0), _hasBody(false), _isChunked(false), _isMultiPart(false), _bodyUTF8(false){}
+
 Request::Request( Config* config )
 	: _parser(NULL), _validator(NULL), _config(config), _method(""), _uri_str(""), _version(""),
 		_errNum(200), _errMess(""), _p_state (P_PARSE), _r_state (P_REQLINE), _content_length(0),

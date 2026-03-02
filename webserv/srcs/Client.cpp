@@ -1,7 +1,18 @@
 #include "Client.hpp"
 
-Client::Client(int new_fd)
-{
+Client::Client(Config* config): _config(config){
+	fd = -1;
+	//in_buff = "";
+	out_buff = "";
+	state = CONNECTED;
+	time(&last_active);
+
+	has_output = false;
+
+	request = Request(config);
+}
+
+Client::Client(Config* config, int new_fd) : _config(config){
 	fd = new_fd;
 	//in_buff = "";
 	out_buff = "";
@@ -9,6 +20,7 @@ Client::Client(int new_fd)
 	time(&last_active);
 
 	has_output = false;
+	request = Request(config);
 }
 
 Client::Client(const Client &other)
@@ -20,8 +32,9 @@ Client::Client(const Client &other)
       state(other.state),
       last_active(other.last_active)
 {}
-Client &Client::operator=(const Client &other)
-{
+
+Client&	Client::operator=(const Client& other){
+	
 	if (this != &other)
 	{
 		fd = other.fd;
@@ -33,11 +46,13 @@ Client &Client::operator=(const Client &other)
 	}
 	return *this;
 }
+
 Client::~Client()
 {
 }
 
 void change_state(enum State state);
+
 void Client::append_read(char *buffer, size_t len)
 {
 	(void)buffer;
@@ -80,4 +95,14 @@ void Client::clear_out_buff()
 {
 	out_buff = "";
 	has_output = false;
+}
+
+bool Client::isRequestComplete(){
+	if (request.getReqStatus() == REQ_DONE)
+		return true;
+	return false;
+}
+
+void Client::appendRequest(char *buffer, size_t len){
+	request.parseRequest(buffer, len);
 }

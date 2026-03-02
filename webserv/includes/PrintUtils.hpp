@@ -14,7 +14,7 @@ std::ostream& operator<<(std::ostream& os, const std::vector<T>& vec)
 		return os;
 	}
 	os << "[ ";
-	for (size_t i = 0; i < vec.size(); ++i)
+	for (size_t i = 0; i < vec.size(); i++)
 	{
 		os << vec[i];
 		if (i + 1 < vec.size())
@@ -29,25 +29,27 @@ std::ostream& operator<<(std::ostream& os, const std::vector<T>& vec)
 template<typename K, typename V>
 std::ostream& operator<<(std::ostream& os, const std::map<K, V>& m)
 {
-	if (m.empty())
-	{
+	if (m.empty()) {
 		os << "[ empty ]";
 		return os;
 	}
 
 	os << "{ ";
+	
 	typename std::map<K, V>::const_iterator it = m.begin();
-	while (it != m.end())
-	{
+	
+	while (it != m.end()){
+
 		os << it->first << " : " << it->second;
-		++it;
+		it++;
 		if (it != m.end())
 			os << ", ";
-	}
+	}	
 	os << " }";
 
 	return os;
 }
+
 class PrintUtils
 {
 	public:

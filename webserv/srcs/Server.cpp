@@ -2,15 +2,20 @@
 #include "Config.hpp"
 #include "Log.hpp"
 
-Server::Server(Config &config) : _max_conn(config.getMaxConnections()), _port_count(config.getServerPortCount()), _sockets(_port_count + _max_conn){
-	
+Server::Server(Config &config) : _config(&config), _running(false), _max_conn(config.getMaxConnections()), _port_count(config.getServerPortCount()){
+
 	Log::instance().log(Log::INFO, Log::TYPE_CLASS, "Server starting....");
 	setupListeningSockets(config);
+
 	addListeningSocketsToPoll();
 	Log::instance().log(Log::INFO, Log::TYPE_CLASS, "Server successfully started");
 }
 
 Server::~Server(void){
+
+	_sockets.clear();
+	_clients.clear();
+	_listen_sockets.clear();
 
 	for(int i = 0; i < _port_count + _max_conn; i++)
 	{
@@ -25,28 +30,28 @@ void	Server::setupListeningSockets(Config& config){
 	std::map<listen_s, std::vector<CServer*> >::iterator it;
 
 	for (it = port_server_map.begin(); it != port_server_map.end(); it++) {
-	    uint32_t ip = it->first.ip;
-	    uint16_t port = it->first.port;
-	    std::vector<CServer*>& servers_on_port = it->second;
+		uint32_t ip = it->first.ip;
+		uint16_t port = it->first.port;
+		std::vector<CServer*>& servers_on_port = it->second;
 
-	    int fd = createListeningSocket(it->first);
+		int fd = createListeningSocket(it->first);
 
-	    CServer* default_srv = NULL;
-	    for (std::vector<CServer*>::iterator s_it = servers_on_port.begin(); s_it != servers_on_port.end(); s_it++) {
-	        
+		CServer* default_srv = NULL;
+		for (std::vector<CServer*>::iterator s_it = servers_on_port.begin(); s_it != servers_on_port.end(); s_it++) {
+
 			CServer* s = *s_it;
 			std::vector<listen_s> listens = s->getListen();
 			std::vector<listen_s>::iterator ls;
 
-	        for (ls = listens.begin(); ls != listens.end(); ls++) {
-	            if (ls->ip == ip && ls->port == port && ls->is_default) {
-	                default_srv = s;
-	                break;
-	            }
-	        }
-	        if (default_srv)
+			for (ls = listens.begin(); ls != listens.end(); ls++) {
+				if (ls->ip == ip && ls->port == port && ls->is_default) {
+					default_srv = s;
+					break;
+				}
+			}
+			if (default_srv)
 				break;
-	    }
+		}
 		listenInstance_s instance(default_srv, fd, it->first);
 
 		instance.configs = servers_on_port;
@@ -59,33 +64,32 @@ void	Server::setupListeningSockets(Config& config){
 	}
 }
 
-
 int	Server::createListeningSocket(const listen_s& port_info)
 {
 	int	sockfd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    
-	if (sockfd < 0)
-        throw std::runtime_error("socket() failed!");
 
-    int	opt = 1; // Enable address reuse to avoid "Address already in use" error when restarting the server
-    
+	if (sockfd < 0)
+		throw std::runtime_error("socket() failed!");
+
+	int	opt = 1; // Enable address reuse to avoid "Address already in use" error when restarting the server
+
 	setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));	// SO_REUSEADDR allows us to reuse the port immediately after the server is closed, without waiting for the OS to release it (which can take a few minutes)
 
-    sockaddr_in addr;
-    std::memset(&addr, 0, sizeof(addr));
-    addr.sin_family = AF_INET;
-    addr.sin_port = htons(port_info.port);
+	sockaddr_in addr;
+	std::memset(&addr, 0, sizeof(addr));
+	addr.sin_family = AF_INET;
+	addr.sin_port = htons(port_info.port);
   	addr.sin_addr.s_addr = port_info.ip;
 
 	if (bind(sockfd, (sockaddr*)&addr, sizeof(addr)) < 0){
 		std::cout << "bind() failed for" << port_info << std::endl;
-    	throw std::runtime_error("bind() failed!");
+		throw std::runtime_error("bind() failed!");
 	}
 	else
 		std::cout << "bound to : " << port_info << std::endl;
 
 	if (listen(sockfd, SOMAXCONN) < 0) // need to change SOMAXCONN to our max connections - does this value equal our total connections count, or just this socket?
-    	throw std::runtime_error("listen() failed!");
+		throw std::runtime_error("listen() failed!");
 
 	return sockfd;
 }
@@ -97,161 +101,214 @@ void	Server::addListeningSocketsToPoll(void){
 
 		pollfd	pfd;
 
-    	pfd.fd = _listen_sockets[i].fd;
-    	pfd.events = POLLIN;
-    	pfd.revents = 0;
+		pfd.fd = _listen_sockets[i].fd;
+		pfd.events = POLLIN;
+		pfd.revents = 0;
+
 		int flags = fcntl(pfd.fd, F_GETFL, 0);
+		
 		if (flags < 0)
 			throw std::runtime_error("fcntl(F_GETFL) failed!");
+		
 		if (fcntl(pfd.fd, F_SETFL, flags | O_NONBLOCK) == -1)
 			throw std::runtime_error("fcntl(F_SETFL) failed!");
-    	 _sockets[i] = pfd;
+		
+		_sockets.push_back(pfd);
 	}
 }
 
-int Server::loop(){
+void	Server::loop(){
+
 	Log::instance().log(Log::INFO, Log::TYPE_CLASS, "Server listening....");
-	while (true)
+
+	_running = true;
+
+	while (_running)
 	{
-		update_poll_events();
+		//update_poll_events();
+
 		int activity = poll(&_sockets[0], _port_count + _clients.size(), -1);
-		if (activity == -1){
+
+		if (activity < 0){
 			Log::instance().log(Log::INFO, Log::TYPE_CLASS, "poll() failed: " + std::string(strerror(errno)));
+			continue;
 		}
-		else if (activity > 0){
-			Server::conn_new_clients();
-			Server::client_read();
-			Server::client_write();
-		}
+		handleEvents();
 	}
 }
 
-void Server::conn_new_clients()
-{
-	int i, j;
-	int new_client = 0;
+void	Server::handleEvents(void){
 
-	struct sockaddr_in client_addr;
-	socklen_t client_len = sizeof(client_addr);
+	for (int i = 0; i < (int)_sockets.size(); i++) {
 
-	for (i = 0; i < _port_count; i++){
-
-		// Check if error flag set on server socket
-		if (_sockets[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
-			close(_sockets[i].fd);
-			_sockets[i].fd = -1;
-			Log::instance().log(Log::ERROR, Log::TYPE_ACCESS, "Connection refused : POLLERR | POLLHUP | POLLNVAL : _sockets[" + toString(i) + "]" );
-		}
-
-		// Check if POLLIN flag set on server socket
-		else if (_sockets[i].revents & POLLIN) {
-
-			// Accept new client connection 
-			if ((new_client = accept(_sockets[i].fd, (struct sockaddr*)&client_addr, &client_len)) == -1){ //obtain connection port and ip : https://chatgpt.com/share/69972875-05d4-800f-a863-fe04cf7a7443
-				Log::instance().log(Log::INFO, Log::TYPE_ACCESS, "conn_new_clients() : Connection refused : POLLIN : _sockets[" + toString(i) + "]");
-				continue;
-			}
-
-			Log::instance().log(Log::INFO, Log::TYPE_ACCESS, "conn_new_clients() : Connection accepted : _sockets[" + toString(i) + "] : fd = " + toString(_sockets[i].fd));
-				
-			struct sockaddr_storage local_addr;
-			socklen_t len = sizeof(local_addr);
-			if (getsockname(new_client, (struct sockaddr*)&local_addr, &len) == -1)
-			{
-				Log::instance().log(Log::ERROR, Log::TYPE_ERROR, "conn_new_clients() : getsockname() failed for new_client fd = " + toString(new_client));
-				close(new_client);
-				continue;
-			}
-			if (local_addr.ss_family == AF_INET)
-			{
-			    struct sockaddr_in *addr = (struct sockaddr_in*)&local_addr;
-			
-			    char ip[INET_ADDRSTRLEN];
-			    inet_ntop(AF_INET, &addr->sin_addr, ip, INET_ADDRSTRLEN);
-				
-			    int port = ntohs(addr->sin_port);
-				std::cout << "Client connected to port: " << port << std::endl;
-			}
-			
-			int flags = fcntl(new_client, F_GETFL, 0);
-			
-			if (flags == -1 || fcntl(new_client, F_SETFL, flags | O_NONBLOCK) == -1)
-			{
-				Log::instance().log(Log::ERROR, Log::TYPE_ERROR, "conn_new_clients() : _sockets[" + toString(i) + "] : fd = " + toString(_sockets[i].fd) + " : Failed to set non-blocking mode: " + std::string(strerror(errno)));
-				close(new_client);
-				continue;
-			}
-			for (j = _port_count; j < _port_count + _max_conn; j++)
-			{
-				if (_sockets[j].fd == -1)
-				{
-					_sockets[j].fd = new_client;
-					_sockets[j].events = POLLIN | POLLOUT;
-					//Identify port and ip that client is connecting to. 
-					_clients.insert(std::pair<int,Client>(new_client,Client(new_client)));//Instantiate client with correct server block from config (also ensure that global variables filter into server and location after parsing/validation)
-					break;
-				}
-			}
-			if (j >= _port_count + _max_conn)
-			{
-				std::cout << "Maximum connections reached, couldn't connect!" << std::endl;
-				close(new_client);
-			}
-			else
-				std::cout << "client connected!" << std::endl;
-		}
-	}
-}
-
-void Server::client_read()
-{
-	char buffer[BUF_SIZE];
-
-	for (int i = _port_count; i < _port_count + _max_conn; i++)
-	{
-		int fd = _sockets[i].fd;
-    	
-		if (fd == -1)
+		if (_sockets[i].revents == 0)
 			continue;
 
-		std::map<int, Client>::iterator it = _clients.find(fd);
-    	if (it == _clients.end()) {
-        	//std::cerr << "[WARN] fd " << fd << " missing in _clients!" << std::endl;
-        	close(fd);
-        	_sockets[i].fd = -1;
-        	continue;
-    	}
-		if (fd != -1 && (_sockets[i].revents & POLLIN))
+		if (i < _port_count)
+			handleAccept(i);
+
+		else {
+
+			int fd = _sockets[i].fd;
+
+			if (_sockets[i].revents & POLLIN)
+				handleClientRead(fd);
+
+			if (_sockets[i].revents & POLLOUT)
+				handleClientWrite(fd);
+
+			if (_sockets[i].revents & (POLLERR | POLLHUP | POLLNVAL))
+				disconnectClient(fd);
+		}
+		_sockets[i].revents = 0;
+	}
+}
+
+void	Server::handleAccept(int index){
+
+	while (true)
+	{
+		sockaddr_in addr;
+		socklen_t len = sizeof(addr);
+
+		int client_fd = accept(_sockets[index].fd, (sockaddr*)&addr, &len);
+
+		if (client_fd < 0){
+
+			if (errno == EAGAIN || errno == EWOULDBLOCK)
+				break;
+
+			Log::instance().log(Log::ERROR, Log::TYPE_ERROR, "accept() failed: " + std::string(strerror(errno)));
+			break;
+		}
+		try{
+			setNonBlocking(client_fd);
+		}
+		catch (const std::exception& e){
+			Log::instance().log(Log::ERROR, Log::TYPE_ERROR, "Failed to set non-blocking mode for client fd=" + toString(client_fd) + " : " + e.what());
+			close(client_fd);
+			continue;
+		}
+		addClient(client_fd);
+
+		Log::instance().log(Log::INFO, Log::TYPE_ACCESS, "New client connected: fd=" + toString(client_fd));
+	}
+}
+
+void	Server::setNonBlocking(int fd){
+
+	int flags = fcntl(fd, F_GETFL, 0);
+	
+	if (flags < 0)
+		throw std::runtime_error("fcntl(F_GETFL) failed!");
+	
+	if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) == -1)
+		throw std::runtime_error("fcntl(F_SETFL) failed!");
+}
+
+void	Server::addClient(int client_fd){
+
+	Client	new_client(_config, client_fd);
+	
+	_clients.insert(std::make_pair(client_fd, new_client));
+
+	pollfd pfd;
+	pfd.fd = client_fd;
+	pfd.events = POLLIN;
+	pfd.revents = 0;
+
+	_sockets.push_back(pfd);
+}
+
+void	Server::handleClientRead(int fd){
+
+    std::map<int, Client>::iterator it = _clients.find(fd);
+    if (it == _clients.end())
+    {
+        Log::instance().log(Log::ERROR, Log::TYPE_ERROR, "handleClientRead: unknown fd=" + toString(fd));
+        return;
+    }
+
+    Client&	client = it->second;
+
+    char buffer[BUF_SIZE];
+
+    ssize_t bytes = recv(fd, buffer, sizeof(buffer), 0);
+
+    if (bytes < 0){
+        
+		if (errno == EAGAIN || errno == EWOULDBLOCK)
+            return;
+
+        disconnectClient(fd);
+        return;
+    }
+
+    if (bytes == 0) {
+        disconnectClient(fd);
+        return;
+    }
+
+    client.appendRequest(buffer, bytes);
+
+    if (client.isRequestComplete()){
+
+        _sockets[getSocketsPosition(fd)].events |= POLLOUT;
+
+        Log::instance().log(Log::INFO, Log::TYPE_ACCESS, "Request complete for client fd=" + toString(fd));
+    }
+}
+
+void	Server::handleClientWrite(int fd)
+{
+    std::string response = "We can write this later";  // Need actual response logic here....
+
+    ssize_t sent = send(fd, response.c_str(), response.size(), 0);
+
+    if (sent <= 0){
+        disconnectClient(fd);
+        return;
+    }	
+
+    response.erase(0, sent);
+
+    if (response.empty())
+        _sockets[getSocketsPosition(fd)].events &= ~POLLOUT;
+}
+
+void	Server::disconnectClient(int fd){
+
+    Log::instance().log(Log::INFO, Log::TYPE_ACCESS, "Client disconnected: fd=" + toString(fd));
+    close(fd);
+    removeClientFromPoll(fd);
+    _clients.erase(fd);
+}
+
+void	Server::removeClientFromPoll(int fd)
+{
+	for (size_t i = 0; i < _sockets.size(); i++)
+	{
+		if (_sockets[i].fd == fd)
 		{
-			ssize_t valread = recv(fd, buffer, BUF_SIZE - 1, 0);
-			if (valread == 0)
-			{
-				close(fd);
-				_clients.erase(fd);
-				_sockets[i].fd = -1;
-				std::cout << "Client disconnected (valread == 0)" << std::endl;
-			}
-			else if (valread == -1)
-			{
-				if (errno == EAGAIN || errno == EWOULDBLOCK)
-					continue;
-				perror("read: ");
-				close(fd);
-				_sockets[i].fd = -1;
-				std::cout << "failed connection: Client was disconnected (valread == -1)" << std::endl;
-			}
-			else
-			{
-				buffer[valread] = '\0';
-				//send(_clients[i], buffer, valread, 0);
-				_clients.at(fd).append_read(buffer, valread);
-				std::cout << fd << " said: " << buffer << std::endl;
-			}
+			_sockets[i].fd = -1;
+			_sockets[i].events = 0;
+			_sockets[i].revents = 0;
+			break;
 		}
 	}
 }
 
-void Server::client_write()
+int	Server::getSocketsPosition(int fd)
+{
+	for (size_t i = 0; i < _sockets.size(); i++){
+
+		if (_sockets[i].fd == fd)
+			return i;
+	}
+	return -1;
+}
+
+/* void Server::client_write()
 {
 	std::string msg;
 
@@ -269,36 +326,38 @@ void Server::client_write()
 
 		}
 	}
-}
+} */
 
-/* Iterate over sockets and update event flags  */
+/*
+// Iterate over sockets and update event flags
 void Server::update_poll_events()
 {
 	for (int i = 0; i < (_port_count + (int)_clients.size()); i++){
-        
+
 		int fd = _sockets[i].fd;
-		
+
 		if (fd == -1)
-            continue;
+			continue;
 
 		if (i < _port_count) {
-            _sockets[i].events = POLLIN;
-            continue;
-        }
-        
+			_sockets[i].events = POLLIN;
+			continue;
+		}
+
 		std::map<int, Client>::iterator it = _clients.find(fd);
-        
+
 		if (it == _clients.end()) {
-            _sockets[i].fd = -1;
-            _sockets[i].events = 0;
-            continue;
-        }
+			_sockets[i].fd = -1;
+			_sockets[i].events = 0;
+			continue;
+		}
 		short events = POLLIN;
-        if (it->second.has_output)
-            _sockets[i].events |= POLLOUT;
+		if (it->second.has_output)
+			_sockets[i].events |= POLLOUT;
 		 _sockets[i].events = events;
-    }
+	}
 }
+*/
 
 /*int server_setup_old(Server &server)
 {
@@ -327,3 +386,50 @@ void Server::update_poll_events()
 	}
 }*/
 
+/* void Server::client_read()
+{
+	char buffer[BUF_SIZE];
+
+	for (int i = _port_count; i < _port_count + _max_conn; i++)
+	{
+		int fd = _sockets[i].fd;
+
+		if (fd == -1)
+			continue;
+
+		std::map<int, Client>::iterator it = _clients.find(fd);
+		if (it == _clients.end()) {
+			std::cerr << "[WARN] fd " << fd << " missing in _clients!" << std::endl;
+			close(fd);
+			_sockets[i].fd = -1;
+			continue;
+		}
+		if (fd != -1 && (_sockets[i].revents & POLLIN))
+		{
+			ssize_t valread = recv(fd, buffer, BUF_SIZE - 1, 0);
+			if (valread == 0)
+			{
+				close(fd);
+				_clients.erase(fd);
+				_sockets[i].fd = -1;
+				std::cout << "Client disconnected (valread == 0)" << std::endl;
+			}
+			else if (valread == -1)
+			{
+				if (errno == EAGAIN || errno == EWOULDBLOCK)
+					continue;
+				perror("read: ");
+				close(fd);
+				_sockets[i].fd = -1;
+				Log::instance().log(Log::INFO, Log::TYPE_ACCESS, "conn_new_clients() : Connection refused : POLLIN : failed connection: Client was disconnected (valread == -1) : _sockets + [" + toString(i) + "]");
+			}
+			else
+			{
+				buffer[valread] = '\0';
+				//send(_clients[i], buffer, valread, 0);
+				_clients.at(fd).append_read(buffer, valread);
+				std::cout << fd << " said: " << buffer << std::endl;
+			}
+		}
+	}
+} */
