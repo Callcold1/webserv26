@@ -29,9 +29,10 @@ class Request {
 						~Request(void);
 	void	    		clear();
 	
-	void				parseRequest(const char* rawData, size_t length);
+	eParse				parseRequest(const char* rawData, size_t length);
 
-	eParse				getParseStatus();
+	eParse				getParseStatus(void);
+	eParse				getParseStatus(void) const;
 	eReqState			getReqStatus();
 	std::string			getRequestStr();
 	std::string			getUnparsedStr();
@@ -52,7 +53,7 @@ class Request {
 	RequestParser*		_parser;
 	RequestValidator*	_validator;
 	//RequestHandler*		_requestHandler;
-	CServer				_matched_server;	
+	CServer				_matched_server;
 	Config*			    _config;// really the server block info
 	std::deque<char>	_buffer;
 	token_s				_unparsed;

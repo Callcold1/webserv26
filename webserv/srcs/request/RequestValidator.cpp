@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/30 11:26:19 by kmooney           #+#    #+#             */
-/*   Updated: 2026/02/24 13:39:03 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/03/03 10:12:10 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -71,6 +71,19 @@ bool	RequestValidator::locationSupportsMethod(const str_t& method) {
 	return false;
 }
 
+bool	RequestValidator::isValidMethod(const std::string& str){
+	if (str.compare("GET") == 0 ||
+		str.compare("POST") == 0 ||
+		str.compare("PUT") == 0 ||
+		str.compare("DELETE") == 0 ||
+		str.compare("HEAD") == 0 ||
+		str.compare("OPTIONS") == 0
+	)
+		return true;
+	else
+		return false;
+}
+
 void	RequestValidator::setLocation(CLocation& location){
 	//_location = _server->getLocationForTarget(_req->_uri.path);
 	_location = location; // temporary - really need to use CServer object to find location - this should happen in the client class
@@ -78,13 +91,13 @@ void	RequestValidator::setLocation(CLocation& location){
 
 bool	RequestValidator::validateMethod(){
 
-	std::vector<std::string> location_method = _location.getMethod();
-
-	if (locationSupportsMethod(_req->_method))
-		return _req->setState(P_ERROR, V_REQLINE, "Method Not Permitted", 501);
-	else if (locationSupportsMethod(to_upper(_req->_method)))
-	 	return _req->setState(P_ERROR, V_REQLINE, "Method must be uppercase", 400);
-	else
+	if (_req->_r_state != V_REQLINE) {
+		if (!locationSupportsMethod(_req->_method))
+			return _req->setState(P_ERROR, _req->_r_state, "Method Not Permitted", 501);
+		else if (locationSupportsMethod(to_upper(_req->_method)))
+			return _req->setState(P_ERROR, V_REQLINE, "Method must be uppercase", 400);
+	}
+	else if (!isValidMethod(_req->_method))
 		return _req->setState(P_ERROR, V_REQLINE, "Method Not Supported", 501);
 	return true;
 }

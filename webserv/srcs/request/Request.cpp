@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/30 11:28:22 by kmooney           #+#    #+#             */
-/*   Updated: 2026/02/24 13:52:20 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/03/03 12:05:50 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -79,7 +79,7 @@ void	Request::resetParser() {
         _parser->clear();
 }
 
-void	Request::parseRequest(const char* rawData, size_t length) {
+eParse	Request::parseRequest(const char* rawData, size_t length) {
 	
 	if (!_parser)
 		_parser = new RequestParser(this);
@@ -91,11 +91,17 @@ void	Request::parseRequest(const char* rawData, size_t length) {
 		if (_p_state == P_PARSE)
 			_parser->parseRequest();
 	}
+	return _p_state;
 }
 
 eParse	Request::getParseStatus(){
 	return _p_state;
 }
+
+eParse	Request::getParseStatus(void) const {
+	return _p_state;
+}
+
 
 eReqState	Request::getReqStatus(){
 	return _r_state;

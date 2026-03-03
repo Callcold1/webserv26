@@ -30,6 +30,7 @@ void	Server::setupListeningSockets(Config& config){
 	std::map<listen_s, std::vector<CServer*> >::iterator it;
 
 	for (it = port_server_map.begin(); it != port_server_map.end(); it++) {
+
 		uint32_t ip = it->first.ip;
 		uint16_t port = it->first.port;
 		std::vector<CServer*>& servers_on_port = it->second;
@@ -144,7 +145,7 @@ void	Server::handleEvents(void){
 		if (_sockets[i].revents == 0)
 			continue;
 
-		if (i < _port_count)
+		if (i < _port_count)						
 			handleAccept(i);
 
 		else {
@@ -223,8 +224,8 @@ void	Server::addClient(int client_fd){
 void	Server::handleClientRead(int fd){
 
     std::map<int, Client>::iterator it = _clients.find(fd);
-    if (it == _clients.end())
-    {
+    
+	if (it == _clients.end()){
         Log::instance().log(Log::ERROR, Log::TYPE_ERROR, "handleClientRead: unknown fd=" + toString(fd));
         return;
     }
@@ -236,27 +237,17 @@ void	Server::handleClientRead(int fd){
     ssize_t bytes = recv(fd, buffer, sizeof(buffer), 0);
 
     if (bytes < 0){
-        
-		if (errno == EAGAIN || errno == EWOULDBLOCK)
-            return;
-
+		Log::instance().log(Log::ERROR, Log::TYPE_ERROR, "handleClientRead() : Invalid read : client disconnected : fd " + toString(fd));
         disconnectClient(fd);
         return;
     }
-
-    if (bytes == 0) {
+    else if (bytes == 0) {
+		Log::instance().log(Log::ERROR, Log::TYPE_ACCESS, "handleClientRead() : Read size of zero : fd " + toString(fd));
         disconnectClient(fd);
         return;
     }
-
-    client.appendRequest(buffer, bytes);
-
-    if (client.isRequestComplete()){
-
-        _sockets[getSocketsPosition(fd)].events |= POLLOUT;
-
-        Log::instance().log(Log::INFO, Log::TYPE_ACCESS, "Request complete for client fd=" + toString(fd));
-    }
+	else if (client.handleClientRead(buffer, bytes))		// expect true if parsing complete (client will hold info on what is to be in response)
+		_sockets[getSocketsPosition(fd)].events |= POLLOUT;
 }
 
 void	Server::handleClientWrite(int fd)
@@ -284,12 +275,11 @@ void	Server::disconnectClient(int fd){
     _clients.erase(fd);
 }
 
-void	Server::removeClientFromPoll(int fd)
-{
-	for (size_t i = 0; i < _sockets.size(); i++)
-	{
-		if (_sockets[i].fd == fd)
-		{
+void	Server::removeClientFromPoll(int fd){
+	
+	for (size_t i = 0; i < _sockets.size(); i++){
+		
+		if (_sockets[i].fd == fd){
 			_sockets[i].fd = -1;
 			_sockets[i].events = 0;
 			_sockets[i].revents = 0;

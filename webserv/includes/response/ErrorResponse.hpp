@@ -12,7 +12,7 @@ public:
 	~ErrorResponse();
 
 	int		generate();
-	void		gen_error_page();
+	void	gen_error_page();
 
 	//headers:
 	void error_headers();
