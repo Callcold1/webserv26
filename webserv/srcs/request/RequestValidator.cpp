@@ -118,10 +118,10 @@ bool	RequestValidator::validateVersion()
 		if (_req->_version.compare(str_t("HTTP/0.9")) == 0 ||
 			_req->_version.compare(str_t("HTTP/2.0")) == 0 ||
 			_req->_version.compare(str_t("HTTP/3.0")) == 0) {
-			return _req->setState(P_ERROR, V_REQLINE, "Unsupported Version", 505);
+			return _req->setState(P_ERROR, V_REQLINE, "Unsupported HTTP Version", 505);
 		}
 		else
-			return _req->setState(P_ERROR, V_REQLINE, "Unsupported Version", 400);
+			return _req->setState(P_ERROR, V_REQLINE, "Unsupported HTTP Version", 400);
 	}
 }
 
@@ -409,23 +409,17 @@ bool	RequestValidator::validateContentType(){ // CHECK SERVER SUPPORTS TYPE
 }
 
 bool	temporaryIsValidContentType(const std::string& name){ // THESE ARE TEST VALUES TO BE REPLACED WITH SERVER CHECK
+	
 	static std::vector<std::string> validTypes;
-	validTypes.push_back("text/html");
-	validTypes.push_back("text/plain");
-	validTypes.push_back("application/json");
-	validTypes.push_back("multipart/form-data");
-	validTypes.push_back("multipart/related");
-
-	if (std::find(validTypes.begin(), validTypes.end(), name) == validTypes.end())
-		return false;
-	return true;
-}
-
-bool	temporaryIsValidCharset(const std::string& name){ // THESE ARE TEST VALUES TO BE REPLACED WITH SERVER CHECK
-	static std::vector<std::string> validTypes;
-	validTypes.push_back("utf-8"); // STANDARD CHARSET - PRETTY UBIQUITOUS
-	validTypes.push_back("ISO-8859-1"); // SINGLE CHAR LATIN
-
+	
+	if (validTypes.empty()){
+		validTypes.push_back("text/html");
+		validTypes.push_back("text/plain");
+		validTypes.push_back("application/json");
+		validTypes.push_back("multipart/form-data");
+		validTypes.push_back("multipart/related");
+		validTypes.push_back("multipart/mixed");
+	}
 	if (std::find(validTypes.begin(), validTypes.end(), name) == validTypes.end())
 		return false;
 	return true;
@@ -437,11 +431,19 @@ bool	RequestValidator::validateMultiPart(const std::string& val, const std::vect
 	std::string	type;
 
 	bool is_related;
+	bool is_form_data;
+	bool is_mixed;
 	bool has_boundary;
 	bool has_type;
 
 	if (val == "multipart/related")
 		is_related = true;
+	else if (val == "multipart/form-data")
+		is_form_data = true;
+	else if (val == "multipart/mixed")
+		is_mixed = true;
+	else
+		return _req->setState(P_ERROR, V_HEADERS, "Unsupported multipart type", 415);
 
 	if (size != 0) {
 
@@ -461,10 +463,6 @@ bool	RequestValidator::validateMultiPart(const std::string& val, const std::vect
 	}
 	if (!has_boundary)
 		return _req->setState(P_ERROR, V_HEADERS, "Missing multiPart boundary", 400);
-	if (has_type && !is_related)
-		return _req->setState(P_ERROR, V_HEADERS, "Invalid option in Content-Type header (type) ", 400);
-	if (!is_related && has_type)
-		return _req->setState(P_ERROR, V_HEADERS, "Missing default type", 400);
 	if (!temporaryIsValidContentType(type))
 		return _req->setState(P_ERROR, V_HEADERS, "Content-Type not supported", 415);
 

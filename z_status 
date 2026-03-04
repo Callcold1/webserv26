@@ -1,22 +1,38 @@
 WIP
 ===
-1) Update Server class so that it works with Config
 
-2) Amend Client class to work with Config, Request and Response
+1) Finish multipart
 
-3) Update logging
+2) Validate config : e.g. root must start with '/'?
 
-4) Finish multipart
+3) Fully test config (write test config files and tests)
 
-5) Update printing functions to use logs to record config settings
+4) Sort out config error handling (Partially done)
 
-6) Validate config : e.g. root must start with '/'?
+5) Assign a default server when parsing config (Partially done - if one is present - need to assign one otherwise)
 
-7) Fully test config (write test config files and tests)
+Still To Do
+===========
 
-8) Sort out config error handling (Partially done)
+- Multipart
 
-9) Assign a default server when parsing config (Partially done - if one is present - need to assign one otherwise)
+- Header Validation
+
+- Request Handling
+    - Server Matching
+    - Location Matching
+    - Static page
+    - Error page
+    - CGI
+
+- Error Handling
+
+- Config Validation
+
+- Testing
 
 Questions we need to consider
 =============================
+
+Client class design
+Pipelining, or error if more than 1 request before response?
