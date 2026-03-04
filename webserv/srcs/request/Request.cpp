@@ -23,7 +23,48 @@ Request::Request( Config* config )
 	: _parser(NULL), _validator(NULL), _config(config), _method(""), _uri_str(""), _version(""),
 		_errNum(200), _errMess(""), _p_state (P_PARSE), _r_state (P_REQLINE), _content_length(0),
 		_unparsed_length(0), _hasBody(false), _isChunked(false), _isMultiPart(false), _bodyUTF8(false){}
+
+Request::Request( const listenInstance_s& listen_instance )
+	: _parser(NULL), _validator(NULL), _listen_instance(listen_instance), _method(""), _uri_str(""), _version(""),
+		_errNum(200), _errMess(""), _p_state (P_PARSE), _r_state (P_REQLINE), _content_length(0),
+		_unparsed_length(0), _hasBody(false), _isChunked(false), _isMultiPart(false), _bodyUTF8(false){}
+
+Request::Request(const Request &other) : _parser(NULL), _validator(NULL), _config(other._config), _method(other._method),
+	_uri_str(other._uri_str), _version(other._version), _req_line(other._req_line), _uri(other._uri), _headers(other._headers), _body(other._body),
+	_boundary(other._boundary), _defaultMultiType(other._defaultMultiType), _multipart(other._multipart), _errNum(other._errNum), _errMess(other._errMess), 
+	_p_state(other._p_state), _r_state(other._r_state), _content_length(other._content_length), _body_length(other._body_length), _unparsed_length(other._unparsed_length),
+	 _hasBody(other._hasBody), _isChunked(other._isChunked), _isMultiPart(other._isMultiPart), _bodyUTF8(other._bodyUTF8){}
 				
+Request& Request::operator=(const Request &other){
+	if (this != &other){
+		_config = other._config;
+		_method = other._method;
+		_uri_str = other._uri_str;
+		_version = other._version;
+		_req_line = other._req_line;
+		_uri = other._uri;
+		_headers = other._headers;
+		_body = other._body;
+		_boundary = other._boundary;
+		_defaultMultiType = other._defaultMultiType;
+		_multipart = other._multipart;
+		_errNum = other._errNum;
+		_errMess = other._errMess;
+		_p_state = other._p_state;
+		_r_state = other._r_state;
+		_content_length = other._content_length;
+		_body_length = other._body_length;
+		_unparsed_length = other._unparsed_length;
+		_hasBody = other._hasBody;
+		_isChunked = other._isChunked;
+		_isMultiPart = other._isMultiPart;
+		_bodyUTF8 = other._bodyUTF8;
+	}	
+	return *this;
+}
+
+
+
 /* DESTRUCTORS */
 Request::~Request( void ){
 	if (_parser){
@@ -101,7 +142,6 @@ eParse	Request::getParseStatus(){
 eParse	Request::getParseStatus(void) const {
 	return _p_state;
 }
-
 
 eReqState	Request::getReqStatus(){
 	return _r_state;

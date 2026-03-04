@@ -17,6 +17,7 @@
 #include "utilityFunctions.hpp"
 #include "RequestTypes.hpp"
 #include "Config.hpp"
+#include "configDefs.hpp"
 
 class RequestParser;
 class RequestValidator;
@@ -26,6 +27,9 @@ class Request {
 	public:
 						Request();
 						Request(Config* config);
+						Request( const listenInstance_s& listen_instance );
+						Request(const Request &other);
+						Request& operator=(const Request &other);
 						~Request(void);
 	void	    		clear();
 	
@@ -55,6 +59,7 @@ class Request {
 	//RequestHandler*		_requestHandler;
 	CServer				_matched_server;
 	Config*			    _config;// really the server block info
+	listenInstance_s	_listen_instance;
 	std::deque<char>	_buffer;
 	token_s				_unparsed;
 
@@ -66,6 +71,7 @@ class Request {
 	//Body				_newBody;
 	std::string 		_boundary;
 	std::string 		_defaultMultiType;
+	MultipartMessage	_multipart;
 
 	void                resetParser();
 	void                resetValidator();

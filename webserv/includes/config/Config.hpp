@@ -127,6 +127,8 @@ class Config {
 	
 		template <typename T>
 		std::map<int, std::string>		mergeErrorPage(T&, std::map<int, std::string> error_pages);
+
+		CServer*						findBestServerMatch(const listenInstance_s& li, const std::string& host, uint32_t dest_ip, uint16_t dest_port) const;
 };
 
 bool operator<(const listen_s& a, const listen_s& b);

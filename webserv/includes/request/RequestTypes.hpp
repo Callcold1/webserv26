@@ -85,20 +85,25 @@ typedef struct parseContext{
 		: last_val(false), delim_req(false), delim(""), error(""), errNum(0), validator(0) {}
 } parseContext;
 
-typedef struct  {
-	std::string			contentType;
-	std::string			disposition;
-	std::string			filename;
-	bool				isFile;
-	std::string			tempFilePath;
-	std::vector<char>	content;
-} MultipartPart;
+enum eMultiPartType { MULTI_NONE, MULTI_RELATED, MULTI_FORM_DATA, MULTI_MIXED };
 
-typedef struct {
-	std::vector<MultipartPart>	parts;
-	std::string					boundary;
-} MultipartMessage;
+struct MultipartMessage; // forward declaration
 
+struct MultipartPart {
+	std::string contentType;
+	std::string disposition;
+	std::string filename;
+	bool isFile;
+	std::string tempFilePath;
+	std::vector<char> content;
+	eMultiPartType type;
+	MultipartMessage* nested;
+};
+
+struct MultipartMessage {
+	std::vector<MultipartPart> parts;
+	std::string boundary;
+};
 /*
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 >>>>>>					ITERATORS FUNCTORS								   <<<<<<

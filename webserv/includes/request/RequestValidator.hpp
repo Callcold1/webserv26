@@ -103,7 +103,8 @@ class RequestValidator {
 		bool				validateContentEncoding();
 
 		bool				validateContentType();
-		bool				validateMultiPart(const std::string& val, const std::vector< std::pair<std::string, std::string> >& options);
+		bool				validateMultiPartHeader(const std::string& val, const std::vector< std::pair<std::string, std::string> >& options);
+		bool				validateMultiPartBody(const MultipartMessage& multipart);
 		//bool				validateCharset(const std::string& val, const std::vector< std::pair<std::string, std::string> >& options);
 		bool				validateCharset(const std::vector< std::pair<std::string, std::string> >& options);
 		
@@ -111,7 +112,6 @@ class RequestValidator {
 		bool				duplicateValueCheck(const std::vector<field_t*>& values);
 		
 		bool				validateAllHeaders(const fieldMap_t& headers);
-		bool				validate_all_headers(const fieldMap_t& headers);
 		//bool				validate_header(const std::string& name, const std::vector<HeaderField_t*>& fields, const HeaderFlags* meta);
 		void				headerDefinitions();
 	
