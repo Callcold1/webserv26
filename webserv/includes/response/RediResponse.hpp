@@ -12,7 +12,7 @@ public:
 	~RediResponse();
 
 	int		generate();
-	void		gen_redi_page();
+	void	gen_redi_page();
 
 	//headers:
 	void redi_headers();

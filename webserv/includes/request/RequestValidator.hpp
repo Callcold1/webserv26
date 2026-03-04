@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/23 01:37:52 by kmooney           #+#    #+#             */
-/*   Updated: 2026/02/23 15:55:08 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/03/03 10:11:33 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -78,6 +78,7 @@ class RequestValidator {
 		void				validateReqLine();
 
 		bool				validateMethod();
+		bool				isValidMethod(const std::string& str);
 		bool				locationSupportsMethod(const str_t& method);
 		
 		bool				validateURI();

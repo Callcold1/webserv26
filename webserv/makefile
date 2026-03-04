@@ -1,16 +1,15 @@
-# USEFUL IF THE MAKEFILE IS NOT IN THE PROJECT ROOT FOLDER
 PROJECT_ROOT := $(realpath ./)
 
 NAME        := webserv
 
 CXX         := g++
-CXXFLAGS    := -Wall -Werror -Wextra -std=c++98 -g
+#CXXFLAGS    := -Wall -Werror -Wextra -std=c++98 -g
+CXXFLAGS    := -Wall -Werror -Wextra -std=c++98 -fsanitize=address -g
 
 INCLUDES    :=	-I $(PROJECT_ROOT)/includes \
 				-I $(PROJECT_ROOT)/includes/response \
  				-I$(PROJECT_ROOT)/includes/config \
  				-I$(PROJECT_ROOT)/includes/request
-#  				-I$(PROJECT_ROOT)/Request/includes \
 
 OBJDIR      := objs
 SRCDIR      := $(PROJECT_ROOT)/srcs
@@ -33,7 +32,8 @@ SRCS        := main.cpp \
 				request/Request.cpp \
 				request/RequestParser.cpp \
 				request/RequestValidator.cpp \
-				Client.cpp
+				Client.cpp \
+				PrintUtils.cpp
 
 OBJS := $(patsubst %.cpp, $(OBJDIR)/%.o, $(SRCS))
 DEPS := $(patsubst %.cpp, $(OBJDIR)/%.d, $(SRCS))

@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/11 16:04:15 by kmooney           #+#    #+#             */
-/*   Updated: 2026/02/19 13:28:37 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/03/03 13:26:12 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,10 +53,6 @@ struct StaticRange
 	    return value >= Min && value <= Max;
 	}
 };
-
-/* CONVERT TO STRING */
-template <typename T>
-std::string toString(const T val);
 
 /* STRING CASE CONVERSION */
 std::string							to_lower(std::string str);
@@ -170,3 +166,27 @@ bool	convertToType(T& target, const std::string& str){
 void	printVisible(const std::string& s);
 void	resolveAddress(const std::string& ip_str, const std::string& port_str, uint32_t& ip, uint16_t& port);
 void	splitPortInfo(const std::string& port_info, uint32_t& ip, uint16_t& port);
+
+/*
+>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<
+>>>>>>		CONVERSION TO STRING	<<<<<<
+>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<
+*/
+
+template <typename T>
+std::string toString(const T val)
+{
+	std::stringstream stream;
+	stream << val;
+	return stream.str();
+}
+
+template <typename T>
+std::string	printstream(T& src){
+
+	std::ostringstream os;
+
+	os << src << std::endl;
+	std::string str = os.str();
+	return str;
+}

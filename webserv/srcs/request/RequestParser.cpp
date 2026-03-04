@@ -929,10 +929,30 @@ void	RequestParser::parseChunked( token_s& it ){
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 */
 
+	1) multipart header will be parsed first 
+	2) use this to populate boundary in MultipartMessage struct,			 
+	2) then use this boundary to parse the body into parts.
+	3) Each part will be stored as a MultipartPart struct, which contains the content type, disposition, filename (if applicable), and the content itself as a vector of chars.
+
+typedef struct  {
+	std::string			contentType;
+	std::string			disposition;
+	std::string			filename;
+	bool				isFile;
+	std::string			tempFilePath;
+	std::vector<char>	content;
+} MultipartPart;
+
+typedef struct {
+	std::vector<MultipartPart>	parts;
+	std::string					boundary;
+} MultipartMessage;
+
 void	RequestParser::parseMultiPart( token_s& it ){
 
-if (it.begin == it.end)
-	 return;
+	if (it.begin == it.end)
+		 return;
+	
 // 	std::string		data;
 
 // 	while (it.begin != it.end) {

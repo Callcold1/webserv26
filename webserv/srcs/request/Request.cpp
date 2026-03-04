@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/30 11:28:22 by kmooney           #+#    #+#             */
-/*   Updated: 2025/07/02 20:04:27 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/03/03 12:05:50 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,10 @@
 #include "RequestValidator.hpp" 
 
 /* CONSTRUCTORS */
+Request::Request(void) : _parser(NULL), _validator(NULL), _config(NULL), _method(""), _uri_str(""), _version(""),
+		_errNum(200), _errMess(""), _p_state (P_PARSE), _r_state (P_REQLINE), _content_length(0),
+		_unparsed_length(0), _hasBody(false), _isChunked(false), _isMultiPart(false), _bodyUTF8(false){}
+
 Request::Request( Config* config )
 	: _parser(NULL), _validator(NULL), _config(config), _method(""), _uri_str(""), _version(""),
 		_errNum(200), _errMess(""), _p_state (P_PARSE), _r_state (P_REQLINE), _content_length(0),
@@ -75,7 +79,7 @@ void	Request::resetParser() {
         _parser->clear();
 }
 
-void	Request::parseRequest(const char* rawData, size_t length) {
+eParse	Request::parseRequest(const char* rawData, size_t length) {
 	
 	if (!_parser)
 		_parser = new RequestParser(this);
@@ -87,11 +91,17 @@ void	Request::parseRequest(const char* rawData, size_t length) {
 		if (_p_state == P_PARSE)
 			_parser->parseRequest();
 	}
+	return _p_state;
 }
 
 eParse	Request::getParseStatus(){
 	return _p_state;
 }
+
+eParse	Request::getParseStatus(void) const {
+	return _p_state;
+}
+
 
 eReqState	Request::getReqStatus(){
 	return _r_state;
@@ -148,3 +158,18 @@ std::string	Request::getRequestStr(){
 	_req_line = _parser->getParsedString();
 	return _req_line;
 }
+
+std::vector<field_t* >	Request::findRequestHeaderValue(const std::string& header_name){
+	fieldMap_t::iterator header = _headers.find(header_name);
+	return header->second;
+}
+
+// void	Request::iterateOverFieldT(std::vector<field_t*>& vec ){
+	
+// 	size_t size = vec.size();
+	
+// 	for (size_t i = 0; i < size; i++){
+// 		const std::string&	 										val 	= vec[i]->val;
+// 		const std::vector< std::pair<std::string, std::string> >&	options = vec[i]->params;
+// 	}
+// }

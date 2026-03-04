@@ -12,6 +12,8 @@
 
 #include "Tokeniser.hpp"
 
+size_t Tokeniser::_line_count = 0;
+
 Tokeniser::Tokeniser(std::istream& input, const tokenContext_t& context) : _context(context){
 	_stream << input.rdbuf();
 	tokenise();
@@ -50,7 +52,8 @@ tokeniser_s Tokeniser::nextToken() {
 	char c;
 
 	while (_stream.get(c)) {
-
+		if (c == '\n')
+			_line_count++;
 		if (c == '#') {
 			while (_stream.get(c) && c != '\n') {}
 			continue;
@@ -60,7 +63,7 @@ tokeniser_s Tokeniser::nextToken() {
 			continue;
 
 		if (isSymbol(c))
-			return tokeniser_s(T_SYMBOL, std::string(1, c));
+			return tokeniser_s(T_SYMBOL, std::string(1, c), Tokeniser::getLineCount());
 
 		std::string value;
 		bool quoted = false;
@@ -82,8 +85,16 @@ tokeniser_s Tokeniser::nextToken() {
 			value += c;
 		}
 		if (quoted)
-			return tokeniser_s(T_QWORD, value);
-		return tokeniser_s(T_WORD, value);
+			return tokeniser_s(T_QWORD, value, Tokeniser::getLineCount());
+		return tokeniser_s(T_WORD, value, Tokeniser::getLineCount());
 	}
-	return tokeniser_s(T_EOF, "");
+	return tokeniser_s(T_EOF, "", Tokeniser::getLineCount());
+}
+
+size_t	Tokeniser::getLineCount(){
+	return _line_count;
+}
+
+void	Tokeniser::setLineCount(){
+	_line_count = 0;
 }

@@ -6,25 +6,11 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/16 15:33:48 by kmooney           #+#    #+#             */
-/*   Updated: 2026/02/19 14:09:31 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/03/02 12:08:45 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "utilityFunctions.hpp"
-
-/*
->>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<
->>>>>>		CONVERSION TO STRING	<<<<<<
->>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<
-*/
-
-template <typename T>
-std::string toString(const T val)
-{
-	std::stringstream stream;
-	stream << val;
-	return stream.str();
-}
 
 /*
 >>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<
@@ -33,21 +19,21 @@ std::string toString(const T val)
 */
 std::string to_lower(std::string str)
 {
-	for (size_t i = 0; i < str.size(); ++i)
+	for (size_t i = 0; i < str.size(); i++)
 		str[i] = std::tolower(static_cast<unsigned char>(str[i]));
 	return str;
 }
 
 std::string to_upper(std::string str)
 {
-	for (size_t i = 0; i < str.size(); ++i)
+	for (size_t i = 0; i < str.size(); i++)
 		str[i] = std::toupper(static_cast<unsigned char>(str[i]));
 	return str;
 }
 
 void to_lower_ref(std::string &str)
 {
-	for (size_t i = 0; i < str.size(); ++i)
+	for (size_t i = 0; i < str.size(); i++)
 		str[i] = std::tolower(static_cast<unsigned char>(str[i]));
 }
 
@@ -650,7 +636,7 @@ bool isQuotedParamKeyChar(unsigned char c) {
 template <typename Container, typename Func>
 bool	iterate(const Container& container, Func f) {
 	typename Container::const_iterator it;
-	for (it = container.begin(); it != container.end(); ++it) {
+	for (it = container.begin(); it != container.end(); it++) {
 		if (!f(*it))
 			return false;
 	}
@@ -801,7 +787,7 @@ const std::set<std::string> &getHeaderTransferEncodings()
 */
 
 bool	isOnlyArg(std::vector<std::string>& args){
-	return args.size() == 1;
+	return args.size() < 2;
 }
 
 std::string	createArgsString(std::vector<std::string> args){

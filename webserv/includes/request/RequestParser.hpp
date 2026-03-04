@@ -92,6 +92,8 @@ private:
 	size_t					_parsed_body_len;
 	uint64_t				_chunk_size;
 	bool					_chunk_parser_status;
+
+	MultipartMessage		_multipart_message;
 };
 
 bool	bytesAvailable(token_s& it, size_t required); 
