@@ -88,9 +88,9 @@ int StaticResponse::gen_index_page()
 	</html>";
 
 	_body = ss.str();
-	int fd = open("Index.html", O_CREAT| O_WRONLY | O_TRUNC, 0644);
-	write(fd, _body.c_str(), get_content_len());
-	close(fd);
+	// int fd = open("Index.html", O_CREAT| O_WRONLY | O_TRUNC, 0644);
+	// write(fd, _body.c_str(), get_content_len());
+	// close(fd);
 	return(0);
 }
 
@@ -118,8 +118,17 @@ int StaticResponse::get_file()
 	return (0);
 }
 
+std::string StaticResponse::get_content_type()
+{
+	if (_body.size() >= 15 && _body.compare(0, 15, "<!doctype html>") == 0)
+	{
+		return("text/html;");
+	}
+	else if () //png image magic bytes
+}
+
 void StaticResponse::static_headers()
 {
 	
-	_headers["Content-Type"] = "text/html; charset=utf-8";
+	_headers["Content-Type"] = get_content_type();
 }

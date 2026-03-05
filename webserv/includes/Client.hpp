@@ -46,6 +46,8 @@ public:
 	
 	bool		handleClientRead(const char *buffer, size_t len);
 	//CServer*	findBestServerMatch(const std::string& host) const;
+
+	void handle_request();
 	
 	private:
 		

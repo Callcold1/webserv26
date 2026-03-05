@@ -2,12 +2,17 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-ErrorResponse::ErrorResponse(Request &request) : Response(request)
+ErrorResponse::ErrorResponse(Request &request) : Response(request), err_msg("Something went wrong")
 {
 	generate();
 }
 
-ErrorResponse::ErrorResponse(int status, Request &request) : Response(status, request)
+ErrorResponse::ErrorResponse(int status, Request &request) : Response(status, request), err_msg("Something went wrong")
+{
+	generate();
+}
+
+ErrorResponse::ErrorResponse(int status, Request &request, std::string custom_err_msg) : Response(status, request), err_msg(custom_err_msg)
 {
 	generate();
 }
@@ -43,7 +48,7 @@ void ErrorResponse::gen_error_page()
 		</head>\n\
 		<body>\n\
 			<h1>" + title + "</h1>\n\
-			<p>Something went wrong.</p>\n\
+			<p>" + err_msg + "</p>\n\
 		</body>\n\
 	</html>";
 

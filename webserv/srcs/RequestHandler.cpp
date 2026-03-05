@@ -8,35 +8,7 @@
 
 int save_file(std::string filename, Request &request)
 {
-	if (filename.empty())
-	filename = "unnamed";
 
-}
-
-int validate_part(std::string part)
-{
-	
-}
-
-int parse_multipart(Request &request)
-{
-	std::string	substr;
-	int			it = 0, last_it = 0;
-	std::string	full_boundary = "--" + request._boundary;
-
-	if (request._boundary.empty())
-		return(BAD_REQUEST_ERROR);
-
-	if (last_it = request._body.find(full_boundary) != 0)
-		return(BAD_REQUEST_ERROR);
-
-	while (last_it != std::string::npos)
-	{
-		it = request._body.find(full_boundary);
-		substr = request._body.substr(last_it, it - 1);
-		validate_part(substr);
-		last_it = it;
-	}
 }
 
 int if_file_upload(Request &request)
@@ -45,7 +17,7 @@ int if_file_upload(Request &request)
 	{
 		if (request.findHeader("content-type")[0]->val == "multipart/form-data")
 		{
-			parse_multipart(request);
+			parse_multipart(request); //wait for parsed mp
 		}
 		else if (request.findHeader("content-type")[0]->val.find("text/") != std::string::npos)
 		{
@@ -56,15 +28,18 @@ int if_file_upload(Request &request)
 		
 }
 
-void handle_request(Request &request, Client &client)
+void Client::handle_request()
 {
 	int error_catch = 0;
 	Response *re;
 	std::string path = request._uri.path;
-	
-	// TODO if: look for redirec order
 
-	if (if_file_upload(request) == 0)
+	if (!_matched_location->getRedirect().url.empty())
+	{
+		re = &RediResponse(request, _matched_location->getRedirect().url);
+	}
+
+	else if (if_file_upload(request) == 0)
 	{}
 
 	else if (path.find(CGI_PATH) != std::string::npos && path.find((CGI_PATH + std::string("assets"))) == std::string::npos)
@@ -92,6 +67,6 @@ void handle_request(Request &request, Client &client)
 	}
 	else
 		re = &ErrorResponse(NOT_FOUND_ERROR, request); //defaults to 404 not found
-	client.append_write(re->serialize());
+	append_write(re->serialize());
 
 }

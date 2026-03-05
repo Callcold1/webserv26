@@ -2,11 +2,12 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-RediResponse::RediResponse(Request &request) : Response(request)
+RediResponse::RediResponse(Request &request, std::string url) : Response(request), _location(url)
 {
+	_status = 301;
 }
 
-RediResponse::RediResponse(int status, Request &request) : Response(status, request)
+RediResponse::RediResponse(int status, Request &request, std::string url) : Response(status, request), _location(url)
 {
 }
 
@@ -24,7 +25,6 @@ RediResponse::~RediResponse()
 
 int RediResponse::generate()
 {
-	get_location();
 	gen_redi_page();
 	defaultHeaders();
 	redi_headers();
@@ -46,20 +46,13 @@ void RediResponse::gen_redi_page()
 		</body>\n\
 	</html>";
 
-	int fd = open("redifile.html", O_CREAT| O_WRONLY | O_TRUNC, 0644);
-	write(fd, _body.c_str(), get_content_len());
-	close(fd);
+	// int fd = open("redifile.html", O_CREAT| O_WRONLY | O_TRUNC, 0644);
+	// write(fd, _body.c_str(), get_content_len());
+	// close(fd);
 }
 
 void RediResponse::redi_headers()
 {
 	_headers["Content-Type"] = "text/html; charset=utf-8";
 	_headers["Location"] = _location;
-}
-
-
-//TODO figure out actual location here:
-void RediResponse::get_location()
-{
-	_location = "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Content-Type";
 }
