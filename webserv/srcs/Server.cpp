@@ -42,7 +42,10 @@ void	Server::setupListeningSockets(Config& config){
 
 			CServer* s = *s_it;
 			std::vector<listen_s> listens = s->getListen();
+			std::vector<std::string> names = s->getServerName();
 			std::vector<listen_s>::iterator ls;
+
+			Log::instance().log(Log::INFO, Log::TYPE_ACCESS, "Test " + createArgsString(names));
 
 			for (ls = listens.begin(); ls != listens.end(); ls++) {
 				if (ls->ip == ip && ls->port == port && ls->is_default) {
@@ -55,6 +58,7 @@ void	Server::setupListeningSockets(Config& config){
 		}
 		if (!default_srv)
 			default_srv = *servers_on_port.begin();
+		Log::instance().log(Log::INFO, Log::TYPE_ACCESS, "Default Server set to " + createArgsString(default_srv->getServerName()));
 		listenInstance_s instance(default_srv, fd, it->first);
 
 		instance.server_configs = servers_on_port;
@@ -188,8 +192,8 @@ void	Server::handleAccept(int index){
 		}
 		//addClient(client_fd);
 		addClient(client_fd, index);
-
 		Log::instance().log(Log::INFO, Log::TYPE_ACCESS, "New client connected: fd=" + toString(client_fd));
+		break;
 	}
 }
 

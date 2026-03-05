@@ -118,31 +118,31 @@ bool	Client::handleClientRead(const char *buffer, size_t len){
 	return true;
 }
 
-CServer*	Client::findBestServerMatch(const std::string& host) const{
+// CServer*	Client::findBestServerMatch(const std::string& host) const{
 
-	std::vector<CServer*> servers = _listen_instance->server_configs;
-	size_t size = servers.size();
+// 	std::vector<CServer*> servers = _listen_instance->server_configs;
+// 	size_t size = servers.size();
 
-	if (size == 0)
-		return NULL;
-	else if (size == 1)
-		return servers[0];
-	else {
-		for (size_t i = 0; i < size; i++){
+// 	if (size == 0)
+// 		return NULL;
+// 	else if (size == 1)
+// 		return servers[0];
+// 	else {
+// 		for (size_t i = 0; i < size; i++){
 
-			CServer* server = servers[i];
+// 			CServer* server = servers[i];
 
-			std::vector<std::string> server_names = server->getServerName();
-			size_t name_size = server_names.size();
+// 			std::vector<std::string> server_names = server->getServerName();
+// 			size_t name_size = server_names.size();
 			
-			for (size_t j = 0; j < name_size; j++){
-				if (server_names[j].compare(host) == 0)
-					return server;
-			}
-		}
-		return _listen_instance->default_server;
-	}
-}
+// 			for (size_t j = 0; j < name_size; j++){
+// 				if (server_names[j].compare(host) == 0)
+// 					return server;
+// 			}
+// 		}
+// 		return _listen_instance->default_server;
+// 	}
+// }
 
 /*
 >>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<
