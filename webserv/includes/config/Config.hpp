@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/14 09:52:22 by kmooney           #+#    #+#             */
-/*   Updated: 2026/02/22 21:34:56 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/03/05 12:41:21 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@
 #include <map>
 #include <vector>
 
+#include "PrintUtils.hpp"
 #include "Parser.hpp"
 #include "configDefs.hpp"
 #include "utilityFunctions.hpp"
@@ -31,94 +32,116 @@ class Config {
 	
 	private:
 
-		bool						_autoindex;				// indicates global autoindex setting (true = on, false = off)
-		std::vector<std::string>	_charsets;				// charset(s) that can be handled
-		std::vector<errorPage_s> 	_error_pages;			// Map of error pages to generate
- 		std::vector<std::string>	_index;					// ordered list of possible index filenames - first one that works is returned
-		long long					_max_body;				// Max acceptable body size in bytes
-		int							_max_connections; 		// Max connections to all servers
-		long long					_max_header_size;		// Max acceptable header size in bytes
- 		std::vector<std::string>	_methods;				// list of methods
-		std::string	 				_root_dir;				// Root directory at global level
-		std::vector<CServer>		_servers;				// Vector of servers
-		int							_timeout_ka;			// Length of time before keep-alive timeout (seconds)
-		int							_timeout_rw;			// Length of time before rw timeout (seconds)
+		bool							_autoindex;				// indicates global autoindex setting (true = on, false = off)
+		std::vector<std::string>		_charset;				// charset(s) that can be handled
+		std::map<int, std::string> 		_error_pages;			// Map of error pages to generate
+ 		std::vector<std::string>		_index;					// ordered list of possible index filenames - first one that works is returned
+		long long						_max_body;				// Max acceptable body size in bytes
+		int								_max_connections; 		// Max connections to all servers
+		long long						_max_header_size;		// Max acceptable header size in bytes
+ 		std::vector<std::string>		_method;				// list of method
+		std::string	 					_root_dir;				// Root directory at global level
+		std::vector<CServer>			_servers;				// Vector of servers
+		int								_timeout_ka;			// Length of time before keep-alive timeout (seconds)
+		int								_timeout_rw;			// Length of time before rw timeout (seconds)
 
-		bool						_autoindex_set;
-		bool						_charset_set;
-		bool						_error_pages_set;
-		bool						_index_set;
-		bool						_max_body_set;
-		bool						_max_connections_set;
-		bool						_max_header_set;
-		bool						_methods_set;
-		bool						_root_set;
-		bool						_servers_set;
-		bool						_timeout_ka_set;
-		bool						_timeout_rw_set;
+		bool							_autoindex_set;
+		bool							_charset_set;
+		bool							_error_page_set;
+		bool							_index_set;
+		bool							_max_body_set;
+		bool							_max_connections_set;
+		bool							_max_header_set;
+		bool							_method_set;
+		bool							_root_set;
+		bool							_servers_set;
+		bool							_timeout_ka_set;
+		bool							_timeout_rw_set;
 
-									/* PROPAGATE VARIABLES TO LOWER LEVEL (CONFIG -> CSERVER) */
-		void						propagateGlobalToServer();
+		std::map <listen_s, std::vector<CServer*> >	_port_server_map;	// Map of ports to the servers that listen on them, used for routing requests to the correct server based on port
+		int								_port_count;
 		
 	public:
-									// Constructors/Destructor/Copy
-									Config();
-									Config(const std::string& filename);
-									Config(const Config &other);
-									Config operator=(const Config &other);
-									~Config();
+										// Constructors/Destructor/Copy
+										Config();
+										Config(const std::string& filename);
+										Config(const Config &other);
+										Config operator=(const Config &other);
+										~Config();
 
-									/* CHECK IF VARIABLE SET*/
-		bool						isAutoIndexSet(void) const;
-		bool						isCharsetSet(void) const;
-		bool						isErrorPageSet(void) const;
-		bool						isIndexSet(void) const;
-		bool						isMaxBodySet(void) const;
-		bool						isMaxConnectionsSet(void) const;
-		bool						isMaxHeaderSet(void) const;
-		bool						isMethodsSet(void) const;
-		bool						isRootDirSet(void) const;
-		bool						isServerSet(void) const;
-		bool						isTimeoutKASet(void) const;
-		bool						isTimeoutRWSet(void) const;
+										/* CHECK IF VARIABLE SET*/
+		bool							isAutoIndexSet(void) const;
+		bool							isCharsetSet(void) const;
+		bool							isErrorPageSet(void) const;
+		bool							isIndexSet(void) const;
+		bool							isMaxBodySet(void) const;
+		bool							isMaxConnectionsSet(void) const;
+		bool							isMaxHeaderSet(void) const;
+		bool							isMethodSet(void) const;
+		bool							isRootDirSet(void) const;
+		bool							isServerSet(void) const;
+		bool							isTimeoutKASet(void) const;
+		bool							isTimeoutRWSet(void) const;
 
-									/*	GETTERS	*/
-		bool						getAutoIndex(void) const;
-		std::vector<std::string>	getCharsets(void) const;
-		std::vector<errorPage_s>	getErrorPages(void) const;
-		std::vector<std::string>	getIndex(void) const;
-		long long					getMaxBodySize(void) const;
-		int							getMaxConnections(void) const;
-		long long					getMaxHeaderSize(void) const;
-		std::vector<std::string>	getMethods(void) const;
-		std::string					getRootDir(void) const;
-		std::vector<CServer>		getServers(void) const;
-		int							getTimeoutKA(void) const;
-		int							getTimeoutRW(void) const;
+										/*	GETTERS	*/
+		bool							getAutoIndex(void) const;
+		std::vector<std::string>		getCharset(void) const;
+		std::map<int, std::string>		getErrorPages(void) const;
+		std::vector<std::string>		getIndex(void) const;
+		long long						getMaxBodySize(void) const;
+		int								getMaxConnections(void) const;
+		long long						getMaxHeaderSize(void) const;
+		std::vector<std::string>		getMethod(void) const;
+		std::string						getRootDir(void) const;
+		std::vector<CServer>			getServers(void) const;
+		int								getTimeoutKA(void) const;
+		int								getTimeoutRW(void) const;
 
-									/*	SETTERS	*/
-		void 						setAutoIndex(bool autoindex);
-		void						setCharsets(std::vector<std::string>& charsets);
-		void						setErrorPages(std::vector<errorPage_s>& error_pages);
-		void						setIndex(const std::vector<std::string>& index);
-		void 						setMaxBodySize(long long max_body_size);
-		void 						setMaxConnections(int max_connections);
-		void 						setMaxHeaderSize(long long max_header_size);
-		void 						setMethods(const std::vector<std::string>& methods);
-		void 						setRootDir(std::string& root);
-		void						setServers(std::vector<CServer>& servers);
-		void						setTimeoutKA(int timeout_in_seconds);
-		void						setTimeoutRW(int timeout_in_seconds);
+		std::map<listen_s, std::vector<CServer*> >	getPortServerMap(void) const;
+		int								getServerPortCount(void) const;
+		const std::vector<CServer*>&	getServersForPort(uint32_t ip, uint16_t port);
 
+										/*	SETTERS	*/
+		void 							setAutoIndex(bool autoindex, bool set_from_config_file);
+		void							setCharset(std::vector<std::string>& charset, bool set_from_config_file);
+		void							setErrorPage(std::map<int, std::string>& error_pages, bool set_from_config_file);
+		void							setIndex(const std::vector<std::string>& index, bool set_from_config_file);
+		void 							setMaxBodySize(long long max_body_size, bool set_from_config_file);
+		void 							setMaxConnections(int max_connections, bool set_from_config_file);
+		void 							setMaxHeaderSize(long long max_header_size, bool set_from_config_file);
+		void 							setMethod(const std::vector<std::string>& method, bool set_from_config_file);
+		void 							setRootDir(std::string& root, bool set_from_config_file);
+		void							setServers(std::vector<CServer>& servers, bool set_from_config_file);
+		void							setTimeoutKA(int timeout_in_seconds, bool set_from_config_file);
+		void							setTimeoutRW(int timeout_in_seconds, bool set_from_config_file);
+
+		void							setServerPortCount(int count);
+		
+										/*	PROPAGATE INHERITABLE VARIABLES	*/
+		void							propagateVarsToChildren();
+		void							propagateServerToLocations(CServer& server);
+
+		// Map of ports to the servers that listen on them, used for routing requests to the correct server based on port
+		bool							mapServersToPorts(void);
+		void							checkForOverlappingPorts(void) const;
+	
+		template <typename T>
+		std::map<int, std::string>		mergeErrorPage(T&, std::map<int, std::string> error_pages);
+
+		CServer*						findBestServerMatch(const listenInstance_s& li, const std::string& host, uint32_t dest_ip, uint16_t dest_port) const;
 };
 
-std::ostream&	operator<<(std::ostream& os, const Config& config);
-std::ostream&	operator<<(std::ostream&, const std::vector<errorPage_s>& error_pages);
-std::ostream&	operator<<(std::ostream& os, const CLocation& location);
-std::ostream&	operator<<(std::ostream& os, const std::vector<CLocation>& locations);
-std::ostream&	operator<<(std::ostream& os, const listen_s& port_info);
-std::ostream&	operator<<(std::ostream& os, const std::vector<CServer>& servers);
-std::ostream&	operator<<(std::ostream& os, const CServer& server);
+bool operator<(const listen_s& a, const listen_s& b);
 
-template<typename T>
-std::ostream&	operator<<(std::ostream& os, const std::vector<T> vec);
+std::ostream&	operator<<(std::ostream& os, const Config& config);
+std::ostream&	operator<<(std::ostream& os, const std::vector<CServer>& servers);
+std::ostream&	operator<<(std::ostream& os, const std::vector<CLocation>& locations);
+
+std::ostream&	operator<<(std::ostream& os, const CServer& server);
+std::ostream&	operator<<(std::ostream& os, const CLocation& location);
+
+std::ostream&	operator<<(std::ostream& os, const std::map<std::string, std::string>& cgi_map);
+std::ostream&	operator<<(std::ostream& os, const std::map<int, std::string>& error_pages);
+std::ostream&	operator<<(std::ostream& os, const listen_s& port_info);
+std::ostream&	operator<<(std::ostream& os, const tryFiles_s& try_files);
+std::ostream&	operator<<(std::ostream& os, const std::map <listen_s, std::vector<CServer*> >& port_server_map);

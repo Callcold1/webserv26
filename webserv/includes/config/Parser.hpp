@@ -23,9 +23,16 @@ struct node_t {
 	std::string				    type;
 	std::vector<std::string>	args;
 	std::vector<node_t*>	    children;
+	std::string					line_num;
 
 	node_t(){}
-	node_t(std::string s, std::vector<std::string> a, std::vector<node_t*> c) : type(s), args(a), children(c){}
+	node_t(std::string s, std::vector<std::string> a, std::vector<node_t*> c, std::string l_num) : type(s), args(a), children(c), line_num(l_num){}
+
+	~node_t() {
+        for (size_t i = 0; i < children.size(); i++) {
+            delete children[i];
+        }
+    }
 };
 
 class Parser {
@@ -44,6 +51,6 @@ public:
 	bool            check(TokenType_e type, const std::string& value = "") const;
 
 protected:
-	std::vector<tokeniser_s>   _tokens;
-	size_t                 _pos;
+	std::vector<tokeniser_s>	_tokens;
+	size_t                 		_pos;
 };

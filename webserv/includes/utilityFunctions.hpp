@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/11 16:04:15 by kmooney           #+#    #+#             */
-/*   Updated: 2026/02/19 13:28:37 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/03/05 14:07:13 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,10 +54,6 @@ struct StaticRange
 	}
 };
 
-/* CONVERT TO STRING */
-template <typename T>
-std::string toString(const T val);
-
 /* STRING CASE CONVERSION */
 std::string							to_lower(std::string str);
 std::string							to_upper(std::string str);
@@ -98,6 +94,7 @@ void								getFileInfo(std::string& path, fileInfo_s& fileinfo);
 void								appendPathToRoot(fileInfo_s* target, std::string& path, std::string& root_dir);
 std::pair<std::string, std::string>	pathSplit(std::string& path);
 std::vector<std::string> 			split_path(std::istringstream &iss);
+std::string rebuild_path(std::vector<std::string>::iterator begin, std::vector<std::string>::iterator end);
 std::string 						rebuild_path(std::vector<std::string> segments);
 void 								remove_dot_segments(std::string &str);
 
@@ -150,8 +147,9 @@ void                                printStrVecStrMap(const std::map<std::string
 const std::set<std::string>& 		getHeaderTransferEncodings();
 
 /* 	VECTOR OPERATIONS */
-bool		isOnlyArg(std::vector<std::string>& args);
-std::string	createArgsString(std::vector<std::string> args);
+bool								isOnlyArg(std::vector<std::string>& args);
+std::string							createArgsString(std::vector<std::string> args);
+std::string							createArgsString(std::vector<std::string> args, std::string delimiter, bool last);
 
 template <typename T>
 bool	convertToType(T& target, const std::string& str){
@@ -170,3 +168,27 @@ bool	convertToType(T& target, const std::string& str){
 void	printVisible(const std::string& s);
 void	resolveAddress(const std::string& ip_str, const std::string& port_str, uint32_t& ip, uint16_t& port);
 void	splitPortInfo(const std::string& port_info, uint32_t& ip, uint16_t& port);
+
+/*
+>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<
+>>>>>>		CONVERSION TO STRING	<<<<<<
+>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<
+*/
+
+template <typename T>
+std::string toString(const T val)
+{
+	std::stringstream stream;
+	stream << val;
+	return stream.str();
+}
+
+template <typename T>
+std::string	printstream(T& src){
+
+	std::ostringstream os;
+
+	os << src << std::endl;
+	std::string str = os.str();
+	return str;
+}

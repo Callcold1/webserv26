@@ -1,56 +1,68 @@
 #pragma once
 
 #include <iostream>
+#include <iomanip>
 #include <string>
 #include <ctime>
 
 #include "Config.hpp"
-//#include "Request.hpp"
+#include "Log.hpp"
+#include "RequestTypes.hpp"
+#include "Request.hpp"
+#include "RequestValidator.hpp"
+#include "RequestParser.hpp"
+#include "Response.hpp"
 
-enum State
-{
+// Could keep this simple (READ, WRITE, ERROR)
+// Alternatively, get very granular?
+enum cState {
 	CONNECTED,
-	READING_H,
-	READING_B,
-	PROCESSING,
-	WRITING
+	READ,
+	WRITE,
+	ERROR,
+	CLOSE,
 };
-
-// struct Request
-// {
-// 	std::string type = "";
-//     std::string	raw_headers = "";
-//     size_t		content_length = 0;
-//     bool		chunked = false;
-//     std::string content_type = "";
-// 	std::string body = "";
-// };
 
 class Client
 {
 public:
-	Client(int new_fd);
+
+	Client(Config* config);
+	Client(Config* config, int new_fd);
+	Client(listenInstance_s* listen_instance, int new_fd);
 	Client(const Client &other);
 	Client &operator=(const Client &other);
+
 	~Client();
 
-	void 		change_state(enum State state);
+	void 		change_state(enum cState state);
 	void 		append_read(char *buffer, size_t len);
 	void 		append_write(std::string str);
 	std::string get_msg();
 	void 		clear_out_buff();
 	
 	bool 		has_output;
-	// logic for sending and receiving etc
-
-private:
+	//Response	response;
 	
-	int				fd;
-	std::string		in_buff;
-	//Request		request;
-	std::string		out_buff;
-	enum State		state;
-	time_t			last_active;
-
-	CServer			_matched_server;
+	bool		handleClientRead(const char *buffer, size_t len);
+	//CServer*	findBestServerMatch(const std::string& host) const;
+	
+	private:
+		
+		int					fd;
+		char				in_buff[1000];
+		Request				request;
+		Response*			response;
+		std::string			out_buff;
+		enum cState			_state;
+		time_t				last_active;
+		
+		Config*				_config;
+		listenInstance_s*	_listen_instance;
+		CServer*			_matched_server;
+		CLocation*			_matched_location;
+		enum eParse			_p_state;
+		enum eReqState		_r_state;
+		bool				_keep_alive;		//update to true if header => Connection: keep-alive
+		size_t				_read_cycles;		// Not sure if we need this, but used to allocate memory for a new request. Will also be required if we are queuing requests?
 };

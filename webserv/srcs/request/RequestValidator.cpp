@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/30 11:26:19 by kmooney           #+#    #+#             */
-/*   Updated: 2026/02/23 12:45:41 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/03/05 10:54:09 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,31 +59,50 @@ void	RequestValidator::validateReqLine(){
 }
 
 
-bool	RequestValidator::serverSupportsMethod(const str_t& method) {
-	const std::vector<str_t> valid_methods = _req->_config->getAllowedMethods();
-	std::vector<str_t>::const_iterator it = valid_methods.begin();
+bool	RequestValidator::locationSupportsMethod(const str_t& method) {
+
+	std::vector<std::string> location_method = _location.getMethod();
+	size_t size = _location.getMethod().size();
 	
-	for (*it; it != valid_methods.end(); it++) {
-		if (method == *it)
+	for (size_t i = 0; i < size; i++){
+		if (method.compare(location_method[i]))
 			return true;
 	}
 	return false;
 }
 
-void	RequestValidator::setRoute(){
-	_route = _config->getRouteForTarget(_req->_uri.path);
+bool	RequestValidator::isValidMethod(const std::string& str){
+	if (str.compare("GET") == 0 ||
+		str.compare("POST") == 0 ||
+		str.compare("PUT") == 0 ||
+		str.compare("DELETE") == 0 ||
+		str.compare("HEAD") == 0 ||
+		str.compare("OPTIONS") == 0
+	)
+		return true;
+	else
+		return false;
 }
 
+void	RequestValidator::setLocation(CLocation& location){
+	//_location = _server->getLocationForTarget(_req->_uri.path);
+	_location = location; // temporary - really need to use CServer object to find location - this should happen in the client class
+}
+
+/* 
+	METHOD VALIDATION : CHECK METHOD IS SUPPORTED BY SERVER/LOCATION (CHECKEDWHEN REQUEST IS NOT IN VREQLINE STATE), 
+						CHECK METHOD IS UPPERCASE
+						CHECK METHOD IS VALID
+*/
 bool	RequestValidator::validateMethod(){
 
-	setRoute();
-	if (serverSupportsMethod(_req->_method)) {
-		if (_route && !_route->allowsMethod(_req->_method))
-			return _req->setState(P_ERROR, V_REQLINE, "Method Not Permitted", 501);
+	if (_req->_r_state != V_REQLINE) {
+		if (!locationSupportsMethod(_req->_method))
+			return _req->setState(P_ERROR, _req->_r_state, "Method Not Permitted", 501);
+		else if (locationSupportsMethod(to_upper(_req->_method)))
+			return _req->setState(P_ERROR, V_REQLINE, "Method must be uppercase", 400);
 	}
-	else if (serverSupportsMethod(to_upper(_req->_method)))
-	 	return _req->setState(P_ERROR, V_REQLINE, "Method must be uppercase", 400);
-	else
+	else if (!isValidMethod(_req->_method))
 		return _req->setState(P_ERROR, V_REQLINE, "Method Not Supported", 501);
 	return true;
 }
@@ -104,10 +123,10 @@ bool	RequestValidator::validateVersion()
 		if (_req->_version.compare(str_t("HTTP/0.9")) == 0 ||
 			_req->_version.compare(str_t("HTTP/2.0")) == 0 ||
 			_req->_version.compare(str_t("HTTP/3.0")) == 0) {
-			return _req->setState(P_ERROR, V_REQLINE, "Unsupported Version", 505);
+			return _req->setState(P_ERROR, V_REQLINE, "Unsupported HTTP Version", 505);
 		}
 		else
-			return _req->setState(P_ERROR, V_REQLINE, "Unsupported Version", 400);
+			return _req->setState(P_ERROR, V_REQLINE, "Unsupported HTTP Version", 400);
 	}
 }
 
@@ -321,6 +340,8 @@ void	RequestValidator::validateHeaders( void ){
 	//headerDefinitions();
 //	validateAllHeaders(_req->_headers); // USE IF STATEMENT TO RETURN IF NOT TRUE
 	// FURTHER VALIDATION AND SYNTAX CHECKS
+	_req->matchServerToHostHeader();
+	_req->matchLocationToURIPath();
 	if (_req->_hasBody)
 		_req->setRstate(P_BODY);
 	else {
@@ -370,12 +391,14 @@ bool	RequestValidator::validateContentType(){ // CHECK SERVER SUPPORTS TYPE
 	// if (count == 0 && _req->_method == "POST" && (_req->_hasBody)) // - ASK MINA FOR OPINION
 	// 	return _req->setState(P_ERROR, V_HEADERS, "Missing 'Content-Type' header (POST)", 400);
 	// else if (count == 0)
+
 	if (count == 0)
 		return true;
 	else if ( count > 1)
 		return _req->setState(P_ERROR, V_HEADERS, "Multiple 'Content-Type' received", 400);
 	
 	fieldMap_t::iterator										header 			= _req->_headers.find("content-type");
+	// Need to iterate over vector
 	const std::string& 											val 			= header->second[0]->val;
 	const std::vector< std::pair<std::string, std::string> >&	options 		= header->second[0]->params;
 	//int 														options_size 	= options.size();
@@ -385,47 +408,69 @@ bool	RequestValidator::validateContentType(){ // CHECK SERVER SUPPORTS TYPE
 		return _req->setState(P_ERROR, V_HEADERS, "Content-Type not supported", 415);
 
 	if (val.find("multipart/") != std::string::npos)
-		return validateMultiPart(val, options);
+		return validateMultiPartHeader(val, options);
 	if (val.find("charset") != std::string::npos)
 		return validateCharset(options);
-	//return validateCharset(val, options);
 	return true;
 }
 
 bool	temporaryIsValidContentType(const std::string& name){ // THESE ARE TEST VALUES TO BE REPLACED WITH SERVER CHECK
+	
 	static std::vector<std::string> validTypes;
-	validTypes.push_back("text/html");
-	validTypes.push_back("text/plain");
-	validTypes.push_back("application/json");
-	validTypes.push_back("multipart/form-data");
-	validTypes.push_back("multipart/related");
-
+	
+	if (validTypes.empty()){
+		validTypes.push_back("text/html");
+		validTypes.push_back("text/plain");
+		validTypes.push_back("application/json");
+		validTypes.push_back("multipart/form-data");
+		validTypes.push_back("multipart/related");
+		validTypes.push_back("multipart/mixed");
+	}
 	if (std::find(validTypes.begin(), validTypes.end(), name) == validTypes.end())
 		return false;
 	return true;
 }
 
-bool	temporaryIsValidCharset(const std::string& name){ // THESE ARE TEST VALUES TO BE REPLACED WITH SERVER CHECK
-	static std::vector<std::string> validTypes;
-	validTypes.push_back("utf-8"); // STANDARD CHARSET - PRETTY UBIQUITOUS
-	validTypes.push_back("ISO-8859-1"); // SINGLE CHAR LATIN
+	// 1) multipart header will be parsed first 
+	// 2) use this to populate boundary in MultipartMessage struct,			 
+	// 2) then use this boundary to parse the body into parts.
+	// 3) Each part will be stored as a MultipartPart struct, which contains the content type, disposition, filename (if applicable), and the content itself as a vector of chars.
 
-	if (std::find(validTypes.begin(), validTypes.end(), name) == validTypes.end())
-		return false;
-	return true;
-}
+/* 
+enum eMultiPartType { MULTI_NONE, MULTI_RELATED, MULTI_FORM_DATA, MULTI_MIXED };
 
-bool	RequestValidator::validateMultiPart(const std::string& val, const std::vector< std::pair<std::string, std::string> >& options){
+struct MultipartMessage; // forward declaration
+
+struct MultipartPart {
+	std::string contentType;
+	std::string disposition;
+	std::string filename;
+	bool isFile;
+	std::string tempFilePath;
+	std::vector<char> content;
+	eMultiPartType type;
+	MultipartMessage* nested;
+};
+
+struct MultipartMessage {
+	std::vector<MultipartPart> parts;
+	std::string boundary;
+};
+ */
+
+bool	RequestValidator::validateMultiPartHeader(const std::string& val, const std::vector< std::pair<std::string, std::string> >& options){
 	size_t		size = options.size();
 	std::string	boundary;
 	std::string	type;
 
-	bool is_related;
+	while (true){
+		if (val == "multipart/related" || val == "multipart/form-data" || val == "multipart/mixed")
+			break;
+		else
+			return _req->setState(P_ERROR, V_HEADERS, "Unsupported multipart type", 415);
+	}
 	bool has_boundary;
 	bool has_type;
-
-	if (val == "multipart/related")
-		is_related = true;
 
 	if (size != 0) {
 
@@ -445,17 +490,18 @@ bool	RequestValidator::validateMultiPart(const std::string& val, const std::vect
 	}
 	if (!has_boundary)
 		return _req->setState(P_ERROR, V_HEADERS, "Missing multiPart boundary", 400);
-	if (has_type && !is_related)
-		return _req->setState(P_ERROR, V_HEADERS, "Invalid option in Content-Type header (type) ", 400);
-	if (!is_related && has_type)
-		return _req->setState(P_ERROR, V_HEADERS, "Missing default type", 400);
 	if (!temporaryIsValidContentType(type))
-		return _req->setState(P_ERROR, V_HEADERS, "Content-Type not supported", 415);
+		return _req->setState(P_ERROR, V_HEADERS, "Content-Type not supported (Multipart type)", 415);
 
 	_req->setBoundaryString("--" + boundary);
 	if (has_type)
 		_req->setDefaultMultiPartType(type);
 	_req->_isMultiPart = true;
+	return true;
+}
+
+bool	RequestValidator::validateMultiPartBody(const MultipartMessage& multipart){
+	(void)multipart; // TEMPORARY - NEED TO IMPLEMENT
 	return true;
 }
 

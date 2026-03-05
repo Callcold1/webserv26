@@ -32,7 +32,9 @@ const tokeniser_s& Parser::consume() {
 }
 
 bool Parser::check(TokenType_e type, const std::string& value) const {
+
 	const tokeniser_s& t = peek();
+
 	if (t.type != type)
 		return false;
 	if (!value.empty() && t.value != value)
@@ -41,9 +43,10 @@ bool Parser::check(TokenType_e type, const std::string& value) const {
 }
 
 void Parser::expect(TokenType_e type, const std::string& value) {
+
 	const tokeniser_s& t = consume();
+
 	if (t.type != type || (!value.empty() && t.value != value)) {
-		throw std::runtime_error("Parser error: unexpected token '" + t.value + "'"
-		);
+		throw std::runtime_error("Parser error: unexpected token '" + t.value + "'");
 	}
 }

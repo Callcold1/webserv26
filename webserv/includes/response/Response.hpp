@@ -24,7 +24,7 @@ public:
 	Response &operator=(const Response &other);
 	~Response();
 
-	virtual int	generate() = 0;
+	virtual int		generate() = 0;
 	std::string		status_text();
 	std::string		serialize();
 

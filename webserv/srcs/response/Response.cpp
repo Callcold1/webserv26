@@ -37,7 +37,7 @@ std::string Response::serialize()
 	s << HTTP_VERSION << " " << _status << " " << status_text() << "/r/n";
 
 	for (HeaderMap_t::iterator it = _headers.begin(); \
-			it != _headers.end(); ++it)
+			it != _headers.end(); it++)
 	{
 		s << it->first << ": " << it->second << "/r/n";
 	}

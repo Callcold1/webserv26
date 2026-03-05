@@ -1,3 +1,4 @@
 {
-	"explorer.sortOrder": "mixed"
+	"explorer.sortOrder": "type",
+	"explorer.sortOrderLexicographicOptions": "upper"
 }
