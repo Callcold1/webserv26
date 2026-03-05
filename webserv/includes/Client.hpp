@@ -29,7 +29,7 @@ public:
 
 	Client(Config* config);
 	Client(Config* config, int new_fd);
-	Client(const listenInstance_s& listen_instance, int new_fd);
+	Client(listenInstance_s* listen_instance, int new_fd);
 	Client(const Client &other);
 	Client &operator=(const Client &other);
 
@@ -45,20 +45,22 @@ public:
 	//Response	response;
 	
 	bool		handleClientRead(const char *buffer, size_t len);
-	CServer*	findBestServerMatch(const std::string& host) const;
+	//CServer*	findBestServerMatch(const std::string& host) const;
 	
 	private:
 		
 		int					fd;
 		char				in_buff[1000];
 		Request				request;
+		Response*			response;
 		std::string			out_buff;
 		enum cState			_state;
 		time_t				last_active;
 		
 		Config*				_config;
-		listenInstance_s	_listen_instance;
-		CServer				_matched_server;
+		listenInstance_s*	_listen_instance;
+		CServer*			_matched_server;
+		CLocation*			_matched_location;
 		enum eParse			_p_state;
 		enum eReqState		_r_state;
 		bool				_keep_alive;		//update to true if header => Connection: keep-alive

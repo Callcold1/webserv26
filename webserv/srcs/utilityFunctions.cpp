@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/16 15:33:48 by kmooney           #+#    #+#             */
-/*   Updated: 2026/03/02 12:08:45 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/03/05 14:06:22 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -470,11 +470,22 @@ std::string rebuild_path(std::vector<std::string> segments)
 	std::string path;
 
 	if (segments[0] == "/")
-		for (size_t i = 1; i < segments.size(); i++)
-		{
+		for (size_t i = 1; i < segments.size(); i++){
 			path + segments[i];
 		}
 	return path;
+}
+
+std::string rebuild_path(std::vector<std::string>::iterator begin, std::vector<std::string>::iterator end)
+{
+	std::string result;
+
+	for (; begin != end; begin++){
+		result += "/";
+		result += *begin;
+	}
+
+	return result;
 }
 
 void remove_dot_segments(std::string &str)
@@ -803,6 +814,19 @@ std::string	createArgsString(std::vector<std::string> args){
 	return str;
 }
 
+std::string	createArgsString(std::vector<std::string> args, std::string delimiter, bool last){
+	size_t size = args.size();
+
+	std::string str;
+
+	for (size_t i = 0; i < size; i++){
+		str.append(args[i]);
+		if (i < size - 1 || (i == size -1 && last))
+			str.append(delimiter);
+	}
+	return str;
+}
+
 /*
 >>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<
 >>>>>>		IP ADDRESS			<<<<<<
@@ -811,24 +835,24 @@ std::string	createArgsString(std::vector<std::string> args){
 
 void printVisible(const std::string& s)
 {
-    for (size_t i = 0; i < s.size(); ++i)
-    {
-        unsigned char c = s[i];
+	for (size_t i = 0; i < s.size(); i++)
+	{
+		unsigned char c = s[i];
 
-        if (c == ' ')
-            std::cout << "[SPACE]";
-        else if (c == '\n')
-            std::cout << "[\\n]";
-        else if (c == '\r')
-            std::cout << "[\\r]";
-        else if (c == '\t')
-            std::cout << "[\\t]";
-        else if (std::isprint(c))
-            std::cout << c;
-        else
-            std::cout << "[0x" << std::hex << (int)c << std::dec << "]";
-    }
-    std::cout << std::endl;
+		if (c == ' ')
+			std::cout << "[SPACE]";
+		else if (c == '\n')
+			std::cout << "[\\n]";
+		else if (c == '\r')
+			std::cout << "[\\r]";
+		else if (c == '\t')
+			std::cout << "[\\t]";
+		else if (std::isprint(c))
+			std::cout << c;
+		else
+			std::cout << "[0x" << std::hex << (int)c << std::dec << "]";
+	}
+	std::cout << std::endl;
 }
 
 void	resolveAddress(const std::string& ip_str, const std::string& port_str, uint32_t& ip, uint16_t& port) {
@@ -838,7 +862,7 @@ void	resolveAddress(const std::string& ip_str, const std::string& port_str, uint
 	std::memset(&hints, 0, sizeof(hints));
 	hints.ai_family = AF_INET;
 	hints.ai_socktype = SOCK_STREAM;
-	
+
 	if (ip_str.empty())
 		hints.ai_flags = AI_PASSIVE;
 
@@ -868,7 +892,7 @@ void splitPortInfo(const std::string& port_info, uint32_t& ip, uint16_t& port)
 	if (pos != std::string::npos){
 		ip_str = port_info.substr(0, pos);
 		port_str = port_info.substr(pos + 1);
-	} 
+	}
 	else {
 		ip_str = "";
 		port_str = port_info;

@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/30 11:26:19 by kmooney           #+#    #+#             */
-/*   Updated: 2026/03/03 10:12:10 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/03/05 10:54:09 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -340,6 +340,8 @@ void	RequestValidator::validateHeaders( void ){
 	//headerDefinitions();
 //	validateAllHeaders(_req->_headers); // USE IF STATEMENT TO RETURN IF NOT TRUE
 	// FURTHER VALIDATION AND SYNTAX CHECKS
+	_req->matchServerToHostHeader();
+	_req->matchLocationToURIPath();
 	if (_req->_hasBody)
 		_req->setRstate(P_BODY);
 	else {

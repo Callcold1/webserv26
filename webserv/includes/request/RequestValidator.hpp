@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/23 01:37:52 by kmooney           #+#    #+#             */
-/*   Updated: 2026/03/03 10:11:33 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/03/05 14:34:47 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -129,6 +129,7 @@ class RequestValidator {
 		bool				percentDecode( str_t& encoded);
 
 		bool				testHeaderPresent(std::string& name);
-};
+
+	};
 
 bool	temporaryIsValidContentType(const std::string& name);

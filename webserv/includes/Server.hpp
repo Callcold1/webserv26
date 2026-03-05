@@ -24,11 +24,8 @@ class CServer;
 class Server {
 
 	public:
-		void	init();
-		void	run();
-		void	shutdown();
 
-		/* Constructors and destructor */
+	/* Constructors and destructor */
 		Server(Config &config);
 		//Server();
 		//Server(const Server& other);
@@ -55,7 +52,7 @@ class Server {
 		
 		void	handleAccept(int index);
 		void	setNonBlocking(int fd);
-		void 	addClient(int client_fd);
+		void 	addClient(int client_fd, int index);
 		
 		void	handleClientRead(int fd);
 		void	handleClientWrite(int fd);

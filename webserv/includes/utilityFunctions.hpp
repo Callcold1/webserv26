@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/11 16:04:15 by kmooney           #+#    #+#             */
-/*   Updated: 2026/03/03 13:26:12 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/03/05 14:07:13 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -94,6 +94,7 @@ void								getFileInfo(std::string& path, fileInfo_s& fileinfo);
 void								appendPathToRoot(fileInfo_s* target, std::string& path, std::string& root_dir);
 std::pair<std::string, std::string>	pathSplit(std::string& path);
 std::vector<std::string> 			split_path(std::istringstream &iss);
+std::string rebuild_path(std::vector<std::string>::iterator begin, std::vector<std::string>::iterator end);
 std::string 						rebuild_path(std::vector<std::string> segments);
 void 								remove_dot_segments(std::string &str);
 
@@ -146,8 +147,9 @@ void                                printStrVecStrMap(const std::map<std::string
 const std::set<std::string>& 		getHeaderTransferEncodings();
 
 /* 	VECTOR OPERATIONS */
-bool		isOnlyArg(std::vector<std::string>& args);
-std::string	createArgsString(std::vector<std::string> args);
+bool								isOnlyArg(std::vector<std::string>& args);
+std::string							createArgsString(std::vector<std::string> args);
+std::string							createArgsString(std::vector<std::string> args, std::string delimiter, bool last);
 
 template <typename T>
 bool	convertToType(T& target, const std::string& str){

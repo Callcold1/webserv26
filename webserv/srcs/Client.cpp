@@ -21,7 +21,7 @@ Client::Client(Config* config, int new_fd) : _config(config){
 	request = Request(config);
 }
 
-Client::Client(const listenInstance_s& listen_instance, int new_fd) : _listen_instance(listen_instance) {
+Client::Client(listenInstance_s* listen_instance, int new_fd) : _listen_instance(listen_instance) {
 	fd = new_fd;
 	out_buff = "";
 	_state = CONNECTED;
@@ -120,7 +120,7 @@ bool	Client::handleClientRead(const char *buffer, size_t len){
 
 CServer*	Client::findBestServerMatch(const std::string& host) const{
 
-	std::vector<CServer*> servers = _listen_instance.configs;
+	std::vector<CServer*> servers = _listen_instance->server_configs;
 	size_t size = servers.size();
 
 	if (size == 0)
@@ -140,7 +140,7 @@ CServer*	Client::findBestServerMatch(const std::string& host) const{
 					return server;
 			}
 		}
-		return _listen_instance.default_server;
+		return _listen_instance->default_server;
 	}
 }
 

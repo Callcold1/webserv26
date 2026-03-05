@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/14 09:52:13 by kmooney           #+#    #+#             */
-/*   Updated: 2026/03/02 14:24:02 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/03/05 12:41:17 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -315,6 +315,29 @@ std::map<int, std::string>	Config::mergeErrorPage(T& child, std::map<int, std::s
 	return _error_pages;
 }
 
+
+/* 
+	This function populates 'Config::_port_server_map'
+	
+	The map has key : listen_s (i.e. ip:port)
+				val : vector of CServer which have listen directive set to the key (ip:port)
+	
+	The function :
+		- iterates over the servers vector
+			- for each server
+			{
+				iterate over the vector of listen_s (i.e. ip/port info)
+				{
+					- try to find the listen_s in the _port_server_map
+						- if not found
+							- the listen_s is added to the map as a key).
+							- the CServer is added to the val (i.e. vector of servers matching this port info)
+						- if found
+							- the CServer is added to the val
+							- if new listen_s is default_server and there is an existing default_server, throw an error as there can only be one!
+			}
+							
+*/
 bool	Config::mapServersToPorts(void){
 
 	for (size_t i = 0; i < _servers.size(); i++) {
