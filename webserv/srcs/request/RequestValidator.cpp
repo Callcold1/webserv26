@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/30 11:26:19 by kmooney           #+#    #+#             */
-/*   Updated: 2026/03/03 10:12:10 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/03/05 10:54:09 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -89,6 +89,11 @@ void	RequestValidator::setLocation(CLocation& location){
 	_location = location; // temporary - really need to use CServer object to find location - this should happen in the client class
 }
 
+/* 
+	METHOD VALIDATION : CHECK METHOD IS SUPPORTED BY SERVER/LOCATION (CHECKEDWHEN REQUEST IS NOT IN VREQLINE STATE), 
+						CHECK METHOD IS UPPERCASE
+						CHECK METHOD IS VALID
+*/
 bool	RequestValidator::validateMethod(){
 
 	if (_req->_r_state != V_REQLINE) {
@@ -335,6 +340,8 @@ void	RequestValidator::validateHeaders( void ){
 	//headerDefinitions();
 //	validateAllHeaders(_req->_headers); // USE IF STATEMENT TO RETURN IF NOT TRUE
 	// FURTHER VALIDATION AND SYNTAX CHECKS
+	_req->matchServerToHostHeader();
+	_req->matchLocationToURIPath();
 	if (_req->_hasBody)
 		_req->setRstate(P_BODY);
 	else {
@@ -401,10 +408,9 @@ bool	RequestValidator::validateContentType(){ // CHECK SERVER SUPPORTS TYPE
 		return _req->setState(P_ERROR, V_HEADERS, "Content-Type not supported", 415);
 
 	if (val.find("multipart/") != std::string::npos)
-		return validateMultiPart(val, options);
+		return validateMultiPartHeader(val, options);
 	if (val.find("charset") != std::string::npos)
 		return validateCharset(options);
-	//return validateCharset(val, options);
 	return true;
 }
 
@@ -425,25 +431,46 @@ bool	temporaryIsValidContentType(const std::string& name){ // THESE ARE TEST VAL
 	return true;
 }
 
-bool	RequestValidator::validateMultiPart(const std::string& val, const std::vector< std::pair<std::string, std::string> >& options){
+	// 1) multipart header will be parsed first 
+	// 2) use this to populate boundary in MultipartMessage struct,			 
+	// 2) then use this boundary to parse the body into parts.
+	// 3) Each part will be stored as a MultipartPart struct, which contains the content type, disposition, filename (if applicable), and the content itself as a vector of chars.
+
+/* 
+enum eMultiPartType { MULTI_NONE, MULTI_RELATED, MULTI_FORM_DATA, MULTI_MIXED };
+
+struct MultipartMessage; // forward declaration
+
+struct MultipartPart {
+	std::string contentType;
+	std::string disposition;
+	std::string filename;
+	bool isFile;
+	std::string tempFilePath;
+	std::vector<char> content;
+	eMultiPartType type;
+	MultipartMessage* nested;
+};
+
+struct MultipartMessage {
+	std::vector<MultipartPart> parts;
+	std::string boundary;
+};
+ */
+
+bool	RequestValidator::validateMultiPartHeader(const std::string& val, const std::vector< std::pair<std::string, std::string> >& options){
 	size_t		size = options.size();
 	std::string	boundary;
 	std::string	type;
 
-	bool is_related;
-	bool is_form_data;
-	bool is_mixed;
+	while (true){
+		if (val == "multipart/related" || val == "multipart/form-data" || val == "multipart/mixed")
+			break;
+		else
+			return _req->setState(P_ERROR, V_HEADERS, "Unsupported multipart type", 415);
+	}
 	bool has_boundary;
 	bool has_type;
-
-	if (val == "multipart/related")
-		is_related = true;
-	else if (val == "multipart/form-data")
-		is_form_data = true;
-	else if (val == "multipart/mixed")
-		is_mixed = true;
-	else
-		return _req->setState(P_ERROR, V_HEADERS, "Unsupported multipart type", 415);
 
 	if (size != 0) {
 
@@ -464,12 +491,17 @@ bool	RequestValidator::validateMultiPart(const std::string& val, const std::vect
 	if (!has_boundary)
 		return _req->setState(P_ERROR, V_HEADERS, "Missing multiPart boundary", 400);
 	if (!temporaryIsValidContentType(type))
-		return _req->setState(P_ERROR, V_HEADERS, "Content-Type not supported", 415);
+		return _req->setState(P_ERROR, V_HEADERS, "Content-Type not supported (Multipart type)", 415);
 
 	_req->setBoundaryString("--" + boundary);
 	if (has_type)
 		_req->setDefaultMultiPartType(type);
 	_req->_isMultiPart = true;
+	return true;
+}
+
+bool	RequestValidator::validateMultiPartBody(const MultipartMessage& multipart){
+	(void)multipart; // TEMPORARY - NEED TO IMPLEMENT
 	return true;
 }
 

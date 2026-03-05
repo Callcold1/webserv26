@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/23 01:37:52 by kmooney           #+#    #+#             */
-/*   Updated: 2026/02/23 12:44:20 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/03/05 14:34:40 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -803,7 +803,7 @@ void	RequestParser::parseBody(token_s& it) {
 			parseMultiPart(it);
 			return;
 		}
-		else{
+		else {
 			parsePlain(it);
 			return;
 		}
@@ -929,10 +929,13 @@ void	RequestParser::parseChunked( token_s& it ){
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 */
 
-	1) multipart header will be parsed first 
-	2) use this to populate boundary in MultipartMessage struct,			 
-	2) then use this boundary to parse the body into parts.
-	3) Each part will be stored as a MultipartPart struct, which contains the content type, disposition, filename (if applicable), and the content itself as a vector of chars.
+	// 1) multipart header will be parsed first 
+	// 2) use this to populate boundary in MultipartMessage struct,			 
+	// 2) then use this boundary to parse the body into parts.
+	// 3) Each part will be stored as a MultipartPart struct, which contains the content type, disposition, filename (if applicable), and the content itself as a vector of chars.
+
+/* 
+ MULTIPART STRUCTS
 
 typedef struct  {
 	std::string			contentType;
@@ -947,12 +950,31 @@ typedef struct {
 	std::vector<MultipartPart>	parts;
 	std::string					boundary;
 } MultipartMessage;
-
+ */
 void	RequestParser::parseMultiPart( token_s& it ){
 
-	if (it.begin == it.end)
-		 return;
-	
+	while (it.begin == it.end){
+		// parse boundary
+		// parse content type hewill require a recursive call ader
+		// parse boundary delimited parts
+			// for each part, parse headers and content
+				// store content in temp file if isFile is true
+		// store each part in _req->_multipart_message.parts
+		// set _req->_multipart_message.boundary
+		// if Content-Disposition header is present, parse filename and disposition type
+			// if filename is present, set isFile to true and store content in temp file
+			// if filename is not present, set isFile to false and store content in memory
+		// if Content-Type header is present, store content type in MultipartPart struct
+			// if not present, set content type to application/octet-stream
+		// if Content-Type is multipart/mixed, need to recursively parse the content of that part as another multipart message using the same parsing logic, but with a different boundary specified in the Content-Type header of that part.
+			// this will require a recursive call to parseMultiPart with the new boundary and content of that part as the input token stream.
+			// need to ensure that the recursive parsing correctly handles the boundaries and does not interfere with the parsing of the outer multipart message.
+		// once final boundary is reached, set state to P_DONE
+		// if at any point parsing fails, set state to P_ERROR with appropriate message and code
+		// NEED TO CONSIDER CASES WHERE BOUNDARY MAY BE SPLIT ACROSS CHUNKS, OR WHERE HEADERS MAY BE SPLIT ACROSS CHUNKS, ETC. MAY NEED TO IMPLEMENT A BUFFERING MECHANISM TO HANDLE INCOMPLETE DATA.
+		// 		
+		return;
+	}
 // 	std::string		data;
 
 // 	while (it.begin != it.end) {

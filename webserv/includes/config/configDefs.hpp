@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/18 17:37:44 by kmooney           #+#    #+#             */
-/*   Updated: 2026/02/24 14:41:05 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/03/05 12:32:38 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,8 @@
 #include <map>
 #include <stdint.h>
 #include <vector>
+
+class CServer;
 
 // DEFAULT CONFIGURATION FILE (VALUES ARE ARBITARY JUST NOW)
 #define DEFAULT_CONF 		"../default.conf"	// path to the default configuration file
@@ -67,3 +69,24 @@ enum LocationMatchType_e{
 	NONE
 };
 
+/* 
+	listenInstance_s : struct that is created from Config::_port_server_map (a map of ip:port and vector of CServer objects with a listen directive with that ip:port )
+	
+	The listen_instance_s ties a listen socket (fd) to the ip:port, the server_configs associated with that ip:port and stores the default server
+	 
+	*/
+struct listenInstance_s {
+    int fd;
+    uint16_t port;
+    uint32_t ip;
+    std::vector<CServer*> server_configs;
+    CServer* default_server;
+
+    listenInstance_s(CServer* server_config, int fd_val, const listen_s& listen)
+        : fd(fd_val), port(listen.port), ip(listen.ip), default_server(listen.is_default ? server_config : NULL){
+        
+		server_configs.push_back(server_config);
+    }
+
+    listenInstance_s() : fd(0), port(0), ip(0), default_server(NULL) {}
+};

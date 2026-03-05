@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/23 01:37:52 by kmooney           #+#    #+#             */
-/*   Updated: 2026/03/03 10:11:33 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/03/05 14:34:47 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -103,7 +103,8 @@ class RequestValidator {
 		bool				validateContentEncoding();
 
 		bool				validateContentType();
-		bool				validateMultiPart(const std::string& val, const std::vector< std::pair<std::string, std::string> >& options);
+		bool				validateMultiPartHeader(const std::string& val, const std::vector< std::pair<std::string, std::string> >& options);
+		bool				validateMultiPartBody(const MultipartMessage& multipart);
 		//bool				validateCharset(const std::string& val, const std::vector< std::pair<std::string, std::string> >& options);
 		bool				validateCharset(const std::vector< std::pair<std::string, std::string> >& options);
 		
@@ -111,7 +112,6 @@ class RequestValidator {
 		bool				duplicateValueCheck(const std::vector<field_t*>& values);
 		
 		bool				validateAllHeaders(const fieldMap_t& headers);
-		bool				validate_all_headers(const fieldMap_t& headers);
 		//bool				validate_header(const std::string& name, const std::vector<HeaderField_t*>& fields, const HeaderFlags* meta);
 		void				headerDefinitions();
 	
@@ -129,6 +129,7 @@ class RequestValidator {
 		bool				percentDecode( str_t& encoded);
 
 		bool				testHeaderPresent(std::string& name);
-};
+
+	};
 
 bool	temporaryIsValidContentType(const std::string& name);

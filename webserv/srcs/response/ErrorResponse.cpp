@@ -57,7 +57,7 @@ void ErrorResponse::error_headers()
 	if (_status >= 400 && _status <= 499)
 		_headers["Connection"] = "close";
 	//if (_status == 405)
-	//	_headers["Allow"] = //figure out allowed method
+	//	_headers["Allow"] = createArgsString(request.matched_location.getMethod())
 	if (_status == 429 || _status == 503) //429 = too many requests; 503 service unavailable
 		 _headers["Retry-After"] = "60";
 	_headers["Content-Type"] = "text/html; charset=utf-8";

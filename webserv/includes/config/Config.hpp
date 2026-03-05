@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/14 09:52:22 by kmooney           #+#    #+#             */
-/*   Updated: 2026/02/24 10:29:11 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/03/05 12:41:21 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -127,6 +127,8 @@ class Config {
 	
 		template <typename T>
 		std::map<int, std::string>		mergeErrorPage(T&, std::map<int, std::string> error_pages);
+
+		CServer*						findBestServerMatch(const listenInstance_s& li, const std::string& host, uint32_t dest_ip, uint16_t dest_port) const;
 };
 
 bool operator<(const listen_s& a, const listen_s& b);

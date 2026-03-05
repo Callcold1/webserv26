@@ -17,6 +17,8 @@
 #include "utilityFunctions.hpp"
 #include "RequestTypes.hpp"
 #include "Config.hpp"
+#include "configDefs.hpp"
+#include "Log.hpp"
 
 class RequestParser;
 class RequestValidator;
@@ -26,6 +28,9 @@ class Request {
 	public:
 						Request();
 						Request(Config* config);
+						Request( listenInstance_s* listen_instance );
+						Request(const Request &other);
+						Request& operator=(const Request &other);
 						~Request(void);
 	void	    		clear();
 	
@@ -47,18 +52,26 @@ class Request {
 	void				setBodyEncoding( const std::string& encoding );
 	void				setBoundaryString( const std::string& boundary );
 	void				setDefaultMultiPartType( const std::string& type );
+	void				setHostname( const std::string& hostname );
+
 
 	std::vector<field_t* >		findRequestHeaderValue(const std::string& header_name);
-	
+
+	void				matchServerToHostHeader(void);
+	void				matchLocationToURIPath(void);
+	int					comparePaths(std::string uri_path, std::string location_path, std::string& leftover);
+
 	RequestParser*		_parser;
 	RequestValidator*	_validator;
 	//RequestHandler*		_requestHandler;
-	CServer				_matched_server;
-	Config*			    _config;// really the server block info
+	Config*			    _config;
+	listenInstance_s*	_listen_instance;
+	CLocation*			_matched_location;
+	CServer*			_matched_server;
 	std::deque<char>	_buffer;
 	token_s				_unparsed;
 
-	std::string 		_method, _uri_str, _version, _req_line;
+	std::string 		_method, _uri_str, _version, _req_line, _host_header;
 	uri_t				_uri;
 	fieldMap_t 			_headers;
 	fieldMap_t 			_trailers;
@@ -66,6 +79,7 @@ class Request {
 	//Body				_newBody;
 	std::string 		_boundary;
 	std::string 		_defaultMultiType;
+	MultipartMessage	_multipart;
 
 	void                resetParser();
 	void                resetValidator();

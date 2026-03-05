@@ -23,28 +23,9 @@ class CServer;
 
 class Server {
 
-	struct listenInstance_s {
-	    int fd;
-	    uint16_t port;
-	    uint32_t ip;
-	    std::vector<CServer*> configs;
-	    CServer* default_server;
-
-	    listenInstance_s(CServer* server_config, int fd_val, const listen_s& listen)
-	        : fd(fd_val), port(listen.port), ip(listen.ip), default_server(listen.is_default ? server_config : NULL){
-	        
-			configs.push_back(server_config);
-	    }
-
-	    listenInstance_s() : fd(0), port(0), ip(0), default_server(NULL) {}
-	};
-
 	public:
-		void	init();
-		void	run();
-		void	shutdown();
 
-		/* Constructors and destructor */
+	/* Constructors and destructor */
 		Server(Config &config);
 		//Server();
 		//Server(const Server& other);
@@ -58,10 +39,8 @@ class Server {
 		void 	client_write();
 		void 	update_poll_events();
 
-
 		std::map<int, Client> 			_clients;				// Map of client file descriptors to Client objects, used for managing client connections and their associated data
 		
-
 	private:
 
 		void	setupListeningSockets(Config& config);
@@ -73,7 +52,7 @@ class Server {
 		
 		void	handleAccept(int index);
 		void	setNonBlocking(int fd);
-		void 	addClient(int client_fd);
+		void 	addClient(int client_fd, int index);
 		
 		void	handleClientRead(int fd);
 		void	handleClientWrite(int fd);

@@ -21,27 +21,49 @@ Client::Client(Config* config, int new_fd) : _config(config){
 	request = Request(config);
 }
 
+Client::Client(listenInstance_s* listen_instance, int new_fd) : _listen_instance(listen_instance) {
+	fd = new_fd;
+	out_buff = "";
+	_state = CONNECTED;
+	time(&last_active);
+
+	has_output = false;
+	request = Request(_listen_instance);
+}
+
 Client::Client(const Client &other)
 	:
-	  has_output(other.has_output),
-	  fd(other.fd),
-	  out_buff(other.out_buff),
-	  _state(other._state),
-	  last_active(other.last_active)
+	has_output(other.has_output),
+	fd(other.fd), 
+	request(other.request),
+	out_buff(other.out_buff),
+	_state(other._state),
+	last_active(other.last_active)
 {}
 
 Client&	Client::operator=(const Client& other){
 
 	if (this != &other)
 	{
+		has_output = other.has_output;
 		fd = other.fd;
+		request = other.request;
 		out_buff = other.out_buff;
 		_state = other._state;
 		last_active = other.last_active;
-		has_output = other.has_output;
+		has_output = other.has_output;		
+		_config = other._config;
+		_listen_instance = other._listen_instance;
+		_matched_server = other._matched_server;
+		_p_state = other._p_state;
+		_r_state = other._r_state;
+		_keep_alive = other._keep_alive;
+		_state = other._state;
+		last_active = other.last_active;
 	}
 	return *this;
 }
+
 
 Client::~Client(){}
 
@@ -69,38 +91,57 @@ bool	Client::handleClientRead(const char *buffer, size_t len){
 	if (!buffer)
 		return false;
 
-	// if (!_request_ptr)
-	// 	_request_ptr = new Request;
-
 	_p_state = request.parseRequest(buffer, len);
-	// _p_state = _request_ptr->parseRequest(buffer, len);
-	
 	
 	switch(_p_state){
 		case P_PARSE	: 	{
-								Log::instance().log(Log::INFO, Log::TYPE_REQUEST_PARSING, "Request Parsing : status = P_PARSE " + printstream(request));
+								Log::instance().log(Log::INFO, Log::TYPE_REQUEST_PARSING,
+									"Request Parsing : status = P_PARSE " + printstream(request));
 								_state = READ;
 								return false;
 							}	
 		case P_AWAIT	: 	{
-								Log::instance().log(Log::INFO, Log::TYPE_REQUEST_PARSING, "Request Parsing : status = P_AWAIT " + printstream(request));
+								Log::instance().log(Log::INFO, Log::TYPE_REQUEST_PARSING,
+									"Request Parsing : status = P_AWAIT " + printstream(request));
 								_state = READ;
 								return false; 
 							}		
 		case P_DONE		:	{	
-								Log::instance().log(Log::INFO, Log::TYPE_REQUEST_PARSING, "Request Parsing : status = P_DONE " + printstream(request)); 
+								Log::instance().log(Log::INFO, Log::TYPE_REQUEST_PARSING,
+									"Request Parsing : status = P_DONE " + printstream(request)); 
 								_state = WRITE;
-								//delete _request_ptr;
 								break;
 		}
-		case P_ERROR	: 	{
-								//delete _request_ptr;
-								_state = ERROR;
-								return true;
-							}
+		case P_ERROR	: 	{ _state = ERROR; break;}
 		default	: break;
 	}
 	return true;
+}
+
+CServer*	Client::findBestServerMatch(const std::string& host) const{
+
+	std::vector<CServer*> servers = _listen_instance->server_configs;
+	size_t size = servers.size();
+
+	if (size == 0)
+		return NULL;
+	else if (size == 1)
+		return servers[0];
+	else {
+		for (size_t i = 0; i < size; i++){
+
+			CServer* server = servers[i];
+
+			std::vector<std::string> server_names = server->getServerName();
+			size_t name_size = server_names.size();
+			
+			for (size_t j = 0; j < name_size; j++){
+				if (server_names[j].compare(host) == 0)
+					return server;
+			}
+		}
+		return _listen_instance->default_server;
+	}
 }
 
 /*

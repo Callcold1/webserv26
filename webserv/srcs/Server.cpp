@@ -53,14 +53,14 @@ void	Server::setupListeningSockets(Config& config){
 			if (default_srv)
 				break;
 		}
+		if (!default_srv)
+			default_srv = *servers_on_port.begin();
 		listenInstance_s instance(default_srv, fd, it->first);
 
-		instance.configs = servers_on_port;
+		instance.server_configs = servers_on_port;
 		instance.default_server = default_srv;
 
-		std::ostringstream os;
-		os << it->first;
-		Log::instance().log(Log::INFO, Log::TYPE_ACCESS, "listening socket created : " + os.str());
+		Log::instance().log(Log::INFO, Log::TYPE_ACCESS, "listening socket created : " + printstream(it->first));
 		_listen_sockets.push_back(instance);
 	}
 }
@@ -107,13 +107,13 @@ void	Server::addListeningSocketsToPoll(void){
 		pfd.revents = 0;
 
 		int flags = fcntl(pfd.fd, F_GETFL, 0);
-		
+
 		if (flags < 0)
 			throw std::runtime_error("fcntl(F_GETFL) failed!");
-		
+
 		if (fcntl(pfd.fd, F_SETFL, flags | O_NONBLOCK) == -1)
 			throw std::runtime_error("fcntl(F_SETFL) failed!");
-		
+
 		_sockets.push_back(pfd);
 	}
 }
@@ -145,7 +145,7 @@ void	Server::handleEvents(void){
 		if (_sockets[i].revents == 0)
 			continue;
 
-		if (i < _port_count)						
+		if (i < _port_count)
 			handleAccept(i);
 
 		else {
@@ -175,10 +175,6 @@ void	Server::handleAccept(int index){
 		int client_fd = accept(_sockets[index].fd, (sockaddr*)&addr, &len);
 
 		if (client_fd < 0){
-
-			if (errno == EAGAIN || errno == EWOULDBLOCK)
-				break;
-
 			Log::instance().log(Log::ERROR, Log::TYPE_ERROR, "accept() failed: " + std::string(strerror(errno)));
 			break;
 		}
@@ -190,7 +186,8 @@ void	Server::handleAccept(int index){
 			close(client_fd);
 			continue;
 		}
-		addClient(client_fd);
+		//addClient(client_fd);
+		addClient(client_fd, index);
 
 		Log::instance().log(Log::INFO, Log::TYPE_ACCESS, "New client connected: fd=" + toString(client_fd));
 	}
@@ -199,18 +196,19 @@ void	Server::handleAccept(int index){
 void	Server::setNonBlocking(int fd){
 
 	int flags = fcntl(fd, F_GETFL, 0);
-	
+
 	if (flags < 0)
 		throw std::runtime_error("fcntl(F_GETFL) failed!");
-	
+
 	if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) == -1)
 		throw std::runtime_error("fcntl(F_SETFL) failed!");
 }
 
-void	Server::addClient(int client_fd){
+void	Server::addClient(int client_fd, int listen_index){
 
-	Client	new_client(_config, client_fd);
-	
+	//Client	new_client(_config, client_fd);						//instantiate client with config
+	Client	new_client(&_listen_sockets[listen_index], client_fd);  //instantiate client with listen_instance_s (limits config to servers listening on that ip:port)
+
 	_clients.insert(std::make_pair(client_fd, new_client));
 
 	pollfd pfd;
@@ -224,7 +222,7 @@ void	Server::addClient(int client_fd){
 void	Server::handleClientRead(int fd){
 
     std::map<int, Client>::iterator it = _clients.find(fd);
-    
+
 	if (it == _clients.end()){
         Log::instance().log(Log::ERROR, Log::TYPE_ERROR, "handleClientRead: unknown fd=" + toString(fd));
         return;
@@ -259,7 +257,7 @@ void	Server::handleClientWrite(int fd)
     if (sent <= 0){
         disconnectClient(fd);
         return;
-    }	
+    }
 
     response.erase(0, sent);
 
@@ -276,9 +274,9 @@ void	Server::disconnectClient(int fd){
 }
 
 void	Server::removeClientFromPoll(int fd){
-	
+
 	for (size_t i = 0; i < _sockets.size(); i++){
-		
+
 		if (_sockets[i].fd == fd){
 			_sockets[i].fd = -1;
 			_sockets[i].events = 0;
@@ -297,129 +295,3 @@ int	Server::getSocketsPosition(int fd)
 	}
 	return -1;
 }
-
-/* void Server::client_write()
-{
-	std::string msg;
-
-	for (int i = _port_count; i < _port_count + _max_conn; i++)
-	{
-		if (_sockets[i].fd != -1 && (_sockets[i].revents & POLLOUT))
-		{
-			std::cout << "aaaaa\n";
-			if ((msg = _clients.at(_sockets[i].fd).get_msg()) != "")
-			{
-				std::cout << "sending \n";
-				send(_sockets[i].fd, msg.c_str(), msg.size(), 0);
-				_clients.at(_sockets[i].fd).clear_out_buff();
-			}
-
-		}
-	}
-} */
-
-/*
-// Iterate over sockets and update event flags
-void Server::update_poll_events()
-{
-	for (int i = 0; i < (_port_count + (int)_clients.size()); i++){
-
-		int fd = _sockets[i].fd;
-
-		if (fd == -1)
-			continue;
-
-		if (i < _port_count) {
-			_sockets[i].events = POLLIN;
-			continue;
-		}
-
-		std::map<int, Client>::iterator it = _clients.find(fd);
-
-		if (it == _clients.end()) {
-			_sockets[i].fd = -1;
-			_sockets[i].events = 0;
-			continue;
-		}
-		short events = POLLIN;
-		if (it->second.has_output)
-			_sockets[i].events |= POLLOUT;
-		 _sockets[i].events = events;
-	}
-}
-*/
-
-/*int server_setup_old(Server &server)
-{
-	int	clientSocket = 0;
-
-	while (true){
-		clientSocket = accept(server_fd, NULL, NULL);
-		if (clientSocket > 0){
-			while (true){
-
-				char buffer[1024] = { 0 };
-				if (clientSocket > 0){
-					std::cout << "client connected : fd = " << clientSocket << std::endl;
-
-					ssize_t bytesRead = recv(clientSocket, buffer, sizeof(buffer) - 1, 0);
-					if (bytesRead != 0) {
-						buffer[bytesRead] = '\0';
-						std::cout << "Message from client: " << buffer << std::endl;
-					}
-					else
-						break;
-				}
-			}
-			close(clientSocket);
-		}
-	}
-}*/
-
-/* void Server::client_read()
-{
-	char buffer[BUF_SIZE];
-
-	for (int i = _port_count; i < _port_count + _max_conn; i++)
-	{
-		int fd = _sockets[i].fd;
-
-		if (fd == -1)
-			continue;
-
-		std::map<int, Client>::iterator it = _clients.find(fd);
-		if (it == _clients.end()) {
-			std::cerr << "[WARN] fd " << fd << " missing in _clients!" << std::endl;
-			close(fd);
-			_sockets[i].fd = -1;
-			continue;
-		}
-		if (fd != -1 && (_sockets[i].revents & POLLIN))
-		{
-			ssize_t valread = recv(fd, buffer, BUF_SIZE - 1, 0);
-			if (valread == 0)
-			{
-				close(fd);
-				_clients.erase(fd);
-				_sockets[i].fd = -1;
-				std::cout << "Client disconnected (valread == 0)" << std::endl;
-			}
-			else if (valread == -1)
-			{
-				if (errno == EAGAIN || errno == EWOULDBLOCK)
-					continue;
-				perror("read: ");
-				close(fd);
-				_sockets[i].fd = -1;
-				Log::instance().log(Log::INFO, Log::TYPE_ACCESS, "conn_new_clients() : Connection refused : POLLIN : failed connection: Client was disconnected (valread == -1) : _sockets + [" + toString(i) + "]");
-			}
-			else
-			{
-				buffer[valread] = '\0';
-				//send(_clients[i], buffer, valread, 0);
-				_clients.at(fd).append_read(buffer, valread);
-				std::cout << fd << " said: " << buffer << std::endl;
-			}
-		}
-	}
-} */
