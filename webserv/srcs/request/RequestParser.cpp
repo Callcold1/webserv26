@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/23 01:37:52 by kmooney           #+#    #+#             */
-/*   Updated: 2026/03/05 14:34:40 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/03/06 15:21:16 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -938,12 +938,12 @@ void	RequestParser::parseChunked( token_s& it ){
  MULTIPART STRUCTS
 
 typedef struct  {
-	std::string			contentType;
-	std::string			disposition;
-	std::string			filename;
-	bool				isFile;
-	std::string			tempFilePath;
-	std::vector<char>	content;
+	std::string					contentType;
+	std::string					disposition;
+	std::string					filename;
+	bool						isFile;
+	std::string					tempFilePath;
+	std::vector<unsigned char>	content;
 } MultipartPart;
 
 typedef struct {

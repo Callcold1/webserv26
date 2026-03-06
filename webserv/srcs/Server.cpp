@@ -30,42 +30,50 @@ void	Server::setupListeningSockets(Config& config){
 	std::map<listen_s, std::vector<CServer*> >::iterator it;
 
 	for (it = port_server_map.begin(); it != port_server_map.end(); it++) {
-
-		uint32_t ip = it->first.ip;
-		uint16_t port = it->first.port;
-		std::vector<CServer*>& servers_on_port = it->second;
-
 		int fd = createListeningSocket(it->first);
+		listenInstanceCreate(fd, it->first, it->second);
+	}
+}
 
-		CServer* default_srv = NULL;
-		for (std::vector<CServer*>::iterator s_it = servers_on_port.begin(); s_it != servers_on_port.end(); s_it++) {
+void	Server::listenInstanceCreate(int fd, listen_s listen, std::vector<CServer*>& servers){
+	
+	listenInstance_s instance(fd, listen, servers);
 
-			CServer* s = *s_it;
-			std::vector<listen_s> listens = s->getListen();
-			std::vector<std::string> names = s->getServerName();
-			std::vector<listen_s>::iterator ls;
+	for (size_t i = 0; i < servers.size(); i++){ 															// iterate over servers
+		listenInstanceNameServerMap(instance.name_to_srv, servers[i], (servers[i])->getServerName());		// add 'name - server' combination to map for each server
+		if (listenInstanceDefaultServer(servers[i]->getListen(), listen))									// check if server is default server for ip:port
+			instance.def_srv = servers[i];
+		else
+			instance.def_srv = servers[0];
+		std::vector<std::string> name = instance.def_srv->getServerName();
+		if (!name.empty())
+			instance.def_srv_name = createArgsString(name);
+		else
+			instance.def_srv_name = "--NO NAME--";
+	}
+	Log::instance().log(Log::INFO, Log::TYPE_CONF, "listening socket created : " + printstream(instance));
+	_listen_sockets.push_back(instance);
+}
 
-			Log::instance().log(Log::INFO, Log::TYPE_ACCESS, "Test " + createArgsString(names));
+bool	Server::listenInstanceDefaultServer(std::vector<listen_s> listens, listen_s target){
 
-			for (ls = listens.begin(); ls != listens.end(); ls++) {
-				if (ls->ip == ip && ls->port == port && ls->is_default) {
-					default_srv = s;
-					break;
-				}
-			}
-			if (default_srv)
-				break;
-		}
-		if (!default_srv)
-			default_srv = *servers_on_port.begin();
-		Log::instance().log(Log::INFO, Log::TYPE_ACCESS, "Default Server set to " + createArgsString(default_srv->getServerName()));
-		listenInstance_s instance(default_srv, fd, it->first);
+	for (size_t i = 0; i < listens.size(); i++){ 														
+		if (target.ip == listens[i].ip && target.port == listens[i].port)				
+			return listens[i].is_default;
+	}
+	return false;
+}
 
-		instance.server_configs = servers_on_port;
-		instance.default_server = default_srv;
-
-		Log::instance().log(Log::INFO, Log::TYPE_ACCESS, "listening socket created : " + printstream(it->first));
-		_listen_sockets.push_back(instance);
+void	Server::listenInstanceNameServerMap(std::map<std::string, CServer* >& map, CServer* server, std::vector<std::string> names){
+	
+	for (size_t i = 0; i < names.size(); i++){												
+		
+		std::string name = names[i];
+		std::map<std::string, CServer* >::iterator it = map.find(name);				
+	
+		if (it != map.end())
+			throw std::runtime_error("Listen Instance : duplicate server name");
+		map[name] = server;															
 	}
 }
 
@@ -90,8 +98,6 @@ int	Server::createListeningSocket(const listen_s& port_info)
 		std::cout << "bind() failed for" << port_info << std::endl;
 		throw std::runtime_error("bind() failed!");
 	}
-	else
-		std::cout << "bound to : " << port_info << std::endl;
 
 	if (listen(sockfd, SOMAXCONN) < 0) // need to change SOMAXCONN to our max connections - does this value equal our total connections count, or just this socket?
 		throw std::runtime_error("listen() failed!");
@@ -298,4 +304,38 @@ int	Server::getSocketsPosition(int fd)
 			return i;
 	}
 	return -1;
+}
+
+/*
+>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<
+>>>>>>		PRINT SERVER INFO 		<<<<<<
+>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<
+*/
+
+// Listening Instance
+std::ostream&	operator<<(std::ostream& os, const listenInstance_s& li){	
+	os
+	<< "\n\n\tListening Socket fd: " << li.fd << ", IP : "
+	<< ( li.ip & 0xFF) << "."
+	<< ((li.ip >> 8)  & 0xFF) << "."
+	<< ((li.ip >> 16) & 0xFF) << "."
+	<< ((li.ip >> 24) & 0xFF) 
+	<< ", port : " << li.port
+	<< "\n\n\tDefault server (name) : " << li.def_srv_name
+	<< li.name_to_srv;
+	return os;
+}
+
+// Listen Instance Map (Name to server)
+std::ostream&	operator<<(std::ostream& os, const std::map<std::string, CServer*>& map){
+	
+	int i = 0;
+
+	if (map.size() == 0)
+		return os << "\n\n\tNo server names in config : hostname cannot be mapped to server name"; 
+	os << "\n\n\tListening Socket Name to Server Map";
+
+	for (std::map<std::string, CServer*>::const_iterator it = map.begin(); it != map.end(); it++, i++)
+		os << "\n\tServer[" << i << "] name(s) : " << it->first  << "\t\tServer config address: " << it->second;
+	return os;
 }

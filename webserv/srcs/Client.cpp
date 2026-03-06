@@ -115,6 +115,9 @@ bool	Client::handleClientRead(const char *buffer, size_t len){
 		case P_ERROR	: 	{ _state = ERROR; break;}
 		default	: break;
 	}
+	// if (_state == WRITE){
+	// 	handleRequest();
+	// }
 	return true;
 }
 

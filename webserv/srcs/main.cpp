@@ -6,14 +6,14 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/07 10:25:15 by kmooney           #+#    #+#             */
-/*   Updated: 2026/03/05 15:05:32 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/03/06 12:57:52 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <cstring>
 #include <iostream>
-#include "Config.hpp"
 #include "CParser.hpp"
+#include "Config.hpp"
 #include "Log.hpp"
 #include "Server.hpp"
 #include <typeinfo>

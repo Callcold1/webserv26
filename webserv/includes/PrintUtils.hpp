@@ -24,8 +24,6 @@ std::ostream& operator<<(std::ostream& os, const std::vector<T>& vec)
 	return os;
 }
 
-#include <map>
-
 template<typename K, typename V>
 std::ostream& operator<<(std::ostream& os, const std::map<K, V>& m)
 {

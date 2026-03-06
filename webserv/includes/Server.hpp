@@ -39,13 +39,17 @@ class Server {
 		void 	client_write();
 		void 	update_poll_events();
 
-		std::map<int, Client> 			_clients;				// Map of client file descriptors to Client objects, used for managing client connections and their associated data
+		std::map<int, Client> _clients;				// Map of client file descriptors to Client objects, used for managing client connections and their associated data
 		
 	private:
 
 		void	setupListeningSockets(Config& config);
 		int		createListeningSocket(const listen_s& port_info);
 		void	addListeningSocketsToPoll(void);
+		void	listenInstanceCreate(int fd, listen_s listen, std::vector<CServer*>& servers);
+		bool	listenInstanceDefaultServer(std::vector<listen_s> listens, listen_s target);
+		void	listenInstanceNameServerMap(std::map<std::string, CServer* >& map, CServer* server, std::vector<std::string> names);
+		void	setDefaultServerForSocket(CServer* def_srv, uint32_t ip, uint16_t port, std::vector<CServer*>& servers );
 		void	addClientSockets(void);
 
 		void	handleEvents(void);
@@ -70,4 +74,6 @@ class Server {
 		std::vector<pollfd> 			_sockets;				// _sockets position is == to _listeningServers position for listening sockets, and is == to client fd for client sockets
 
 };
- 
+
+std::ostream&	operator<<(std::ostream& os, const listenInstance_s& li);
+std::ostream&	operator<<(std::ostream& os, const std::map<std::string, CServer*>& map);

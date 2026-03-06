@@ -53,14 +53,10 @@ void	CParser::parseConfigFile(Config& config){
 		Log::instance().log(Log::DEBUG, Log::TYPE_CONF, "Config object created : initial parsing complete : \n\n" + printstream(config));
 
 		config.propagateVarsToChildren();
-		//os << config << std::endl;
 		Log::instance().log(Log::DEBUG, Log::TYPE_CONF, "Variables propagated from global -> server -> location : \n\n" + printstream(config));
 		
 		config.mapServersToPorts();
 		config.checkForOverlappingPorts();
-		oss << config.getPortServerMap() << std::endl;
-		Log::instance().log(Log::INFO, Log::TYPE_CONF, "ip:port to server map created : \n\n" + oss.str());
-
 		delete _rawConfig;
 		Log::instance().log(Log::INFO, Log::TYPE_CLASS, "Config parsing successfully completed....");
 	}
@@ -349,7 +345,8 @@ bool	CParser::setLocation(node_t* location_node, std::vector<CLocation>& locatio
 		temp.uri_set = true;
 	}
 	else
-		throw std::runtime_error("Invalid number of arguments provided for location uri : " + location_node->type + " " + createArgsString(location_node->args) + " : line " + location_node->line_num);
+		throw std::runtime_error("Invalid number of arguments provided for location uri : "
+			+ location_node->type + " " + createArgsString(location_node->args) + " : line " + location_node->line_num);
 
 	for (size_t i = 0; i < location_node->children.size(); i++){
 
@@ -501,7 +498,6 @@ void	CParser::handleUploadPath(node_t* node, tempConfig_s& tmp, HandlerContext_e
 		throw std::runtime_error("Invalid context for upload_path directive : the 'upload_path' directive can only be used inside a Location block");
 }
 
-
 void	CParser::setVariable(tempConfig_s& tmp, node_t* node, HandlerContext_e context){
 	try{
 		if (node->type == "alias")
@@ -650,7 +646,8 @@ void	CParser::pushToLocation(tempConfig_s& tmp, CLocation& dest){
 bool	CParser::setBoolean(node_t* node, bool& state){
 
 	if (!isOnlyArg(node->args))
-		throw std::runtime_error("Multiple arguments when only one permitted : " + node->type + " " + createArgsString(node->args) + " : line " + node->line_num);
+		throw std::runtime_error("Multiple arguments when only one permitted : " 
+			+ node->type + " " + createArgsString(node->args) + " : line " + node->line_num);
 
 	std::string lowercase = to_lower(node->args[0]);
 
@@ -663,7 +660,8 @@ bool	CParser::setBoolean(node_t* node, bool& state){
 	else if (lowercase.length() == 1 && (lowercase == "0" || lowercase == "f"))
 			state = false;
 	else
-		throw std::runtime_error("value must be boolean (T/F/t/f/true/false/TRUE/FALSE/1/0) : " + node->type + " " + createArgsString(node->args) + " : line " + node->line_num);
+		throw std::runtime_error("value must be boolean (T/F/t/f/true/false/TRUE/FALSE/1/0) : " 
+			+ node->type + " " + createArgsString(node->args) + " : line " + node->line_num);
 	return true;
 }
 
@@ -672,7 +670,8 @@ bool	CParser::setCGImap(node_t* node, std::map<std::string, std::string>& cgi_ma
 	size_t size = node->args.size();
 
 	if (size <= 1)
-		throw std::runtime_error("invalid cgi_path : must contain path and at least one extension type : " + node->type + " " + createArgsString(node->args) + " : line " + node->line_num);
+		throw std::runtime_error("invalid cgi_path : must contain path and at least one extension type : " 
+			+ node->type + " " + createArgsString(node->args) + " : line " + node->line_num);
 	std::string path = node->args[0];
 	std::string ext;
 	for (size_t i = 1; i < size; i++){
@@ -694,7 +693,8 @@ bool	CParser::setCharset(node_t* node, std::vector<std::string>& charset){
 				charset.push_back(node->args[i]);
 		}
 		else
-			throw std::runtime_error("invalid directive : unsupported charset : " + node->type + " " + createArgsString(node->args) + " : line " + node->line_num);
+			throw std::runtime_error("invalid directive : unsupported charset : " 
+				+ node->type + " " + createArgsString(node->args) + " : line " + node->line_num);
 	}
 	return true;
 }
@@ -762,7 +762,7 @@ bool	CParser::setServerName(node_t* node, std::vector<std::string>& names){
 
 	size_t size = node->args.size();
 
-	for (size_t i = 0; i < size - 1; i++)
+	for (size_t i = 0; i < size; i++)
 			names.push_back(node->args[i]);
 	return true;
 }

@@ -21,6 +21,8 @@ Then :
 
 6) Assign a default server when parsing config (Partially done - if one is present - need to assign one otherwise)
 
+7) Error handling for file opening  - e.g. run "./webserv ./webserv" or "./webserv ./" - both cause issues
+
 Still To Do
 ===========
 

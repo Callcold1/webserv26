@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/30 11:28:22 by kmooney           #+#    #+#             */
-/*   Updated: 2026/03/05 14:58:18 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/03/06 15:58:14 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -222,36 +222,32 @@ void	Request::setHostname(const std::string& hostname){
 // Possibly best to put this in the parser for control/consistency
 // Empty host header is not OK for HTTP 1.1 - need to throw error
 void	Request::matchServerToHostHeader(void){
+	
 	if (_host_header.length() == 0){
 		if (_version == "HTTP/1.0")
-			Log::instance().log(Log::ERROR, Log::TYPE_REQUEST_PARSING, "No host header provided : server set to default_server"); // Not an error for HTTP 1.0 but is for HTTP 1.1?
+			Log::instance().log(Log::ERROR, Log::TYPE_REQUEST_PARSING,
+				"No host header provided : server set to default_server"); 						// Not an error for HTTP 1.0 but is for HTTP 1.1?
 		else if (_version == "HTTP/1.1"){
-			Log::instance().log(Log::ERROR, Log::TYPE_ERROR, "No host header provided : host header is mandatory for HTTP/1.1");
-			setState(P_ERROR, V_REQLINE, "No host header provided : host header is mandatory for HTTP/1.1", 400); //wrong code - is this really required here (error should be picked up earlier)
+			Log::instance().log(Log::ERROR, Log::TYPE_ERROR,
+				"No host header provided : host header is mandatory for HTTP/1.1");
+			setState(P_ERROR, V_REQLINE, 
+				"No host header provided : host header is mandatory for HTTP/1.1", 400); 		//wrong code - is this really required here (error should be picked up earlier)
 			return;
 		}
 	}
-	size_t size = _listen_instance->server_configs.size();
-	if (size == 0){
+	
+	if (_listen_instance->servers.size() == 0){
 		Log::instance().log(Log::ERROR, Log::TYPE_ERROR, "No server config for ip:port ");
 		//throw exception
 	}
 
-	for (size_t i = 0; i < size; i++){
+	if (!_listen_instance)
+		Log::instance().log(Log::ERROR, Log::TYPE_ERROR, "No listen instance in request class ");
+	else if (_listen_instance->name_to_srv.find(_host_header) == _listen_instance->name_to_srv.end())
+		_matched_server = _listen_instance->def_srv;
+	else
+		_matched_server = (_listen_instance->name_to_srv.find(_host_header))->second;
 		
-		CServer* server = _listen_instance->server_configs[i];
-		std::vector<std::string> server_names = server->getServerName();
-		size_t name_size = server_names.size();
-		
-		for (size_t j = 0; j < name_size; j++){
-			
-			if (server_names[j].compare(_host_header) == 0){
-				_matched_server = server;
-				return;
-			}
-		}
-	}
-	_matched_server = _listen_instance->default_server;
 	Log::instance().log(Log::INFO, Log::TYPE_REQUEST_PARSING, "matching server = " + printstream(_matched_server));
 }
 

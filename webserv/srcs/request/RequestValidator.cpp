@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/30 11:26:19 by kmooney           #+#    #+#             */
-/*   Updated: 2026/03/05 10:54:09 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/03/06 16:20:43 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -364,6 +364,8 @@ bool	RequestValidator::validateHostHeader() { // URI COMPARISON REQUIRED
 	 not have an authority component, an empty Host header field will be sent in this case.
 	  A server MUST accept the absolute-form in requests even though most HTTP/1.1 clients 
 	  will only send the absolute-form to a proxy. */
+	  
+	_req->setHostname((_req->_headers.find("host"))->second[0]->val);
 	return true;
 }
 
