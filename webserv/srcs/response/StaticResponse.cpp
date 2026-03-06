@@ -62,7 +62,8 @@ int directory_tree(int it, std::stringstream *outfile, std::string path)
 		{
 			if (S_ISDIR(st.st_mode))
 			{
-				directory_tree(it + 1, outfile, fullpath);
+				if (directory_tree(it + 1, outfile, fullpath) != 0)
+					return (1);
 			}
 		}
 	}
@@ -120,15 +121,27 @@ int StaticResponse::get_file()
 
 std::string StaticResponse::get_content_type()
 {
+	const unsigned char png_magic[] = {
+		0x89, 0x50, 0x4E, 0x47,
+		0x0D, 0x0A, 0x1A, 0x0A
+	};
+
 	if (_body.size() >= 15 && _body.compare(0, 15, "<!doctype html>") == 0)
 	{
-		return("text/html;");
+		return("text/html");
 	}
-	else if () //png image magic bytes
+	else if (_body.size() >= sizeof(png_magic) &&
+        std::memcmp(_body.data(), png_magic, sizeof(png_magic)) == 0)
+    {
+        return("image/png");
+    }
+	else
+	{
+		return("application/octet-stream");
+	}
 }
 
 void StaticResponse::static_headers()
 {
-	
 	_headers["Content-Type"] = get_content_type();
 }

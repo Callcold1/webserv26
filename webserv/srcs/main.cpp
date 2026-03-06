@@ -6,18 +6,16 @@
 /*   By: junruh <junruh@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/07 10:25:15 by kmooney           #+#    #+#             */
-/*   Updated: 2026/03/05 14:48:08 by junruh           ###   ########.fr       */
+/*   Updated: 2026/03/06 16:48:14 by junruh           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <cstring>
 #include <iostream>
-#include "CgiResponse.hpp"
 #include "Config.hpp"
 #include "CParser.hpp"
 #include "Log.hpp"
 #include "Server.hpp"
-#
 #include <typeinfo>
 #include <cxxabi.h>
 #include <exception>
@@ -27,20 +25,14 @@
 #define NO_CLI_ARG "No config file path provided - attempting to use : "
 #define ERR_CONFIG_NOT_OPEN "Error : the configuration file could not be opened : "
 
+int	main(int argc, char** argv){
 
-int	main()
-{
-	//Server server;
-	
-	//server.loop();
+	std::string config_path;
 
-	// RediResponse rr(300);
-	// ErrorResponse er(404);
-	CgiResponse cr(200, request);
-	cr.generate();
-	
+	if (argc == 2)
+		config_path = argv[1];
 
-	if (argc < 2) {
+	else if (argc < 2) {
 		config_path = DEFAULT_PATH;
 		Log::instance().log(Log::INFO, Log::TYPE_CONF, NO_CLI_ARG + config_path);
 	}

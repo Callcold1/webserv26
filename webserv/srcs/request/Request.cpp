@@ -6,7 +6,7 @@
 /*   By: junruh <junruh@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/30 11:28:22 by kmooney           #+#    #+#             */
-/*   Updated: 2026/03/05 14:44:05 by junruh           ###   ########.fr       */
+/*   Updated: 2026/03/06 16:11:00 by junruh           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -202,18 +202,22 @@ std::string	Request::getRequestStr(){
 
 std::vector<field_t* >	 Request::findHeader(const std::string& header_name){
 	fieldMap_t::iterator header = _headers.find(header_name);
+	
+	if (header == _headers.end())
+        return std::vector<field_t*>(); 
+	
 	return header->second;
 }
 
-void	 Request::iterateOverFieldT(std::vector<field_t*>& vec ){
+// void	 Request::iterateOverFieldT(std::vector<field_t*>& vec ){
 
-	size_t size = vec.size();
+// 	size_t size = vec.size();
 
-	for (size_t i = 0; i < size; i++){
-	const std::string&	 val	 = vec[i]->val;
-	const std::vector< std::pair<std::string, std::string> >&	 options = vec[i]->params;
-	}
-}
+// 	for (size_t i = 0; i < size; i++){
+// 	const std::string&	 val	 = vec[i]->val;
+// 	const std::vector< std::pair<std::string, std::string> >&	 options = vec[i]->params;
+// 	}
+// }
 
 std::string Request::findQuery(const std::string id)  //function to get specific query value 
 {

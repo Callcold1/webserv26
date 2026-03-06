@@ -31,6 +31,7 @@ SRCS        := main.cpp \
 				request/Request.cpp \
 				request/RequestParser.cpp \
 				request/RequestValidator.cpp \
+				RequestHandler.cpp \
 				Client.cpp \
 				PrintUtils.cpp
 
