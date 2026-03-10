@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   RequestValidator.cpp                               :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: junruh <junruh@student.42.fr>              +#+  +:+       +#+        */
+/*   By: jake <jake@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/30 11:26:19 by kmooney           #+#    #+#             */
-/*   Updated: 2026/03/06 14:35:33 by junruh           ###   ########.fr       */
+/*   Updated: 2026/03/10 13:38:27 by jake             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -350,21 +350,76 @@ void	RequestValidator::validateHeaders( void ){
 	}
 }
 
-bool	RequestValidator::validateHostHeader() { // URI COMPARISON REQUIRED
+bool	RequestValidator::validateHostHeader() {
+	/* 
+		Host header rules 
+		=================
+		1.1 : Must be present
+			: Must not be empty
+			: Exactly one host header
+			:
+			: Syntax : 
+			:	Allowed Form : Host: example.com
+			:	Allowed Form : Host: example.com:8080
+			:	Allowed Form : Host: sub.domain.org
+			:	Allowed Form : Host: 127.0.0.1
+			:	Allowed Form : Host: 127.0.0.1:8000
+			:	Allowed Form : Host: [2001:db8::1]
+			:	Allowed Form : Host: [2001:db8::1]:443
+			:
+			:	Invalid Form : Host: http://example.com
+			:	Invalid Form : Host: example .com
+			:	Invalid Form : Host: exa$mple.com
+			:	Invalid Form : Host: :80
+			: 
+			: No whitespace or control characters
+			: Port must be valid if present (i.e. 0-65535)
+			: IPv6 must use brackets
 
-	int count = countHeaderValues(_req->_headers, "host");
-	
-	if ( count == 0)
-		return _req->setState(P_ERROR, V_HEADERS, "Missing 'Host' header", 400);
-	if ( count > 1)
-		return _req->setState(P_ERROR, V_HEADERS, "Multiple 'Host' header values", 400);
-/* 	When an origin server receives a request with an absolute-form of request-target,
-	the origin server MUST ignore the received Host header field (if any) and instead 
-	use the host information of the request-target. Note that if the request-target does
-	 not have an authority component, an empty Host header field will be sent in this case.
-	  A server MUST accept the absolute-form in requests even though most HTTP/1.1 clients 
-	  will only send the absolute-form to a proxy. */
+		1.0 : Voluntary
+			: Not present : serve default_server
+			: If exists, and invalid : return 400 Bad request
+
+	*/
+	/* 	When an origin server receives a request with an absolute-form of request-target,
+		the origin server MUST ignore the received Host header field (if any) and instead 
+		use the host information of the request-target. Note that if the request-target does
+	 	not have an authority component, an empty Host header field will be sent in this case.
+	  	A server MUST accept the absolute-form in requests even though most HTTP/1.1 clients 
+	  	will only send the absolute-form to a proxy.
+	*/
+
+	fieldMap_t::const_iterator it = _req->_headers.find("host");
+
+	if (it != _req->_headers.end()){					
+		int count = it->second.size();
+		if (_req->_uri.uri_type == ABSOLUTE_FORM && count == 1)
+			return (validateAbsoluteForm(it));
+		if ( count == 0)
+			return _req->setState(P_ERROR, V_HEADERS, "Missing 'Host' header value", 400);
+		else if ( count > 1)
+			return _req->setState(P_ERROR, V_HEADERS, "Multiple 'Host' header values", 400);
+		else
+			_req->setHostname(it->second[0]->val); // need to check syntax (valid port if present, doesn't start with port etc)
+	}
+	else {
+		if (_req->_version.compare("HTTP/1.1") == 0)
+			return _req->setState(P_ERROR, V_HEADERS, "Missing 'Host' header", 400);
+		else if (_req->_version.compare("HTTP/1.0") == 0)
+			Log::instance().log(Log::INFO, Log::TYPE_REQUEST_PARSING,
+				"Request Parsing : Missing host header : using default server", true);
+	}
 	return true;
+}
+
+bool	RequestValidator::validateAbsoluteForm(fieldMap_t::const_iterator& it){
+		
+	if (_req->_uri.auth.compare(it->second[0]->val) == 0){
+		_req->setHostname(_req->_uri.auth); // need to check syntax (valid port if present, doesn't start with port etc)
+		return true;
+	}
+	else
+		return _req->setState(P_ERROR, V_HEADERS, "'Host' header value mismatch (Absolute Form)", 400);
 }
 
 /*

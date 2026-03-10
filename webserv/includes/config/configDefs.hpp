@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/18 17:37:44 by kmooney           #+#    #+#             */
-/*   Updated: 2026/03/05 12:32:38 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/03/06 14:09:08 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -70,23 +70,29 @@ enum LocationMatchType_e{
 };
 
 /* 
-	listenInstance_s : struct that is created from Config::_port_server_map (a map of ip:port and vector of CServer objects with a listen directive with that ip:port )
+	listenInstance_s : 
+
+	fd 				: listening socket fd
+	ip 				: listening socket ip
+	port 			: listening socket port
+	servers 		: servers listening on the ip:port
+	def_srv 		: default server for that port (used if no hostname in a request, or hostname not found in name_to_srv map)
+	def_srv_name 	: name of default server 
+	name_to serv 	: maps a server name to a server
 	
-	The listen_instance_s ties a listen socket (fd) to the ip:port, the server_configs associated with that ip:port and stores the default server
-	 
 	*/
 struct listenInstance_s {
-    int fd;
-    uint16_t port;
-    uint32_t ip;
-    std::vector<CServer*> server_configs;
-    CServer* default_server;
+    int 							fd;
+    uint32_t 						ip;
+    uint16_t 						port;
+    CServer* 						def_srv;
+    std::vector<CServer*> 			servers;
+	std::string 					def_srv_name;
+	std::map<std::string, CServer*> name_to_srv;
 
-    listenInstance_s(CServer* server_config, int fd_val, const listen_s& listen)
-        : fd(fd_val), port(listen.port), ip(listen.ip), default_server(listen.is_default ? server_config : NULL){
-        
-		server_configs.push_back(server_config);
+    listenInstance_s( int fd_val, const listen_s& l, std::vector<CServer*>& srvs)
+        : fd(fd_val), ip(l.ip), port(l.port), def_srv(NULL), servers(srvs){
     }
 
-    listenInstance_s() : fd(0), port(0), ip(0), default_server(NULL) {}
+    listenInstance_s() : fd(0), ip(0), port(0), def_srv(NULL) {}
 };

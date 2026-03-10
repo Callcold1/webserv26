@@ -4,6 +4,7 @@ Client::Client(Config* config): _config(config){
 	fd = -1;
 	out_buff = "";
 	_state = CONNECTED;
+	_conn = CONN_KEEP_ALIVE,
 	time(&last_active);
 
 	has_output = false;
@@ -15,6 +16,7 @@ Client::Client(Config* config, int new_fd) : _config(config){
 	fd = new_fd;
 	out_buff = "";
 	_state = CONNECTED;
+	_conn = CONN_KEEP_ALIVE,
 	time(&last_active);
 
 	has_output = false;
@@ -25,6 +27,7 @@ Client::Client(listenInstance_s* listen_instance, int new_fd) : _listen_instance
 	fd = new_fd;
 	out_buff = "";
 	_state = CONNECTED;
+	_conn = CONN_KEEP_ALIVE,
 	time(&last_active);
 
 	has_output = false;
@@ -38,6 +41,7 @@ Client::Client(const Client &other)
 	request(other.request),
 	out_buff(other.out_buff),
 	_state(other._state),
+	_conn(other._conn),
 	last_active(other.last_active)
 {}
 
@@ -91,57 +95,48 @@ bool	Client::handleClientRead(const char *buffer, size_t len){
 	if (!buffer)
 		return false;
 
+	Log::instance().log(Log::INFO, Log::TYPE_REQUEST_PARSING,
+							"Request Parsing : parser started : read length : " + toString(len), false);
 	_p_state = request.parseRequest(buffer, len);
 	
 	switch(_p_state){
 		case P_PARSE	: 	{
 								Log::instance().log(Log::INFO, Log::TYPE_REQUEST_PARSING,
-									"Request Parsing : status = P_PARSE " + printstream(request));
+									"Request Parsing : status = P_PARSE " + printstream(request), true);
 								_state = READ;
 								return false;
 							}	
 		case P_AWAIT	: 	{
 								Log::instance().log(Log::INFO, Log::TYPE_REQUEST_PARSING,
-									"Request Parsing : status = P_AWAIT " + printstream(request));
+									"Request Parsing : status = P_AWAIT " + printstream(request), true);
 								_state = READ;
-								return false; 
+								return false;
 							}		
 		case P_DONE		:	{	
 								Log::instance().log(Log::INFO, Log::TYPE_REQUEST_PARSING,
-									"Request Parsing : status = P_DONE " + printstream(request)); 
+									"Request Parsing : status = P_DONE " + printstream(request), true); 
 								_state = WRITE;
 								break;
 		}
-		case P_ERROR	: 	{ _state = ERROR; break;}
+		case P_ERROR	: 	{ 
+								Log::instance().log(Log::ERROR, Log::TYPE_REQUEST_PARSING,
+									"Request Parsing : Client FD : [" + toString(fd) +"] : Error : " 
+										+ request._errMess + ", error num : " + toString (request._errNum) , true);
+								 out_buff = request._errMess + ", error num : " + toString(request._errNum) + "\n";
+								_state = ERROR;
+								_conn = CONN_CLOSE;
+								break;
+		}
 		default	: break;
 	}
+	// if (_state == WRITE){
+	// 	handleRequest();
+	// }
 	return true;
 }
 
-CServer*	Client::findBestServerMatch(const std::string& host) const{
-
-	std::vector<CServer*> servers = _listen_instance->server_configs;
-	size_t size = servers.size();
-
-	if (size == 0)
-		return NULL;
-	else if (size == 1)
-		return servers[0];
-	else {
-		for (size_t i = 0; i < size; i++){
-
-			CServer* server = servers[i];
-
-			std::vector<std::string> server_names = server->getServerName();
-			size_t name_size = server_names.size();
-			
-			for (size_t j = 0; j < name_size; j++){
-				if (server_names[j].compare(host) == 0)
-					return server;
-			}
-		}
-		return _listen_instance->default_server;
-	}
+eConn	Client::getConn(){
+	return _conn;
 }
 
 /*
@@ -190,8 +185,24 @@ std::ostream& operator<<(std::ostream& os, Request& request){
 	os << std::left << std::setw(20) << "ErrMess" << std::setw(3) << " : " << request._errMess << std::endl;
 	os << std::left << std::setw(20) << "ErrNum" << std::setw(3) << " : " << request._errNum << std::endl << std::endl;
 	os << request._headers;
+
+	if (request._matched_server){
+		// MATCHED SERVER ADDRESS
+		os << std::left << std::setw(20) << "Matched Server" << std::setw(3) << " : " << request._matched_server << std::endl;
+		//// MATCHED SERVER INFO
+		os << std::left << std::setw(20) << "Matched Server" << std::setw(3) << " : \n" << *request._matched_server << std::endl;
+		// MATCHED SERVER NAME
+		os << std::left << std::setw(20) << "Matched Server Name" << std::setw(3) << " : " << request._matched_server->getServerName() << std::endl;
+	}
+	if (request._matched_location){
+		// MATCHED LOCATION ADDRESS
+		os << std::left << std::setw(20) << "Matched Location" << std::setw(3) << " : " << request._matched_location << std::endl;
+		//// MATCHED LOCATION INFO
+		//os << std::left << std::setw(20) << "Matched Location" << std::setw(3) << " : " << *(request._matched_location) << std::endl;
+		// MATCHED LOCATION NAME
+		os << std::left << std::setw(20) << "Matched Location URI" << std::setw(3) << " : " << request._matched_location->getURI() << std::endl << std::endl;
+	}
 	return os;
-	
 }
 
 /*

@@ -3,24 +3,24 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: junruh <junruh@student.42.fr>              +#+  +:+       +#+        */
+/*   By: jake <jake@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/07 10:25:15 by kmooney           #+#    #+#             */
-/*   Updated: 2026/03/06 16:48:14 by junruh           ###   ########.fr       */
+/*   Updated: 2026/03/10 13:37:54 by jake             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <cstring>
 #include <iostream>
-#include "Config.hpp"
 #include "CParser.hpp"
+#include "Config.hpp"
 #include "Log.hpp"
 #include "Server.hpp"
 #include <typeinfo>
 #include <cxxabi.h>
 #include <exception>
 
-#define DEFAULT_PATH "default.conf"
+#define DEFAULT_PATH "testConfigs/default.conf"
 #define TOO_MANY_ARGS "Error : too many arguments : the program can be started without arguments (default.conf will be used), or with a valid configuration file path"
 #define NO_CLI_ARG "No config file path provided - attempting to use : "
 #define ERR_CONFIG_NOT_OPEN "Error : the configuration file could not be opened : "
@@ -34,11 +34,11 @@ int	main(int argc, char** argv){
 
 	else if (argc < 2) {
 		config_path = DEFAULT_PATH;
-		Log::instance().log(Log::INFO, Log::TYPE_CONF, NO_CLI_ARG + config_path);
+		Log::instance().log(Log::INFO, Log::TYPE_CONF, NO_CLI_ARG + config_path, true);
 	}
 
 	else {
-		Log::instance().log(Log::ERROR, Log::TYPE_ERROR, TOO_MANY_ARGS);
+		Log::instance().log(Log::ERROR, Log::TYPE_ERROR, TOO_MANY_ARGS, true);
 		return 1;
 	}
 
@@ -52,7 +52,7 @@ int	main(int argc, char** argv){
 	}
 
 	catch (const std::exception& e){
-		Log::instance().log(Log::INFO, Log::TYPE_ERROR, e.what());
+		Log::instance().log(Log::ERROR, Log::TYPE_ERROR, e.what(), true);
 		return 1;
 	}
 	

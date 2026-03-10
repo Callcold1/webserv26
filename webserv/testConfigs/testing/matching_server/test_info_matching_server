@@ -1,0 +1,14 @@
+matching_server_1.conf : tests to check basic server matching is working
+                            1) Name matches correctly
+                            2) HTTP 1.0 : Missing host header : match with default default_server (ie first in config file for that port)
+                            3) HTTP 1.1 : Missing host header : error response
+                            4) HTTP 1.0 : Host header but missing host value : error response
+                            5) HTTP 1.1 : Host header but missing host value : error response
+
+matching_server_2.conf : default_server is set : confirms that setting works
+                            1) No config server name(s) for port : match with default_server (ie first in config for that port)
+                            2) HTTP 1.0 : Hostname provided but no name match : the default default_server should be selected
+                            3) HTTP 1.1 : Hostname provided but no name match : error response
+
+matching_server_3.conf : default_server is set for 2 server blocks listening on same ip:port
+                            1) Should throw error and stop server

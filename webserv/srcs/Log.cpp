@@ -22,7 +22,7 @@
 Log::Log() : _out(&std::cerr){
 	createLogFolders();
 	openLogFiles();
-	log(INFO, TYPE_CLASS, "Log files opened successfully");
+	log(INFO, TYPE_CLASS, "Log files opened successfully", false);
 }
 
 Log::~Log(){
@@ -167,7 +167,7 @@ int Log::setOutput(int type) {
 	return log_fd;
 }
 
-void Log::log(LogLevel level, const LogType type, const std::string msg) {
+void Log::log(LogLevel level, const LogType type, const std::string msg, bool print) {
 
 	int log_fd = setOutput(type);
 
@@ -175,7 +175,8 @@ void Log::log(LogLevel level, const LogType type, const std::string msg) {
 					   + " [" + typeToString(type) + "] " + msg + "\n";
 
 	write(log_fd, log_line.c_str(), log_line.size()); 	// write to file
-	(*_out) << log_line; 								// write to stderr
+	if (print)
+		(*_out) << log_line; 								// write to stderr
 }
 
 void Log::log(LogLevel level, const LogType type, int fd, const std::string msg) {
@@ -207,7 +208,7 @@ std::string Log::typeToString(LogType type) {
 		case TYPE_CLASS: return "TYPE_CLASS";
 		case TYPE_CONF: return "TYPE_CONF";
 		case TYPE_ERROR: return "TYPE_ERROR";
-		case TYPE_REQUEST_PARSING:  return "LOG_TYPE_REQUEST_PARSING";
+		case TYPE_REQUEST_PARSING:  return "TYPE_REQUEST_PARSING";
 		case TYPE_REQUESTS:  return "TYPE_REQUESTS";
 		case TYPE_RESPONSE: return "TYPE_RESPONSE";
 	}

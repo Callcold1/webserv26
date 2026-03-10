@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/23 01:37:52 by kmooney           #+#    #+#             */
-/*   Updated: 2026/03/05 14:34:47 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/03/06 14:08:45 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -94,7 +94,7 @@ class RequestValidator {
 
 		void				validateHeaders();
 		bool				validateHostHeader();
-
+		bool				validateAbsoluteForm(fieldMap_t::const_iterator& it);
 		bool				validateRepresentation();
 		bool				identifyLengthHeader();
 		bool				validateTransferEncoding();

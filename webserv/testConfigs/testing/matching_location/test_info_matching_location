@@ -1,0 +1,13 @@
+matching_location1.conf :  3 tests to check basic server matching is working
+                           
+                            1) Location matches correctly
+                            2) HTTP 1.0 : Missing host value : should match with the default default_server (ie first in config for that port)
+                            3) HTTP 1.1 : Missing host value : should return error response
+                            4) Hostname provided but no name match : the default default_server should be selected
+
+matching_server_2.conf : default_server is set : confirms that setting works
+                            1) No name and matches with the default default_server (ie first in config for that port)
+                            2)  Hostname provided but no name match : the default_server should be selected
+
+matching_server_3.conf : default_server is set for 2 server blocks listening on same ip:port
+                            1) Should throw error and stop server
