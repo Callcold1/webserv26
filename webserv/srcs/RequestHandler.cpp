@@ -15,14 +15,6 @@ bool file_exists(const char* filename)
 
 int save_file(std::string filename, std::string file_body)
 {
-	// if (file_exists(filename.c_str()))
-	// {
-	// 	filename = filename + "_2";
-	// 	while (file_exists(filename.c_str()))
-	// 	{
-			
-	// 	}
-	// }
 	std::string base = filename;
 	std::string ext;
 
@@ -46,7 +38,7 @@ int save_file(std::string filename, std::string file_body)
 	int fd = open(file_path.c_str(), O_CREAT | O_WRONLY | O_EXCL, 0644);
 	if (fd < 0)
 		return (500);
-	if (write(fd, file_body.c_str(), file_body.length()) < 1) //think about how to handle this error
+	if (write(fd, file_body.c_str(), file_body.length()) < 1)
 	{
 		close(fd);
 		return (500);
@@ -80,7 +72,7 @@ int if_file_upload(Request &request)
 		{
 			return (1);
 		}
-		else if (header[0]->val == "multipart/form-data")
+		else if (header[0]->val.find("multipart/form-data"))
 		{
 			return(save_mp_file(request._multipart.parts));
 		}
@@ -104,8 +96,11 @@ void Client::handle_request()
 		re = &RediResponse(request, _matched_location->getRedirect().url);
 	}
 
-	else if (if_file_upload(request) == 0)
-	{}
+	else if (error_catch = if_file_upload(request) != 1)
+	{
+		if (error_catch >= 400)
+			re = &ErrorResponse(error_catch, request);
+	}
 
 	else if (path.find(CGI_PATH) != std::string::npos && path.find((CGI_PATH + std::string("assets"))) == std::string::npos)
 	{
