@@ -377,7 +377,7 @@ void	getFilePermissions(fileInfo_s& fileinfo){
 		fileinfo.is_file = S_ISREG(fileStat.st_mode);
 		fileinfo.is_symlink = S_ISLNK(fileStat.st_mode);
 		fileinfo.is_exec = fileStat.st_mode & S_IXUSR;
-		fileinfo.permissions = fileStat.st_mode;
+		//fileinfo.permissions = fileStat.st_mode;
 	}
 	else if(errno == ENOENT)
 		fileinfo.not_found = true;
@@ -395,7 +395,7 @@ void	getFilePermissions(fileInfo_s* fileinfo){
 		fileinfo->is_file = S_ISREG(fileStat.st_mode);
 		fileinfo->is_symlink = S_ISLNK(fileStat.st_mode);
 		fileinfo->is_exec = fileStat.st_mode & S_IXUSR;
-		fileinfo->permissions = fileStat.st_mode;
+//		fileinfo->permissions = fileStat.st_mode;
 	}
 	else if(errno == ENOENT)
 		fileinfo->not_found = true;
@@ -669,7 +669,7 @@ std::ostream&	printFileInfo(std::ostream &os, fileInfo_s* fileinfo)
 	os << "File Not Found: " << fileinfo->not_found << std::endl;
 	os << "File Appended Path: " << fileinfo->path << std::endl;
 	os << "File Permissions: "
-	<< std::oct << std::setfill('0') << std::setw(4) << (fileinfo->permissions & 0777)
+	//<< std::oct << std::setfill('0') << std::setw(4) << (fileinfo->permissions & 0777)
 	<< std::dec << std::setfill(' ') << std::setw(0) << std::endl;
 	return os;
 }

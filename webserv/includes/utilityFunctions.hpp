@@ -40,10 +40,11 @@ struct fileInfo_s
 	bool is_file;
 	bool is_symlink;
 	bool not_found;
-	__mode_t permissions;
+	//__mode_t permissions;
 	std::string path;
 
-	fileInfo_s() : inaccessible(false), is_dir(false), is_exec(false), is_file(false), is_symlink(false), not_found(false), permissions(0), path("") {}
+	//fileInfo_s() : inaccessible(false), is_dir(false), is_exec(false), is_file(false), is_symlink(false), not_found(false), permissions(0), path("") {}
+	fileInfo_s() : inaccessible(false), is_dir(false), is_exec(false), is_file(false), is_symlink(false), not_found(false), path("") {}
 };
 
 template <typename T, T Min, T Max>
