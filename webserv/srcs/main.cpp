@@ -34,11 +34,11 @@ int	main(int argc, char** argv){
 
 	else if (argc < 2) {
 		config_path = DEFAULT_PATH;
-		Log::instance().log(Log::INFO, Log::TYPE_CONF, NO_CLI_ARG + config_path);
+		Log::instance().log(Log::INFO, Log::TYPE_CONF, NO_CLI_ARG + config_path, true);
 	}
 
 	else {
-		Log::instance().log(Log::ERROR, Log::TYPE_ERROR, TOO_MANY_ARGS);
+		Log::instance().log(Log::ERROR, Log::TYPE_ERROR, TOO_MANY_ARGS, true);
 		return 1;
 	}
 
@@ -52,7 +52,7 @@ int	main(int argc, char** argv){
 	}
 
 	catch (const std::exception& e){
-		Log::instance().log(Log::INFO, Log::TYPE_ERROR, e.what());
+		Log::instance().log(Log::ERROR, Log::TYPE_ERROR, e.what(), true);
 		return 1;
 	}
 	

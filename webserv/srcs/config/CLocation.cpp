@@ -238,7 +238,9 @@ std::string	CLocation::getUploadPath(void) const{
 }
 
 std::string	CLocation::getURI(void) const{
-	return _uri;
+	if (_uri.length() > 0)
+		return _uri;
+	return "No URI set";
 }
 
 /*

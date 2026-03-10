@@ -4,11 +4,11 @@
 
 Server::Server(Config &config) : _config(&config), _running(false), _max_conn(config.getMaxConnections()), _port_count(config.getServerPortCount()){
 
-	Log::instance().log(Log::INFO, Log::TYPE_CLASS, "Server starting....");
+	Log::instance().log(Log::INFO, Log::TYPE_CLASS, "Server starting....", true);
 	setupListeningSockets(config);
 
 	addListeningSocketsToPoll();
-	Log::instance().log(Log::INFO, Log::TYPE_CLASS, "Server successfully started");
+	Log::instance().log(Log::INFO, Log::TYPE_CLASS, "Server successfully started", true);
 }
 
 Server::~Server(void){
@@ -29,51 +29,60 @@ void	Server::setupListeningSockets(Config& config){
 	std::map<listen_s, std::vector<CServer*> > port_server_map = config.getPortServerMap();
 	std::map<listen_s, std::vector<CServer*> >::iterator it;
 
-	for (it = port_server_map.begin(); it != port_server_map.end(); it++) {
-		int fd = createListeningSocket(it->first);
-		listenInstanceCreate(fd, it->first, it->second);
+	try {
+		for (it = port_server_map.begin(); it != port_server_map.end(); it++) {
+			int fd = createListeningSocket(it->first);
+			listenInstanceCreate(fd, it->first, it->second);
+		}
+	}
+	catch (const std::exception& e){
+		std::string err = e.what();
+		throw std::runtime_error(err + " : server stopped");
 	}
 }
 
 void	Server::listenInstanceCreate(int fd, listen_s listen, std::vector<CServer*>& servers){
-	
+
 	listenInstance_s instance(fd, listen, servers);
 
-	for (size_t i = 0; i < servers.size(); i++){ 															// iterate over servers
-		listenInstanceNameServerMap(instance.name_to_srv, servers[i], (servers[i])->getServerName());		// add 'name - server' combination to map for each server
-		if (listenInstanceDefaultServer(servers[i]->getListen(), listen))									// check if server is default server for ip:port
+	for (size_t i = 0; i < servers.size(); i++){ 
+		listenInstanceNameServerMap(instance.name_to_srv, servers[i], (servers[i])->getServerName());
+		if (instance.def_srv && listenInstanceDefaultServer(servers[i]->getListen(), listen))
+			throw std::runtime_error("Multiple default_server for same port");
+		else if (listenInstanceDefaultServer(servers[i]->getListen(), listen)){
 			instance.def_srv = servers[i];
-		else
-			instance.def_srv = servers[0];
-		std::vector<std::string> name = instance.def_srv->getServerName();
-		if (!name.empty())
-			instance.def_srv_name = createArgsString(name);
-		else
-			instance.def_srv_name = "--NO NAME--";
+			std::vector<std::string> name = instance.def_srv->getServerName();
+			if (!name.empty())
+				instance.def_srv_name = createArgsString(name);
+			else
+				instance.def_srv_name = "--NO NAME--";
+		}
 	}
-	Log::instance().log(Log::INFO, Log::TYPE_CONF, "listening socket created : " + printstream(instance));
+	if (!instance.def_srv)
+			instance.def_srv = servers[0];
+	Log::instance().log(Log::INFO, Log::TYPE_CONF, "listening socket created : " + printstream(instance), true);
 	_listen_sockets.push_back(instance);
 }
 
 bool	Server::listenInstanceDefaultServer(std::vector<listen_s> listens, listen_s target){
 
-	for (size_t i = 0; i < listens.size(); i++){ 														
-		if (target.ip == listens[i].ip && target.port == listens[i].port)				
-			return listens[i].is_default;
+	for (size_t i = 0; i < listens.size(); i++){
+		if (target.ip == listens[i].ip && target.port == listens[i].port && listens[i].is_default)
+			return true;
 	}
 	return false;
 }
 
 void	Server::listenInstanceNameServerMap(std::map<std::string, CServer* >& map, CServer* server, std::vector<std::string> names){
-	
-	for (size_t i = 0; i < names.size(); i++){												
-		
+
+	for (size_t i = 0; i < names.size(); i++){
+
 		std::string name = names[i];
-		std::map<std::string, CServer* >::iterator it = map.find(name);				
-	
+		std::map<std::string, CServer* >::iterator it = map.find(name);
+
 		if (it != map.end())
 			throw std::runtime_error("Listen Instance : duplicate server name");
-		map[name] = server;															
+		map[name] = server;
 	}
 }
 
@@ -84,7 +93,7 @@ int	Server::createListeningSocket(const listen_s& port_info)
 	if (sockfd < 0)
 		throw std::runtime_error("socket() failed!");
 
-	int	opt = 1; // Enable address reuse to avoid "Address already in use" error when restarting the server
+	int	opt = 1;
 
 	setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));	// SO_REUSEADDR allows us to reuse the port immediately after the server is closed, without waiting for the OS to release it (which can take a few minutes)
 
@@ -99,7 +108,7 @@ int	Server::createListeningSocket(const listen_s& port_info)
 		throw std::runtime_error("bind() failed!");
 	}
 
-	if (listen(sockfd, SOMAXCONN) < 0) // need to change SOMAXCONN to our max connections - does this value equal our total connections count, or just this socket?
+	if (listen(sockfd, SOMAXCONN) < 0)
 		throw std::runtime_error("listen() failed!");
 
 	return sockfd;
@@ -130,18 +139,16 @@ void	Server::addListeningSocketsToPoll(void){
 
 void	Server::loop(){
 
-	Log::instance().log(Log::INFO, Log::TYPE_CLASS, "Server listening....");
+	Log::instance().log(Log::INFO, Log::TYPE_CLASS, "Server listening....", false);
 
 	_running = true;
 
-	while (_running)
-	{
-		//update_poll_events();
-
+	while (_running) {
+		
 		int activity = poll(&_sockets[0], _port_count + _clients.size(), -1);
-
+		
 		if (activity < 0){
-			Log::instance().log(Log::INFO, Log::TYPE_CLASS, "poll() failed: " + std::string(strerror(errno)));
+			Log::instance().log(Log::INFO, Log::TYPE_CLASS, "poll() failed: " + std::string(strerror(errno)), true);
 			continue;
 		}
 		handleEvents();
@@ -168,8 +175,10 @@ void	Server::handleEvents(void){
 			if (_sockets[i].revents & POLLOUT)
 				handleClientWrite(fd);
 
-			if (_sockets[i].revents & (POLLERR | POLLHUP | POLLNVAL))
+			if (_sockets[i].revents & (POLLERR | POLLHUP | POLLNVAL)){
+				Log::instance().log(Log::INFO, Log::TYPE_ACCESS, "Client disconnect : handleEvents: POLLERR | POLLHUP | POLLNVAL: fd=" + toString(fd), true);
 				disconnectClient(fd);
+			}
 		}
 		_sockets[i].revents = 0;
 	}
@@ -185,20 +194,19 @@ void	Server::handleAccept(int index){
 		int client_fd = accept(_sockets[index].fd, (sockaddr*)&addr, &len);
 
 		if (client_fd < 0){
-			Log::instance().log(Log::ERROR, Log::TYPE_ERROR, "accept() failed: " + std::string(strerror(errno)));
+			Log::instance().log(Log::ERROR, Log::TYPE_ERROR, "accept() failed: " + std::string(strerror(errno)), true);
 			break;
 		}
 		try{
 			setNonBlocking(client_fd);
 		}
 		catch (const std::exception& e){
-			Log::instance().log(Log::ERROR, Log::TYPE_ERROR, "Failed to set non-blocking mode for client fd=" + toString(client_fd) + " : " + e.what());
+			Log::instance().log(Log::ERROR, Log::TYPE_ERROR, "Failed to set non-blocking mode for client fd=" + toString(client_fd) + " : " + e.what(), true);
 			close(client_fd);
 			continue;
 		}
-		//addClient(client_fd);
 		addClient(client_fd, index);
-		Log::instance().log(Log::INFO, Log::TYPE_ACCESS, "New client connected: fd=" + toString(client_fd));
+		Log::instance().log(Log::INFO, Log::TYPE_ACCESS, "New client connected: fd=" + toString(client_fd), true);
 		break;
 	}
 }
@@ -216,8 +224,7 @@ void	Server::setNonBlocking(int fd){
 
 void	Server::addClient(int client_fd, int listen_index){
 
-	//Client	new_client(_config, client_fd);						//instantiate client with config
-	Client	new_client(&_listen_sockets[listen_index], client_fd);  //instantiate client with listen_instance_s (limits config to servers listening on that ip:port)
+	Client	new_client(&_listen_sockets[listen_index], client_fd);
 
 	_clients.insert(std::make_pair(client_fd, new_client));
 
@@ -231,66 +238,76 @@ void	Server::addClient(int client_fd, int listen_index){
 
 void	Server::handleClientRead(int fd){
 
-    std::map<int, Client>::iterator it = _clients.find(fd);
+	std::map<int, Client>::iterator it = _clients.find(fd);
 
 	if (it == _clients.end()){
-        Log::instance().log(Log::ERROR, Log::TYPE_ERROR, "handleClientRead: unknown fd=" + toString(fd));
-        return;
-    }
+		Log::instance().log(Log::ERROR, Log::TYPE_ERROR, "handleClientRead: unknown fd=" + toString(fd), true);
+		return;
+	}
 
-    Client&	client = it->second;
+	Client&	client = it->second;
 
-    char buffer[BUF_SIZE];
+	char buffer[BUF_SIZE];
 
-    ssize_t bytes = recv(fd, buffer, sizeof(buffer), 0);
+	ssize_t bytes = recv(fd, buffer, sizeof(buffer), 0);
 
-    if (bytes < 0){
-		Log::instance().log(Log::ERROR, Log::TYPE_ERROR, "handleClientRead() : Invalid read : client disconnected : fd " + toString(fd));
-        disconnectClient(fd);
-        return;
-    }
-    else if (bytes == 0) {
-		Log::instance().log(Log::ERROR, Log::TYPE_ACCESS, "handleClientRead() : Read size of zero : fd " + toString(fd));
-        disconnectClient(fd);
-        return;
-    }
-	else if (client.handleClientRead(buffer, bytes))		// expect true if parsing complete (client will hold info on what is to be in response)
+	if (bytes < 0){
+		Log::instance().log(Log::ERROR, Log::TYPE_ERROR, "handleClientRead() : Invalid read : client disconnected : fd " + toString(fd), true);
+		disconnectClient(fd);
+		return;
+	}
+	else if (bytes == 0) {
+		Log::instance().log(Log::ERROR, Log::TYPE_ACCESS, "handleClientRead() : Read size of zero : fd " + toString(fd), true);
+		disconnectClient(fd);
+		return;
+	}
+	else if (client.handleClientRead(buffer, bytes))	// expect true if parsing complete (client will hold info on what is to be in response)
 		_sockets[getSocketsPosition(fd)].events |= POLLOUT;
 }
 
 void	Server::handleClientWrite(int fd)
 {
-    std::string response = "We can write this later";  // Need actual response logic here....
+	std::map<int, Client>::iterator it = _clients.find(fd);
 
-    ssize_t sent = send(fd, response.c_str(), response.size(), 0);
+	if (it == _clients.end()){
+		Log::instance().log(Log::ERROR, Log::TYPE_ERROR, "handleClientWrite: unknown fd=" + toString(fd), true);
+		return;
+	}
+	Client& client = it->second;
+	std::string response = client.get_msg();
 
-    if (sent <= 0){
-        disconnectClient(fd);
-        return;
-    }
+	ssize_t sent = send(fd, response.c_str(), response.size(), 0);
 
-    response.erase(0, sent);
+	if (sent <= 0){
+		Log::instance().log(Log::INFO, Log::TYPE_ACCESS, "Client disconnect : handleClientWrite: sent is less than or equal to zero: fd=" + toString(fd), true);
+		disconnectClient(fd);
+		return;
+	}
+	if (client.getConn() == CONN_CLOSE){
+		disconnectClient(fd);
+		return;
+	}
+	response.erase(0, sent);
 
-    if (response.empty())
-        _sockets[getSocketsPosition(fd)].events &= ~POLLOUT;
+	if (response.empty())
+		_sockets[getSocketsPosition(fd)].events &= ~POLLOUT;
 }
 
 void	Server::disconnectClient(int fd){
 
-    Log::instance().log(Log::INFO, Log::TYPE_ACCESS, "Client disconnected: fd=" + toString(fd));
-    close(fd);
-    removeClientFromPoll(fd);
-    _clients.erase(fd);
+	Log::instance().log(Log::INFO, Log::TYPE_ACCESS, "Client disconnected: fd=" + toString(fd), true);
+	close(fd);
+	removeClientFromPoll(fd);
+	_clients.erase(fd);
 }
 
-void	Server::removeClientFromPoll(int fd){
+void Server::removeClientFromPoll(int fd) {
+
+	close(fd);
 
 	for (size_t i = 0; i < _sockets.size(); i++){
-
 		if (_sockets[i].fd == fd){
-			_sockets[i].fd = -1;
-			_sockets[i].events = 0;
-			_sockets[i].revents = 0;
+			_sockets.erase(_sockets.begin() + i);
 			break;
 		}
 	}
@@ -313,13 +330,13 @@ int	Server::getSocketsPosition(int fd)
 */
 
 // Listening Instance
-std::ostream&	operator<<(std::ostream& os, const listenInstance_s& li){	
+std::ostream&	operator<<(std::ostream& os, const listenInstance_s& li){
 	os
 	<< "\n\n\tListening Socket fd: " << li.fd << ", IP : "
 	<< ( li.ip & 0xFF) << "."
 	<< ((li.ip >> 8)  & 0xFF) << "."
 	<< ((li.ip >> 16) & 0xFF) << "."
-	<< ((li.ip >> 24) & 0xFF) 
+	<< ((li.ip >> 24) & 0xFF)
 	<< ", port : " << li.port
 	<< "\n\n\tDefault server (name) : " << li.def_srv_name
 	<< li.name_to_srv;
@@ -328,11 +345,11 @@ std::ostream&	operator<<(std::ostream& os, const listenInstance_s& li){
 
 // Listen Instance Map (Name to server)
 std::ostream&	operator<<(std::ostream& os, const std::map<std::string, CServer*>& map){
-	
+
 	int i = 0;
 
 	if (map.size() == 0)
-		return os << "\n\n\tNo server names in config : hostname cannot be mapped to server name"; 
+		return os << "\n\n\tNo server names in config : hostname cannot be mapped to server name";
 	os << "\n\n\tListening Socket Name to Server Map";
 
 	for (std::map<std::string, CServer*>::const_iterator it = map.begin(); it != map.end(); it++, i++)

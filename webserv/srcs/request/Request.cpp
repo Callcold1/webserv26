@@ -15,30 +15,35 @@
 #include "RequestValidator.hpp" 
 
 /* CONSTRUCTORS */
-Request::Request(void) : _parser(NULL), _validator(NULL), _config(NULL), _listen_instance(NULL), _method(""), _uri_str(""), _version(""),
+Request::Request(void) : _parser(NULL), _validator(NULL), _config(NULL), _listen_instance(NULL), 
+		_matched_location(NULL), _matched_server(NULL), _method(""), _uri_str(""), _version(""),
 		_errNum(200), _errMess(""), _p_state (P_PARSE), _r_state (P_REQLINE), _content_length(0),
 		_unparsed_length(0), _hasBody(false), _isChunked(false), _isMultiPart(false), _bodyUTF8(false){}
 
-Request::Request( Config* config )
-	: _parser(NULL), _validator(NULL), _config(config), _listen_instance(NULL), _method(""), _uri_str(""), _version(""),
+Request::Request( Config* config ) : _parser(NULL), _validator(NULL), _config(config), _listen_instance(NULL), 
+		_matched_location(NULL), _matched_server(NULL), _method(""), _uri_str(""), _version(""),
 		_errNum(200), _errMess(""), _p_state (P_PARSE), _r_state (P_REQLINE), _content_length(0),
 		_unparsed_length(0), _hasBody(false), _isChunked(false), _isMultiPart(false), _bodyUTF8(false){}
 
-Request::Request( listenInstance_s* listen_instance )
-	: _parser(NULL), _validator(NULL), _listen_instance(listen_instance), _method(""), _uri_str(""), _version(""),
+Request::Request( listenInstance_s* listen_instance ) : _parser(NULL), _validator(NULL), _listen_instance(listen_instance),
+		_matched_location(NULL), _matched_server(NULL),  _method(""), _uri_str(""), _version(""),
 		_errNum(200), _errMess(""), _p_state (P_PARSE), _r_state (P_REQLINE), _content_length(0),
 		_unparsed_length(0), _hasBody(false), _isChunked(false), _isMultiPart(false), _bodyUTF8(false){}
 
-Request::Request(const Request &other) : _parser(NULL), _validator(NULL), _config(other._config), _listen_instance(other._listen_instance), _method(other._method),
-	_uri_str(other._uri_str), _version(other._version), _req_line(other._req_line), _uri(other._uri), _headers(other._headers), _body(other._body),
-	_boundary(other._boundary), _defaultMultiType(other._defaultMultiType), _multipart(other._multipart), _errNum(other._errNum), _errMess(other._errMess), 
-	_p_state(other._p_state), _r_state(other._r_state), _content_length(other._content_length), _body_length(other._body_length), _unparsed_length(other._unparsed_length),
-	 _hasBody(other._hasBody), _isChunked(other._isChunked), _isMultiPart(other._isMultiPart), _bodyUTF8(other._bodyUTF8){}
+Request::Request(const Request &other) : _parser(NULL), _validator(NULL), _config(other._config), _listen_instance(other._listen_instance),
+	_matched_location(other._matched_location), _matched_server(other._matched_server),  _method(other._method),
+	_uri_str(other._uri_str), _version(other._version), _req_line(other._req_line), _uri(other._uri), _headers(other._headers), 
+	_body(other._body),_boundary(other._boundary), _defaultMultiType(other._defaultMultiType), _multipart(other._multipart),
+	_errNum(other._errNum), _errMess(other._errMess), _p_state(other._p_state), _r_state(other._r_state), 
+	_content_length(other._content_length), _body_length(other._body_length), _unparsed_length(other._unparsed_length),
+	_hasBody(other._hasBody), _isChunked(other._isChunked), _isMultiPart(other._isMultiPart), _bodyUTF8(other._bodyUTF8){}
 				
 Request& Request::operator=(const Request &other){
 	if (this != &other){
 		_config = other._config;
 		_listen_instance = other._listen_instance;
+		_matched_location = other._matched_location;
+		_matched_server = other._matched_server;
 		_method = other._method;
 		_uri_str = other._uri_str;
 		_version = other._version;
@@ -64,15 +69,13 @@ Request& Request::operator=(const Request &other){
 	return *this;
 }
 
-
-
 /* DESTRUCTORS */
 Request::~Request( void ){
 	if (_parser){
 		for (fieldMap_t::iterator it = _headers.begin(); it != _headers.end(); it++){
 			size_t size = it->second.size();
 			
-			for (size_t i = 0; i < size; i++){ 
+			for (size_t i = 0; i < size; i++){
 				delete it->second[i];
 			}
 		}
@@ -226,10 +229,10 @@ void	Request::matchServerToHostHeader(void){
 	if (_host_header.length() == 0){
 		if (_version == "HTTP/1.0")
 			Log::instance().log(Log::ERROR, Log::TYPE_REQUEST_PARSING,
-				"No host header provided : server set to default_server"); 						// Not an error for HTTP 1.0 but is for HTTP 1.1?
+				"No host header provided : server set to default_server", false); 						// Not an error for HTTP 1.0 but is for HTTP 1.1?
 		else if (_version == "HTTP/1.1"){
 			Log::instance().log(Log::ERROR, Log::TYPE_ERROR,
-				"No host header provided : host header is mandatory for HTTP/1.1");
+				"No host header provided : host header is mandatory for HTTP/1.1", true);
 			setState(P_ERROR, V_REQLINE, 
 				"No host header provided : host header is mandatory for HTTP/1.1", 400); 		//wrong code - is this really required here (error should be picked up earlier)
 			return;
@@ -237,30 +240,30 @@ void	Request::matchServerToHostHeader(void){
 	}
 	
 	if (_listen_instance->servers.size() == 0){
-		Log::instance().log(Log::ERROR, Log::TYPE_ERROR, "No server config for ip:port ");
+		Log::instance().log(Log::ERROR, Log::TYPE_ERROR, "No server config for ip:port ", true);
 		//throw exception
 	}
 
 	if (!_listen_instance)
-		Log::instance().log(Log::ERROR, Log::TYPE_ERROR, "No listen instance in request class ");
+		Log::instance().log(Log::ERROR, Log::TYPE_ERROR, "No listen instance in request class ", true);
 	else if (_listen_instance->name_to_srv.find(_host_header) == _listen_instance->name_to_srv.end())
 		_matched_server = _listen_instance->def_srv;
 	else
 		_matched_server = (_listen_instance->name_to_srv.find(_host_header))->second;
 		
-	Log::instance().log(Log::INFO, Log::TYPE_REQUEST_PARSING, "matching server = " + printstream(_matched_server));
+	Log::instance().log(Log::INFO, Log::TYPE_REQUEST_PARSING, "matching server = " + printstream(_matched_server), false);
 }
 
-// Possibly best to put this in the parser for control/consistency?
 void	Request::matchLocationToURIPath(void){
 	
 	if (_matched_server == NULL){
-		 //return error
+		Log::instance().log(Log::ERROR, Log::TYPE_REQUEST_PARSING, "No matching server is set", true);
+		//return error
 	}
 	
-	int 					longest;
+	int 					longest = 0;
 	std::string				remainder;
-	CLocation*				best_location = NULL;
+	CLocation				best_location;
 	std::vector<CLocation> 	locations = _matched_server->getLocations();
 	size_t					size = locations.size();
 	
@@ -273,12 +276,14 @@ void	Request::matchLocationToURIPath(void){
 		if (match_len > longest){
 			longest = match_len;
 			remainder = leftover;
-			best_location = &locations[i];
+			best_location = locations[i];
 		}
 	}
-	_matched_location = best_location;
-	Log::instance().log(Log::INFO, Log::TYPE_REQUEST_PARSING, "matching location = " + printstream(_matched_location));
-	Log::instance().log(Log::INFO, Log::TYPE_REQUEST_PARSING, "remaining uri = " + remainder );
+	_matched_location = &best_location;
+
+	Log::instance().log(Log::INFO, Log::TYPE_REQUEST_PARSING, "matching location = " + printstream(_matched_location), false);
+	Log::instance().log(Log::INFO, Log::TYPE_REQUEST_PARSING, "best location = " + printstream(best_location), true);
+	Log::instance().log(Log::INFO, Log::TYPE_REQUEST_PARSING, "remaining uri = " + remainder, true);
 }
 
 int	Request::comparePaths(std::string uri_path, std::string location_path, std::string& leftover){

@@ -2,10 +2,6 @@ WIP
 ===
 
 Currently : adding Server and Location Matching
-				setting default server for each ip:port combination
-
-Set default header in _port_server_map
-Check for duplicate server names (should only relate to one socket)
 
 Then :
 
@@ -22,6 +18,22 @@ Then :
 6) Assign a default server when parsing config (Partially done - if one is present - need to assign one otherwise)
 
 7) Error handling for file opening  - e.g. run "./webserv ./webserv" or "./webserv ./" - both cause issues
+
+Problems
+========			    
+Problem : Server Matching           : Need to test HTTP 1.0 (Generally no host header?)
+                                    : Need to test HTTP 1.1 (Must have a host header)
+
+Problem : location matching         : need to preserve '/' when splitting 
+                                        - differentiates files from dirs
+                                        - more accurate match length
+
+Problem : Check for duplicate server names (should only relate to one socket)
+
+Changes Made
+============
+Changed 'Server::removeClientFromPoll(int fd)' : now erases client from poll vector (previously set fd to -1)
+
 
 Still To Do
 ===========

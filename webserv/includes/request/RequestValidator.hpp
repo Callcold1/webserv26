@@ -94,7 +94,7 @@ class RequestValidator {
 
 		void				validateHeaders();
 		bool				validateHostHeader();
-
+		bool				validateAbsoluteForm(fieldMap_t::const_iterator& it);
 		bool				validateRepresentation();
 		bool				identifyLengthHeader();
 		bool				validateTransferEncoding();

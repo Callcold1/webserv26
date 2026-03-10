@@ -23,6 +23,17 @@ enum cState {
 	CLOSE,
 };
 
+// TEMPORARY? 
+// I THINK WE NEED SEPARATE STATE TRACKING FOR THE CONNECTION
+// IF THE STATUS IS WRITE, THE SERVER NEEDS TO KNOW WHAT TO DO NEXT...
+// HOWEVER, IF WE UPDATE THE STATE FROM WRITE TO CLOSE/ERROR/READ/CONNECTED AFTER HANDLING THEN eConn IS NOT REQUIRED
+// COULD DO WITH A DEFAULT SETTING THAT ISN'T CLOSE OR KEEP-ALIVE?)
+// IF WE REMOVE THIS, ALSO REMOVE getConn and _conn
+enum eConn{
+	CONN_CLOSE,
+	CONN_KEEP_ALIVE
+};
+
 class Client
 {
 public:
@@ -45,6 +56,7 @@ public:
 	//Response	response;
 	
 	bool		handleClientRead(const char *buffer, size_t len);
+	eConn		getConn();
 	//CServer*	findBestServerMatch(const std::string& host) const;
 	
 	private:
@@ -55,6 +67,7 @@ public:
 		Response*			response;
 		std::string			out_buff;
 		enum cState			_state;
+		enum eConn			_conn;
 		time_t				last_active;
 		
 		Config*				_config;
