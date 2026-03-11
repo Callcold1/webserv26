@@ -1,7 +1,7 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   CServer.hpp                                   :+:      :+:    :+:   */
+/*   CServer.hpp                                	   :+:      :+:    :+:    */
 /*                                                    +:+ +:+         +:+     */
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
@@ -12,10 +12,7 @@
 
 #pragma once
 
-#include "CLocation.hpp"
 #include "Config.hpp"
-
-struct listen_s;
 
 class CLocation;
 
@@ -109,4 +106,7 @@ class CServer {
 
 										/*	PROPAGATE VARIABLES TO LOWER LEVEL (CSERVER -> CLOCATION)	*/
 		void							propagateServerToLocation();
+
+										/*	LOCATION MATCHING (FOR REQUEST URI FIND BEST FIT CLOCATION )	*/
+		const CLocation*				getLocationForPath(const std::string& uri_path) const;
 };

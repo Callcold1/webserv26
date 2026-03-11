@@ -2,6 +2,12 @@
 #include "Config.hpp"
 #include "Log.hpp"
 
+/*
+>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<
+>>>>>>		CONSTRUCTORS		<<<<<<
+>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<
+*/
+
 Server::Server(Config &config) : _config(&config), _running(false), _max_conn(config.getMaxConnections()), _port_count(config.getServerPortCount()){
 
 	Log::instance().log(Log::INFO, Log::TYPE_CLASS, "Server starting....", true);
@@ -11,18 +17,27 @@ Server::Server(Config &config) : _config(&config), _running(false), _max_conn(co
 	Log::instance().log(Log::INFO, Log::TYPE_CLASS, "Server successfully started", true);
 }
 
+/* >>>>>>	DESTRUCTOR	<<<<<<*/
+
 Server::~Server(void){
 
 	_sockets.clear();
 	_clients.clear();
 	_listen_sockets.clear();
 
-	for(int i = 0; i < _port_count + _max_conn; i++)
-	{
+	for(int i = 0; i < _port_count + _max_conn; i++){
 		if (_sockets[i].fd != -1)
 			close(_sockets[i].fd);
 	}
 }
+
+/*
+>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<
+>>>>>>		SET UP LISTENING SOCKETS		<<<<<<
+>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<
+*/
+
+/* >>>>>>	ITERATE OVER PORT:SERVER MAP AND CREATE LISTENING SOCKETS	<<<<<<*/
 
 void	Server::setupListeningSockets(Config& config){
 
@@ -41,17 +56,24 @@ void	Server::setupListeningSockets(Config& config){
 	}
 }
 
+/* >>>>>>	CREATE LISTENING INSTANCE (HOLDS SOCKET FD, MAP OF SERVER_NAME TO SERVER, DEFAULT SERVER FOR SOCKET)	<<<<<<*/
+
 void	Server::listenInstanceCreate(int fd, listen_s listen, std::vector<CServer*>& servers){
 
 	listenInstance_s instance(fd, listen, servers);
 
-	for (size_t i = 0; i < servers.size(); i++){ 
+	for (size_t i = 0; i < servers.size(); i++){
+
 		listenInstanceNameServerMap(instance.name_to_srv, servers[i], (servers[i])->getServerName());
+		
 		if (instance.def_srv && listenInstanceDefaultServer(servers[i]->getListen(), listen))
 			throw std::runtime_error("Multiple default_server for same port");
+		
 		else if (listenInstanceDefaultServer(servers[i]->getListen(), listen)){
+		
 			instance.def_srv = servers[i];
 			std::vector<std::string> name = instance.def_srv->getServerName();
+	
 			if (!name.empty())
 				instance.def_srv_name = createArgsString(name);
 			else
@@ -59,19 +81,14 @@ void	Server::listenInstanceCreate(int fd, listen_s listen, std::vector<CServer*>
 		}
 	}
 	if (!instance.def_srv)
-			instance.def_srv = servers[0];
-	Log::instance().log(Log::INFO, Log::TYPE_CONF, "listening socket created : " + printstream(instance), true);
+		instance.def_srv = servers[0];
+	
+	Log::instance().log(Log::INFO, Log::TYPE_CONF, "listening socket created : " + printstream(instance), false);
+	
 	_listen_sockets.push_back(instance);
 }
 
-bool	Server::listenInstanceDefaultServer(std::vector<listen_s> listens, listen_s target){
-
-	for (size_t i = 0; i < listens.size(); i++){
-		if (target.ip == listens[i].ip && target.port == listens[i].port && listens[i].is_default)
-			return true;
-	}
-	return false;
-}
+/* >>>>>>	CREATE MAP OF SERVER NAME TO SERVER (TO ASSIST WITH HOSTNAME TO SERVER NAME MATCHING)	<<<<<<*/
 
 void	Server::listenInstanceNameServerMap(std::map<std::string, CServer* >& map, CServer* server, std::vector<std::string> names){
 
@@ -85,6 +102,19 @@ void	Server::listenInstanceNameServerMap(std::map<std::string, CServer* >& map, 
 		map[name] = server;
 	}
 }
+
+/* >>>>>>	SET DEFAULT SERVER FOR A LISTENING SOCKET	<<<<<<*/
+
+bool	Server::listenInstanceDefaultServer(std::vector<listen_s> listens, listen_s target){
+
+	for (size_t i = 0; i < listens.size(); i++){
+		if (target.ip == listens[i].ip && target.port == listens[i].port && listens[i].is_default)
+			return true;
+	}
+	return false;
+}
+
+/* >>>>>>	CREATE LISTENING SOCKET	<<<<<<*/
 
 int	Server::createListeningSocket(const listen_s& port_info)
 {
@@ -114,6 +144,8 @@ int	Server::createListeningSocket(const listen_s& port_info)
 	return sockfd;
 }
 
+/* >>>>>>	ADD LISTENING SOCKET TO POLL	<<<<<<*/
+
 void	Server::addListeningSocketsToPoll(void){
 	size_t size = _listen_sockets.size();
 
@@ -137,6 +169,12 @@ void	Server::addListeningSocketsToPoll(void){
 	}
 }
 
+/*
+>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<
+>>>>>>		SERVER LOOP		<<<<<<
+>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<
+*/
+
 void	Server::loop(){
 
 	Log::instance().log(Log::INFO, Log::TYPE_CLASS, "Server listening....", false);
@@ -154,6 +192,12 @@ void	Server::loop(){
 		handleEvents();
 	}
 }
+
+/*
+>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<
+>>>>>>		EVENT HANDLING		<<<<<<
+>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<
+*/
 
 void	Server::handleEvents(void){
 
@@ -175,14 +219,20 @@ void	Server::handleEvents(void){
 			if (_sockets[i].revents & POLLOUT)
 				handleClientWrite(fd);
 
-			if (_sockets[i].revents & (POLLERR | POLLHUP | POLLNVAL)){
-				Log::instance().log(Log::INFO, Log::TYPE_ACCESS, "Client disconnect : handleEvents: POLLERR | POLLHUP | POLLNVAL: fd=" + toString(fd), true);
-				disconnectClient(fd);
-			}
+			if (_sockets[i].revents & (POLLERR | POLLHUP | POLLNVAL))
+				disconnectClient(fd, "handleEvents: POLLERR | POLLHUP | POLLNVAL");
 		}
 		_sockets[i].revents = 0;
 	}
 }
+
+/*
+>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<
+>>>>>>		CLIENT HANDLING		<<<<<<
+>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<
+*/
+
+/* >>>>>>	ACCEPT CLIENT CONNECTION	<<<<<<*/
 
 void	Server::handleAccept(int index){
 
@@ -201,26 +251,17 @@ void	Server::handleAccept(int index){
 			setNonBlocking(client_fd);
 		}
 		catch (const std::exception& e){
-			Log::instance().log(Log::ERROR, Log::TYPE_ERROR, "Failed to set non-blocking mode for client fd=" + toString(client_fd) + " : " + e.what(), true);
+			Log::instance().log(Log::ERROR, Log::TYPE_ERROR, "Failed to set non-blocking mode for client fd [" + toString(client_fd) + "] : " + " : " + e.what(), true);
 			close(client_fd);
 			continue;
 		}
 		addClient(client_fd, index);
-		Log::instance().log(Log::INFO, Log::TYPE_ACCESS, "New client connected: fd=" + toString(client_fd), true);
+		Log::instance().log(Log::INFO, Log::TYPE_ACCESS, "New client connected: fd [" + toString(client_fd) + "]", true);
 		break;
 	}
 }
 
-void	Server::setNonBlocking(int fd){
-
-	int flags = fcntl(fd, F_GETFL, 0);
-
-	if (flags < 0)
-		throw std::runtime_error("fcntl(F_GETFL) failed!");
-
-	if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) == -1)
-		throw std::runtime_error("fcntl(F_SETFL) failed!");
-}
+/* >>>>>>	ADD CLIENT TO POLL	<<<<<<*/
 
 void	Server::addClient(int client_fd, int listen_index){
 
@@ -236,12 +277,14 @@ void	Server::addClient(int client_fd, int listen_index){
 	_sockets.push_back(pfd);
 }
 
+/* >>>>>>	READ FROM CLIENT	<<<<<<*/
+
 void	Server::handleClientRead(int fd){
 
 	std::map<int, Client>::iterator it = _clients.find(fd);
 
 	if (it == _clients.end()){
-		Log::instance().log(Log::ERROR, Log::TYPE_ERROR, "handleClientRead: unknown fd=" + toString(fd), true);
+		Log::instance().log(Log::ERROR, Log::TYPE_ERROR, "handleClientRead: unknown fd [" + toString(fd) + "] : ", true);
 		return;
 	}
 
@@ -251,26 +294,22 @@ void	Server::handleClientRead(int fd){
 
 	ssize_t bytes = recv(fd, buffer, sizeof(buffer), 0);
 
-	if (bytes < 0){
-		Log::instance().log(Log::ERROR, Log::TYPE_ERROR, "handleClientRead() : Invalid read : client disconnected : fd " + toString(fd), true);
-		disconnectClient(fd);
-		return;
-	}
-	else if (bytes == 0) {
-		Log::instance().log(Log::ERROR, Log::TYPE_ACCESS, "handleClientRead() : Read size of zero : fd " + toString(fd), true);
-		disconnectClient(fd);
-		return;
-	}
-	else if (client.handleClientRead(buffer, bytes))	// expect true if parsing complete (client will hold info on what is to be in response)
+	if (bytes < 0)
+		disconnectClient(fd, "Invalid read");
+	else if (bytes == 0)
+		disconnectClient(fd, "Read size of zero");
+	else if (client.handleClientRead(buffer, bytes))
 		_sockets[getSocketsPosition(fd)].events |= POLLOUT;
 }
+
+/* >>>>>>	WRITE TO CLIENT	<<<<<<*/
 
 void	Server::handleClientWrite(int fd)
 {
 	std::map<int, Client>::iterator it = _clients.find(fd);
 
 	if (it == _clients.end()){
-		Log::instance().log(Log::ERROR, Log::TYPE_ERROR, "handleClientWrite: unknown fd=" + toString(fd), true);
+		Log::instance().log(Log::ERROR, Log::TYPE_ERROR, "handleClientWrite: unknown fd [" + toString(fd) + "]", true);
 		return;
 	}
 	Client& client = it->second;
@@ -279,12 +318,11 @@ void	Server::handleClientWrite(int fd)
 	ssize_t sent = send(fd, response.c_str(), response.size(), 0);
 
 	if (sent <= 0){
-		Log::instance().log(Log::INFO, Log::TYPE_ACCESS, "Client disconnect : handleClientWrite: sent is less than or equal to zero: fd=" + toString(fd), true);
-		disconnectClient(fd);
+		disconnectClient(fd, "handleClientWrite: sent is less than or equal to zero");
 		return;
 	}
 	if (client.getConn() == CONN_CLOSE){
-		disconnectClient(fd);
+		disconnectClient(fd, "Connection set to type 'close'");
 		return;
 	}
 	response.erase(0, sent);
@@ -293,13 +331,23 @@ void	Server::handleClientWrite(int fd)
 		_sockets[getSocketsPosition(fd)].events &= ~POLLOUT;
 }
 
-void	Server::disconnectClient(int fd){
+/*
+>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<
+>>>>>>		CLIENT DISCONNECT		<<<<<<
+>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<
+*/
 
-	Log::instance().log(Log::INFO, Log::TYPE_ACCESS, "Client disconnected: fd=" + toString(fd), true);
+/* >>>>>>	DISCONNECT CLIENT	<<<<<<*/
+
+void	Server::disconnectClient(int fd, const std::string& reason){
+
+	Log::instance().log(Log::INFO, Log::TYPE_ACCESS, "Client disconnected: fd [" + toString(fd) + "] : " + reason, true);
 	close(fd);
 	removeClientFromPoll(fd);
 	_clients.erase(fd);
 }
+
+/* >>>>>>	REMOVE CLIENT FROM POLL	<<<<<<*/
 
 void Server::removeClientFromPoll(int fd) {
 
@@ -312,6 +360,21 @@ void Server::removeClientFromPoll(int fd) {
 		}
 	}
 }
+
+/* >>>>>>	SET SOCKET TO NON-BLOCKING	<<<<<<*/
+
+void	Server::setNonBlocking(int fd){
+
+	int flags = fcntl(fd, F_GETFL, 0);
+
+	if (flags < 0)
+		throw std::runtime_error("fcntl(F_GETFL) failed!");
+
+	if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) == -1)
+		throw std::runtime_error("fcntl(F_SETFL) failed!");
+}
+
+/* >>>>>>	GET POSITION OF FD IN POLLING 	<<<<<<*/
 
 int	Server::getSocketsPosition(int fd)
 {

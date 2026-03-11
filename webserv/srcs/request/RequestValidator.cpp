@@ -22,7 +22,7 @@
 
 RequestValidator::RequestValidator(Request* request) : _req() { 
 	_req = request;
-	_config = request->_config;
+	//_config = request->_config;
 }
 
 RequestValidator::~RequestValidator(){}
@@ -58,19 +58,6 @@ void	RequestValidator::validateReqLine(){
 	_req->setRstate(P_HEADERS);
 }
 
-
-bool	RequestValidator::locationSupportsMethod(const str_t& method) {
-
-	std::vector<std::string> location_method = _location.getMethod();
-	size_t size = _location.getMethod().size();
-	
-	for (size_t i = 0; i < size; i++){
-		if (method.compare(location_method[i]))
-			return true;
-	}
-	return false;
-}
-
 bool	RequestValidator::isValidMethod(const std::string& str){
 	if (str.compare("GET") == 0 ||
 		str.compare("POST") == 0 ||
@@ -84,25 +71,27 @@ bool	RequestValidator::isValidMethod(const std::string& str){
 		return false;
 }
 
-void	RequestValidator::setLocation(CLocation& location){
-	//_location = _server->getLocationForTarget(_req->_uri.path);
-	_location = location; // temporary - really need to use CServer object to find location - this should happen in the client class
-}
+// void	RequestValidator::setLocation(CLocation& location){
+// 	//_location = _server->getLocationForTarget(_req->_uri.path);
+// 	_location = location; // temporary - really need to use CServer object to find location - this should happen in the client class
+// }
 
 /* 
-	METHOD VALIDATION : CHECK METHOD IS SUPPORTED BY SERVER/LOCATION (CHECKEDWHEN REQUEST IS NOT IN VREQLINE STATE), 
+	METHOD VALIDATION : CHECK METHOD IS SUPPORTED BY SERVER/LOCATION (CHECKED WHEN REQUEST IS NOT IN VREQLINE STATE), 
 						CHECK METHOD IS UPPERCASE
 						CHECK METHOD IS VALID
 */
 bool	RequestValidator::validateMethod(){
 
+	std::string method = _req->getMethod();
+
 	if (_req->_r_state != V_REQLINE) {
-		if (!locationSupportsMethod(_req->_method))
+		if (!_req->_matched_location->isMethodSupported(method))
 			return _req->setState(P_ERROR, _req->_r_state, "Method Not Permitted", 501);
-		else if (locationSupportsMethod(to_upper(_req->_method)))
+		else if (_req->_matched_location->isMethodSupported(to_upper(method)))
 			return _req->setState(P_ERROR, V_REQLINE, "Method must be uppercase", 400);
 	}
-	else if (!isValidMethod(_req->_method))
+	else if (!isValidMethod(method))
 		return _req->setState(P_ERROR, V_REQLINE, "Method Not Supported", 501);
 	return true;
 }

@@ -444,11 +444,35 @@ void	appendPathToRoot(fileInfo_s* fileinfo, std::string& path, std::string& root
 	fileinfo->path = root_dir + '/' + path;
 }
 
+path_t	splitPath(const std::string& path){
+
+	path_t result;
+
+	result.absolute = (!path.empty() && path[0] == '/');
+	size_t size = path.size();
+	result.trailing_slash = (size > 1 && path[size - 1] == '/');
+
+	std::stringstream ss(path);
+	std::string token;
+
+	while (getline(ss, token, '/')) {
+		if (token.empty() || token == ".")
+			continue;
+		if (token == "..") {
+			if (!result.segments.empty())
+				result.segments.pop_back();
+		}
+		else
+			result.segments.push_back(token);
+	}
+	return result;
+}
+
 std::vector<std::string> split_path(std::istringstream &iss)
 {
 	std::string str;
 	std::vector<std::string> segments;
-
+	// THIS NEEDS TO BE CHANGED!
 	if (str.substr(0, 1) == "./")
 		str = str.substr(2);
 	else if (str[0] == '/')

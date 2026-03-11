@@ -32,12 +32,7 @@ class Server {
 		//Server&	operator=( const Server& other);
 		~Server(void);
 
-		//int get_socket(int index);
 		void 	loop();
-		void 	conn_new_clients();
-		void 	client_read();
-		void 	client_write();
-		void 	update_poll_events();
 
 		std::map<int, Client> _clients;				// Map of client file descriptors to Client objects, used for managing client connections and their associated data
 		
@@ -46,11 +41,12 @@ class Server {
 		void	setupListeningSockets(Config& config);
 		int		createListeningSocket(const listen_s& port_info);
 		void	addListeningSocketsToPoll(void);
+
 		void	listenInstanceCreate(int fd, listen_s listen, std::vector<CServer*>& servers);
 		bool	listenInstanceDefaultServer(std::vector<listen_s> listens, listen_s target);
 		void	listenInstanceNameServerMap(std::map<std::string, CServer* >& map, CServer* server, std::vector<std::string> names);
 		void	setDefaultServerForSocket(CServer* def_srv, uint32_t ip, uint16_t port, std::vector<CServer*>& servers );
-		void	addClientSockets(void);
+
 
 		void	handleEvents(void);
 		
@@ -61,7 +57,7 @@ class Server {
 		void	handleClientRead(int fd);
 		void	handleClientWrite(int fd);
 		
-		void	disconnectClient(int fd);
+		void	disconnectClient(int fd, const std::string& reason);
 		void	removeClientFromPoll(int fd);
 
 		int 	getSocketsPosition(int fd);

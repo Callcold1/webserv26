@@ -26,12 +26,19 @@
 #include <fcntl.h>
 #include <netdb.h>
 #include <sys/socket.h>
-#include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 
 // PATH STRUCT
+struct path_t {
+	bool absolute;
+	bool trailing_slash;
+	std::vector<std::string> segments;
+};
+
+// FILE INFO STRUCT
 struct fileInfo_s
 {
 	bool inaccessible;
@@ -50,8 +57,8 @@ struct fileInfo_s
 template <typename T, T Min, T Max>
 struct StaticRange
 {
-    static bool test(T value){
-	    return value >= Min && value <= Max;
+	static bool test(T value){
+		return value >= Min && value <= Max;
 	}
 };
 
@@ -93,9 +100,9 @@ void								getFileInfo(std::string& path, fileInfo_s& fileinfo);
 
 /*	FILEPATH MANIPULATION  */
 void								appendPathToRoot(fileInfo_s* target, std::string& path, std::string& root_dir);
-std::pair<std::string, std::string>	pathSplit(std::string& path);
+path_t								splitPath(const std::string& path);
 std::vector<std::string> 			split_path(std::istringstream &iss);
-std::string rebuild_path(std::vector<std::string>::iterator begin, std::vector<std::string>::iterator end);
+std::string							rebuild_path(std::vector<std::string>::iterator begin, std::vector<std::string>::iterator end);
 std::string 						rebuild_path(std::vector<std::string> segments);
 void 								remove_dot_segments(std::string &str);
 
@@ -121,7 +128,7 @@ bool								isTextChar(unsigned char c);
 bool								isTokenChar(unsigned char c);
 bool								isUnreserved(unsigned char c);
 bool								isVisibleChar(unsigned char c);
-bool								isSeparator(unsigned char c); 
+bool								isSeparator(unsigned char c);
 
 /*  URI SPECIFIC ABNF CHECKS */
 bool								isSchemeChar(unsigned char c);
@@ -157,11 +164,11 @@ bool	convertToType(T& target, const std::string& str){
 	std::istringstream stream(str);
 	stream >> target;
 
-    if (stream.fail())
-        return false;
-		
+	if (stream.fail())
+		return false;
+
 	 stream >> std::ws;
-	
+
 	return stream.eof();
 }
 

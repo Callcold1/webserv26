@@ -11,6 +11,8 @@
 /* ************************************************************************** */
 
 #include "CServer.hpp"
+#include "CLocation.hpp"
+#include <algorithm>
 
 CServer::CServer( void ) :
 	_autoindex(false), _max_body(DEFAULT_MAX_BODY),	_max_header_size(DEFAULT_MAX_HEAD),
@@ -81,6 +83,18 @@ CServer& CServer::operator=(const CServer& other) {
 	}
 	return *this;
 }
+
+/*
+>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<
+>>>>>>		SORT FUNCTOR	<<<<<<
+>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<
+*/
+
+struct compareByLength_f {
+    bool operator()(const CLocation& a, const CLocation& b) const {
+        return a.getURI().size() > b.getURI().size();
+    }
+};
 
 /*
 >>>>>>>>>>>>>>><<<<<<<<<<<<<<<
@@ -228,6 +242,8 @@ void	CServer::setListen(const std::vector<listen_s>& ports, bool set_from_config
 void	CServer::setLocations(const std::vector<CLocation>& locations, bool set_from_config_file){
 	_location_set = set_from_config_file;
 	_locations = locations;
+	
+	std::sort(_locations.begin(), _locations.end(), compareByLength_f());
 }
 
 void	CServer::setMaxBodySize(long long max_body_size, bool set_from_config_file){
@@ -263,4 +279,18 @@ void    CServer::setTimeoutKA(int timeout_in_seconds, bool set_from_config_file)
 void    CServer::setTimeoutRW(int timeout_in_seconds, bool set_from_config_file){
 	_timeout_rw_set = set_from_config_file;
 	_timeout_rw = timeout_in_seconds;
+}
+
+const CLocation*	CServer::getLocationForPath(const std::string& uri_path) const {
+	
+	size_t size = _locations.size(); 
+	
+	for (size_t i = 0; i < size; i++) {
+        
+		const std::string& loc_path = _locations[i].getURI();
+
+        if (uri_path.compare(0, loc_path.size(), loc_path) == 0)
+            return &_locations[i];
+	}
+	return NULL;
 }
