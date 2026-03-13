@@ -20,7 +20,7 @@
 
 class Request;
 class RequestParser;
-class Config;
+//class Config;
 
 enum HeaderFlag {
 	HDR_MANDATORY        = 1 << 1, // TRUE IF HEADER MUST BE PRESENT IN MESSAGE
@@ -68,18 +68,17 @@ class RequestValidator {
 	private:
 
 		Request*			_req;
-		CLocation			_location;
-		Config*				_config;
+		//CLocation			_location;
+		//Config*			_config;
 		
 		//std::map<std::string, int>	hdr_seen;
 		//const HeaderFlags*			_hdr_flags;
-		void				setLocation(CLocation& location);	
+		//void				setLocation(CLocation& location);	
 	
 		void				validateReqLine();
 
 		bool				validateMethod();
 		bool				isValidMethod(const std::string& str);
-		bool				locationSupportsMethod(const str_t& method);
 		
 		bool				validateURI();
 		bool				validateScheme();

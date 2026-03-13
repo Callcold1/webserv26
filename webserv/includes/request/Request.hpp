@@ -36,18 +36,19 @@ class Request {
 	
 	eParse				parseRequest(const char* rawData, size_t length);
 
+						/* GETTERS */
+	const std::string&	getErrMsg(void) const;
+	const std::string&	getMethod()const;
+	const CLocation*	getMatchedLocation()const;
+	const CServer*		getMatchedServer(void) const;
 	eParse				getParseStatus(void);
 	eParse				getParseStatus(void) const;
 	eReqState			getReqStatus();
 	std::string			getRequestStr();
 	std::string			getUnparsedStr();
 
-	void 				setRstate(eReqState r_state);
-	void 				setPstate(eParse p_state);
+						/* SETTERS */
 
-	bool 				setState(eParse p_state, std::string err_mess, unsigned int err_num );
-	bool 				setState(eParse p_state, eReqState r_state, std::string err_mess, unsigned int err_num );
-	
 	void				setBodyType( bool hasBody, bool isChunked );
 	void				setBodyEncoding( const std::string& encoding );
 	void				setBoundaryString( const std::string& boundary );
@@ -57,20 +58,22 @@ class Request {
 	std::string			findQuery(const std::string id);
 	
 	void				setHostname( const std::string& hostname );
-
-
-	std::vector<field_t* >		findRequestHeaderValue(const std::string& header_name);
+	void 				setPstate(eParse p_state);
+	void 				setRstate(eReqState r_state);
+	bool 				setState(eParse p_state, std::string err_mess, unsigned int err_num );
+	bool 				setState(eParse p_state, eReqState r_state, std::string err_mess, unsigned int err_num );
 
 	void				matchServerToHostHeader(void);
 	void				matchLocationToURIPath(void);
-	int					comparePaths(std::string uri_path, std::string location_path, std::string& leftover);
+
+	std::vector<field_t* >		findRequestHeaderValue(const std::string& header_name);
 
 	RequestParser*		_parser;
 	RequestValidator*	_validator;
 	//RequestHandler*		_requestHandler;
-	Config*			    _config;
+	//Config*			    _config;
 	listenInstance_s*	_listen_instance;
-	CLocation*			_matched_location;
+	const CLocation*	_matched_location;
 	CServer*			_matched_server;
 	std::deque<char>	_buffer;
 	token_s				_unparsed;
@@ -96,6 +99,8 @@ class Request {
 	uint64_t			_content_length, _body_length, _unparsed_length; //_content_length is used when content length is provided. body_length is used to track length parsed
 
 	bool 				_hasBody, _isChunked, _isMultiPart, _bodyUTF8;
+
+	private : 
 };
 
 std::ostream& l14(std::ostream& os);

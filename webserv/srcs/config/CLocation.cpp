@@ -29,7 +29,8 @@ _redirect_set(false),
 _root_dir_set(false),
 _try_files_set(false),
 _upload_path_set(false),
-_uri_set(false)
+_uri_set(false),
+_no_uri ("No URI set")
 {}
 
 CLocation::~CLocation( void ){
@@ -65,6 +66,7 @@ CLocation::CLocation(const CLocation &other){
 	_try_files_set = other._try_files_set;
 	_upload_path_set = other._upload_path_set;
 	_uri_set = other._uri_set;
+	_no_uri = other._no_uri;
 }
 
 CLocation& CLocation::operator=(const CLocation &other) {
@@ -98,10 +100,17 @@ CLocation& CLocation::operator=(const CLocation &other) {
 		_try_files_set = other._try_files_set;
 		_upload_path_set = other._upload_path_set;
 		_uri_set = other._uri_set;
+		_no_uri = other._no_uri;
 		return *this;
 	} 
 	return *this;
 }
+
+/*
+>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+>>>>>>		CHECK IF SET FROM LOCATION BLOCK		<<<<<<
+>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+*/
 
 bool	CLocation::isAliasSet(void) const{
 	return _alias_set;
@@ -157,6 +166,22 @@ bool	CLocation::isUploadPathSet(void) const{
 
 bool	CLocation::isURISet(void) const{
 	return _uri_set;
+}
+
+/*
+>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<
+>>>>>>		CHECK VARIABLE		<<<<<<
+>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<
+*/
+
+bool	CLocation::isMethodSupported(const std::string& method) const{
+	size_t size = _method.size();
+	
+	for (size_t i = 0; i < size; i++){
+		if (method.compare(_method[i]))
+			return true;
+	}
+	return false;
 }
 
 /*
@@ -237,10 +262,10 @@ std::string	CLocation::getUploadPath(void) const{
 	return _upload_path;
 }
 
-std::string	CLocation::getURI(void) const{
+const std::string&	CLocation::getURI(void) const{
 	if (_uri.length() > 0)
 		return _uri;
-	return "No URI set";
+	return _no_uri;
 }
 
 /*

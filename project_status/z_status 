@@ -1,9 +1,7 @@
 WIP
 ===
 
-Currently : adding Server and Location Matching
-
-Then :
+fix path ///
 
 1) Finish multipart (in progress)
 
@@ -19,21 +17,20 @@ Then :
 
 7) Error handling for file opening  - e.g. run "./webserv ./webserv" or "./webserv ./" - both cause issues
 
+8) Make request private where necessary
+
 Problems
 ========			    
-Problem : Server Matching           : Need to test HTTP 1.0 (Generally no host header?)
-                                    : Need to test HTTP 1.1 (Must have a host header)
-
-Problem : location matching         : need to preserve '/' when splitting 
-                                        - differentiates files from dirs
-                                        - more accurate match length
 
 Problem : Check for duplicate server names (should only relate to one socket)
+Problem : Removing /// from uri path
 
 Changes Made
 ============
 Changed 'Server::removeClientFromPoll(int fd)' : now erases client from poll vector (previously set fd to -1)
-
+Removed Config from Request RequestParser RequestValidator
+Moved location matching function to server - uses find now instead of splitting to a vector of path segments
+Added path_t struct (not sure if we'll use this but it does help with indicating if path is absolute, or if trailing '/')
 
 Still To Do
 ===========
