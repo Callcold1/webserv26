@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   core_def.hpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
+/*   By: jake <jake@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/28 18:51:39 by kmooney           #+#    #+#             */
-/*   Updated: 2025/06/17 18:01:06 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/03/10 13:48:38 by jake             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -92,7 +92,7 @@ typedef void (*fStr2)(str_t, str_t);
 
 typedef struct file_s {
 	fd_t    	fd;
-	__mode_t	perm;
+	mode_t	perm;
 	str_t   	filename;
 	void		*data;
 	file_s(){}

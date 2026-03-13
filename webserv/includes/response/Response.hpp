@@ -23,7 +23,7 @@ public:
 	Response(int status, Request &request);
 	Response(const Response &other);
 	Response &operator=(const Response &other);
-	~Response();
+	virtual ~Response();
 
 	virtual int		generate() = 0;
 	std::string		status_text();

@@ -88,18 +88,19 @@ int if_file_upload(Request &request)
 void Client::handle_request()
 {
 	int error_catch = 0;
-	Response *re;
 	std::string path = request._uri.path;
 
 	if (!_matched_location->getRedirect().url.empty())
 	{
-		re = &RediResponse(request, _matched_location->getRedirect().url);
+		response = new RediResponse(request, _matched_location->getRedirect().url);
+		response->generate();
 	}
 
-	else if (error_catch = if_file_upload(request) != 1)
+	else if ((error_catch = if_file_upload(request)) != 1)
 	{
+		// TODO generate response for successful file upload
 		if (error_catch >= 400)
-			re = &ErrorResponse(error_catch, request);
+			response = new ErrorResponse(error_catch, request);
 	}
 
 	else if (path.find(CGI_PATH) != std::string::npos && path.find((CGI_PATH + std::string("assets"))) == std::string::npos)
@@ -107,26 +108,30 @@ void Client::handle_request()
 		struct stat st;
 		if (stat(path.c_str(), &st) == 0 && S_ISREG(st.st_mode))
 		{
-			re = &CgiResponse(request);
-			error_catch = re->generate();
+			response =  new CgiResponse(request);
+			error_catch = response->generate();
 			if (error_catch != 0)
 			{
-				re = &ErrorResponse(error_catch, request);
+				delete response;
+				response = new ErrorResponse(error_catch, request);
 			}
 		}
 		else
 		{
-			re = &ErrorResponse(NOT_FOUND_ERROR, request); //again, could be 403 for directories etc but this is for security
+			response = new ErrorResponse(NOT_FOUND_ERROR, request); //again, could be 403 for directories etc but this is for security
 		}
 	}
 	else if (path.find(HTML_PATH) != std::string::npos || path.find(PHOTO_PATH) != std::string::npos)
 	{
-		re = &StaticResponse(request);
-		if ((error_catch = re->generate()) != 0)
-			re = &ErrorResponse(error_catch, request);
+		response = new StaticResponse(request);
+		if ((error_catch = response->generate()) != 0)
+		{
+			delete response;
+			response = new ErrorResponse(error_catch, request);
+		}
 	}
 	else
-		re = &ErrorResponse(NOT_FOUND_ERROR, request); //defaults to 404 not found
-	append_write(re->serialize());
-
+		response =  new ErrorResponse(NOT_FOUND_ERROR, request); //defaults to 404 not found
+	append_write(response->serialize());
+	delete response;
 }

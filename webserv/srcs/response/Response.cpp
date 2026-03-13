@@ -53,7 +53,7 @@ std::string Response::status_text()
 	switch (_status)
 	{
 		case 200: return "OK";
-		case 201: return "Created";
+		case 201: return "Resource Created";
 		case 202: return "Accepted";
 		case 204: return "No Content";
 
@@ -63,7 +63,7 @@ std::string Response::status_text()
 
 		case 400: return "Bad Request";
 		//case 401: return "Unauthorized";
-		case 403: return "Forbidden";
+		//case 403: return "Forbidden";
 		case 404: return "Not Found";
 		case 405: return "Method Not Allowed";
 

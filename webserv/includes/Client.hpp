@@ -61,23 +61,23 @@ public:
 
 	void handle_request();
 	
-	private:
-		
-		int					fd;
-		char				in_buff[1000];
-		Request				request;
-		Response*			response;
-		std::string			out_buff;
-		enum cState			_state;
-		enum eConn			_conn;
-		time_t				last_active;
-		
-		Config*				_config;
-		listenInstance_s*	_listen_instance;
-		CServer*			_matched_server;
-		CLocation*			_matched_location;
-		enum eParse			_p_state;
-		enum eReqState		_r_state;
-		bool				_keep_alive;		//update to true if header => Connection: keep-alive
-		size_t				_read_cycles;		// Not sure if we need this, but used to allocate memory for a new request. Will also be required if we are queuing requests?
+private:
+	
+	int					fd;
+	char				in_buff[1000];
+	Request				request;
+	Response*			response;
+	std::string			out_buff;
+	enum cState			_state;
+	enum eConn			_conn;
+	time_t				last_active;
+	
+	Config*				_config;
+	listenInstance_s*	_listen_instance;
+	CServer*			_matched_server;
+	CLocation*			_matched_location;
+	enum eParse			_p_state;
+	enum eReqState		_r_state;
+	bool				_keep_alive;		//update to true if header => Connection: keep-alive
+	size_t				_read_cycles;		// Not sure if we need this, but used to allocate memory for a new request. Will also be required if we are queuing requests?
 };

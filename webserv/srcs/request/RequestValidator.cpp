@@ -6,7 +6,7 @@
 /*   By: jake <jake@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/30 11:26:19 by kmooney           #+#    #+#             */
-/*   Updated: 2026/03/10 13:38:27 by jake             ###   ########.fr       */
+/*   Updated: 2026/03/10 16:18:21 by jake             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -524,7 +524,7 @@ bool	RequestValidator::validateMultiPartHeader(const std::string& val, const std
 		else
 			return _req->setState(P_ERROR, V_HEADERS, "Unsupported multipart type", 415);
 	}
-	bool has_boundary;
+	bool has_boundary = false;
 	bool has_type;
 
 	if (size != 0) {

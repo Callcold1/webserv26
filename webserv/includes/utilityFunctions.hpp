@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   utilityFunctions.hpp                               :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
+/*   By: jake <jake@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/11 16:04:15 by kmooney           #+#    #+#             */
-/*   Updated: 2026/03/05 14:07:13 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/03/10 16:16:16 by jake             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,6 +26,7 @@
 #include <fcntl.h>
 #include <netdb.h>
 #include <sys/socket.h>
+#include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -40,7 +41,7 @@ struct fileInfo_s
 	bool is_file;
 	bool is_symlink;
 	bool not_found;
-	__mode_t permissions;
+	mode_t permissions;
 	std::string path;
 
 	fileInfo_s() : inaccessible(false), is_dir(false), is_exec(false), is_file(false), is_symlink(false), not_found(false), permissions(0), path("") {}
