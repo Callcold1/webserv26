@@ -223,13 +223,7 @@ bool isValidUTF8(const std::string &str)
 
 /*
 0000	0
-0001	1Global
-======
-Max Body size : 500000
-Max Connections : 1024
-Max Header size : 8000
-Timeout (keep-alive) : 65 seconds
-Timeout (read-write) : 200 seconds
+0001	1
 0010	2
 0011	3
 0100	4
@@ -429,97 +423,84 @@ fileInfo_s* getFileInfo(std::string& path, std::string& root_dir){
 	return fileinfo;
 }
 
+bool	assignTempfile(std::string& target_path, int& target_fd, const std::string& prefix){
+
+	time_t	t = time(NULL);
+	tm	tm_now;
+	localtime_r(&t, &tm_now);
+
+    char timestamp[32];
+    strftime(timestamp, sizeof(timestamp), "%Y%m%d_%H%M%S", &tm_now);
+    
+	// Template for mkstemp (must end with XXXXXX.extension)
+	// mkstemp requires a writable char array
+	std::string			tmpTemplate = "/tmp/" + prefix + timestamp + "_XXXXXX" + ".tmp";
+    std::vector<char>	tmpFilename(tmpTemplate.begin(), tmpTemplate.end());
+    
+	tmpFilename.push_back('\0');
+
+    target_fd = mkstemp(tmpFilename.data());
+	target_path = tmpTemplate;
+	if (target_fd == -1)
+    	return false;
+	return true;
+}
+
 /*
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<
 >>>>>>	  FILEPATH MANIPULATION		<<<<<<
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<
 */
 
-void	appendPathToRoot(fileInfo_s* fileinfo, std::string& path, std::string& root_dir){
+void	appendPathToRoot(fileInfo_s* fileinfo, std::string path, std::string root_dir){
 
-	if (root_dir[root_dir.size() - 1] == '/')
-		trimEndChar(root_dir, '/');
-	if (path[0] == '/')
-		trimLeadingChar(path, '/');
-	fileinfo->path = root_dir + '/' + path;
-}
-
-path_t	splitPath(const std::string& path){
-
-	path_t result;
-
-	result.absolute = (!path.empty() && path[0] == '/');
-	size_t size = path.size();
-	result.trailing_slash = (size > 1 && path[size - 1] == '/');
-
-	std::stringstream ss(path);
-	std::string token;
-
-	while (getline(ss, token, '/')) {
-		if (token.empty() || token == ".")
-			continue;
-		if (token == "..") {
-			if (!result.segments.empty())
-				result.segments.pop_back();
-		}
-		else
-			result.segments.push_back(token);
+	if (path.length() == 0)
+		fileinfo->path = root_dir;
+	else {
+		if (root_dir[root_dir.size() - 1] == '/')
+			trimEndChar(root_dir, '/');
+		if (path[0] == '/')
+			trimLeadingChar(path, '/');
+		fileinfo->path = root_dir + '/' + path;
 	}
-	return result;
 }
 
-std::vector<std::string> split_path(std::istringstream &iss)
-{
-	std::string str;
-	std::vector<std::string> segments;
-	// THIS NEEDS TO BE CHANGED!
-	if (str.substr(0, 1) == "./")
-		str = str.substr(2);
-	else if (str[0] == '/')
-		segments.push_back("/");
-	while (std::getline(iss, str, '/'))
-	{
-		if (str.empty() || str.compare(".") == 0)
-			continue;
-		else if (str.compare("..") == 0 && segments.size() > 1)
-			segments.pop_back();
-		else
-			segments.push_back(str);
-	}
-	return segments;
-}
+std::string normalisePath(const std::string& path) {
 
-std::string rebuild_path(std::vector<std::string> segments)
-{
-	std::string path;
-
-	if (segments[0] == "/")
-		for (size_t i = 1; i < segments.size(); i++){
-			path + segments[i];
-		}
-	return path;
-}
-
-std::string rebuild_path(std::vector<std::string>::iterator begin, std::vector<std::string>::iterator end)
-{
 	std::string result;
+    size_t i = 0;
 
-	for (; begin != end; begin++){
-		result += "/";
-		result += *begin;
-	}
+    while (i < path.size()) {
 
-	return result;
-}
+		if (path[i] == '/') {
+			result += '/';
 
-void remove_dot_segments(std::string &str)
-{
-	std::istringstream iss(str);
-	std::vector<std::string> segments;
+			while (i < path.size() && path[i] == '/')
+                i++;
+            continue;
+        }
 
-	segments = split_path(iss);
-	str = rebuild_path(segments);
-	return;
+        size_t start = i;
+        while (i < path.size() && path[i] != '/')
+            i++;
+
+        std::string segment = path.substr(start, i - start);
+
+        if (segment == ".") {
+            continue;
+        }
+		else if (segment == "..") {
+            if (result.size() > 1)
+                result.erase(result.find_last_of('/', result.size() - 2) + 1);
+        }
+		else
+            result += segment;
+    }
+    if (result.empty())
+        result = "/";
+    if (path.size() > 1 && path[path.size() - 1] == '/' && result[result.size() - 1] != '/')
+        result += '/';
+    return result;
 }
 
 /*

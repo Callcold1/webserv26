@@ -27,6 +27,7 @@ RequestParser::RequestParser(Request* request): _req(){
 	_expected_len = 0;
 	_chunk_size = 0;
 	_chunk_parser_status = PARSE_CHUNK_SIZE;
+	//_mp_state = MP_NONE;
 }
 
 RequestParser::~RequestParser(){
@@ -40,8 +41,9 @@ void	RequestParser::clear() {
 	_expected_len = 0;
 	_parsed_body_len = 0;
 	_chunk_size = 0;
+	_chunk_parser_status = PARSE_CHUNK_SIZE;
+	//_mp_state = MP_NONE;
 }
-
 
 /**
  * @brief Main entry point to parse raw HTTP request data.
@@ -94,7 +96,7 @@ void	RequestParser::addData(const char* data, size_t length){
  *
  * This function sets the beginning and end positions of the `_p_it` token range,
  * which is used to track the portion of the buffer currently being parsed.
- * 
+ *
  * If the request is in the `P_REQLINE` state, it resets the beginning of the parse range
  * to the start of the buffer. The end iterator is always set to the current end of the buffer.
  *
@@ -133,7 +135,7 @@ void	RequestParser::setIterators(token_s& t, T& begin, T& end){
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 >>>>>>					 SPLITING FUNCTIONS								   <<<<<<
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-																				*/																	
+																				*/
 /**
  * @brief Extracts the next line from the input token stream.
  *
@@ -221,7 +223,6 @@ bool	RequestParser::parseSingleToken( token_s& it, eParseContext contextNum, std
 
 size_t	RequestParser::splitToToken( token_s& it, bool last_val, std::vector<token_s>& tkns, const std::string& delim )
 {
-
 	// NEED TO ADD DQUOTE CHECK AND ESCAPE CHAR
 	std::deque<char>::const_iterator	parse_pos = it.begin;
 	while (parse_pos != it.end)
@@ -264,9 +265,9 @@ size_t	RequestParser::splitToToken( token_s& it, bool last_val, std::vector<toke
 bool	RequestParser::splitToToken( token_s& it, bool last_val, token_s& tkn, const std::string& delim )
 {
 	std::deque<char>::const_iterator	parse_pos	= it.begin;
-	
+
 	while (parse_pos != it.end)	{
-		
+
 		std::deque<char>::const_iterator	compare = parse_pos;
 		std::string::const_iterator			delim_pos = delim.begin();
 
@@ -346,18 +347,18 @@ std::string	RequestParser::tokenToString(const token_s& token) {
 
 /**
  * @brief Parses an HTTP request by processing its various components: request line, headers, and body.
- * 
- * This function checks the current state of the request (`_r_state`) and invokes the appropriate parsing 
+ *
+ * This function checks the current state of the request (`_r_state`) and invokes the appropriate parsing
  * function based on the state. The eURIstates& include:
  * - `P_REQLINE`: Parses the request line (method, URI, and protocol).
  * - `P_HEADERS`: Parses the HTTP headers.
  * - `P_BODY	: Parses the body of the HTTP request.
  * - `P_TRAILERS: Parses the HTTP trailers (if transfer encoding is chunked).
- * 
- * 
+ *
+ *
  * The `_p_state` is set to `P_PARSE` to indicate that parsing is in progress.
- * 
- * @note The function works by calling the specific parsing functions like `parseReqLine`, `parseHeaders`, 
+ *
+ * @note The function works by calling the specific parsing functions like `parseReqLine`, `parseHeaders`,
  * and `parseBody` depending on the state of the request.
  */
 void	RequestParser::parseRequest(){
@@ -385,27 +386,27 @@ void	RequestParser::parseRequest(){
 
 /**
  * @brief Parses the HTTP request line.
- * 
- * This function processes the request line (which includes the HTTP method, URI, and version) of 
- * the incoming HTTP request. It uses the `getRequestLine` function to retrieve the request line 
- * and then calls splitToToken which then splits the request line using space to delimit. 
+ *
+ * This function processes the request line (which includes the HTTP method, URI, and version) of
+ * the incoming HTTP request. It uses the `getRequestLine` function to retrieve the request line
+ * and then calls splitToToken which then splits the request line using space to delimit.
  * If there are not exactly 2 spaces ( 3 rl arguments ), an error is returned indicating malformed request line.
  * - `RL_COMPLETE`: Indicates that the request line has been fully parsed.
- * 
+ *
  * The function checks for any parsing errors, and if an error is detected, it sets the appropriate
  * error state and message.
- * 
+ *
  * @param it The token iterator pointing to the current position in the input data.
- * 
- * @return This function does not return any value but modifies the state of the request and 
+ *
+ * @return This function does not return any value but modifies the state of the request and
  *         the `_rl_state` during parsing.
- * 
+ *
  * @note If the request line format is incorrect, the state is set to `P_ERROR` and an error message is logged.
  */
 void	RequestParser::parseReqLine(token_s& it){
 
 	token_s	rl;
-	
+
 	if (!getRequestLine(rl, it))
 		return;
 	tokenToString(rl, _req->_req_line);
@@ -421,7 +422,7 @@ void	RequestParser::parseReqLine(token_s& it){
 	tokenToString(_tknLst[0], _req->_method);
 	if (!parseURI(_tknLst[1]))
 	 	return;
-	
+
 	tokenToString(_tknLst[2], _req->_version);
 	_req->setRstate(V_REQLINE);
 	return;
@@ -429,14 +430,14 @@ void	RequestParser::parseReqLine(token_s& it){
 
 /**
  * @brief Retrieves the request line from the HTTP request.
- * 
- * This function attempts to parse the next line from the input iterator and assigns it to the 
+ *
+ * This function attempts to parse the next line from the input iterator and assigns it to the
  * `rl` token. If the line is successfully parsed, it sets the request line state to `RL_METHOD`.
  * If the line cannot be parsed, the function sets the request parsing state to `P_AWAIT`.
- * 
+ *
  * @param rl The token where the parsed request line will be stored.
  * @param it The iterator pointing to the current position in the input data.
- * 
+ *
  * @return `true` if the request line was successfully parsed, `false` otherwise.
  */
 bool	RequestParser::getRequestLine(token_s& rl, token_s &it){
@@ -476,7 +477,7 @@ bool	RequestParser::parseURI( token_s& uri )
 }
 
 eURIstates&	RequestParser::parseScheme( eURIstates& state, token_s& uri ){
-	
+
 	if (parseSingleToken(uri, ABSOLUTE_URI, _req->_uri.scheme)){
 		_req->_uri.uri_type = ABSOLUTE_FORM;
 		return state = AUTH;
@@ -491,7 +492,7 @@ eURIstates&	RequestParser::parseScheme( eURIstates& state, token_s& uri ){
 	}
 	if (_req->getParseStatus() == P_ERROR)
 		return state = URI_ERROR;
-		
+
 	_req->setState(P_ERROR, "Malformed Request Line : No authority or path in URI ", 400);
 	return state = URI_ERROR;
 }
@@ -499,9 +500,9 @@ eURIstates&	RequestParser::parseScheme( eURIstates& state, token_s& uri ){
 eURIstates&	RequestParser::parseAuth( eURIstates& state, token_s& uri ){
 	token_s		auth;
 	char		found_delim;
-	
+
 	if (splitToTokenMultiDelims(uri, true, auth, "/?#", found_delim )){
-		
+
 		tokenToString(auth, _req->_uri.auth);
 		if (!_req->_uri.scheme.empty() && _req->_uri.auth.empty())
 			_req->setState(P_ERROR, "Malformed Request Line : No authority or server component in URI", 400);
@@ -523,7 +524,7 @@ eURIstates&	RequestParser::parseAuth( eURIstates& state, token_s& uri ){
 		default	 : { return state = URI_END;}
 	}
 }
-		
+
 eURIstates&	RequestParser::parseUser( eURIstates& state, token_s& auth ){
 
 	token_s userinfo;
@@ -541,7 +542,7 @@ eURIstates&	RequestParser::parseHost( eURIstates& state, token_s& uri ){
 
 	token_s		host;
 	char		found_delim;
-	
+
 	if (splitToTokenMultiDelims(uri, true, host, ":/?#", found_delim )){
 		if (!tokenCharValidation(host, "Malformed Request Line : Invalid characters in Host element ", 400, isHostChar))
 			return state = URI_ERROR;
@@ -566,13 +567,14 @@ eURIstates&		RequestParser::parsePath( eURIstates& state, token_s& uri ){
 	token_s		path;
 	std::string path_str;
 	char		found_delim;
-	
+
 	if (splitToTokenMultiDelims(uri, true, path, "?#", found_delim )){
 		if (!tokenCharValidation(path, "Malformed Request Line : Invalid characters in Path element", 400, isPathChar))
 			return state = URI_ERROR ;
-			
+
 		tokenToString(path, path_str);
 		_req->_uri.path += path_str;
+		_req->_re.request_path = _req->_uri.path;	// temporary (testing respond_t)
 		switch (found_delim){
 			case '?' : { return state = QUERY;}
 			case '#' : { return state = FRAG; }
@@ -594,7 +596,7 @@ eURIstates&	RequestParser::parseQuery( eURIstates& state, token_s& uri ){
 	}
 	else
 		state = URI_END;
-	
+
 	std::string	key;
 	std::string	val;
 	std::vector<token_s> querylist;
@@ -657,16 +659,16 @@ bool	RequestParser::URInormalisation( void ){
  * @see to_lower_ref()
  */
 bool	RequestParser::parseFieldVal(token_s& value_tkn, field_t* field) {
-	
+
 	std::vector<token_s>			param_vector;
 	std::vector<token_s>::iterator	it;
-	
+
 	token_s token;
 	std::string	param_key;
 	std::string	param_val;
 
 	splitToToken(value_tkn, true, param_vector, ";");
-	{	
+	{
 		it = param_vector.begin();
 		if (!tokenCharValidation(*it, "Malformed Field : Invalid Character in Field Value", 400, isTextChar))
 			return false;
@@ -712,21 +714,23 @@ bool	RequestParser::parseFieldLine(token_s& line) {
 	std::string					field_name;
 	std::vector< field_t * >	field_vector;
 	fieldMap_t*	fieldMap;
-	
+
 	if (_req->_r_state == P_HEADERS)
 		fieldMap = &_req->_headers;
-	else
+	else if (_req->_r_state == P_TRAILERS)
 		fieldMap = &_req->_trailers;
+	else if(_req->_r_state == P_MULTI)
+		fieldMap = currentPart().headers;
 
 	if (parseSingleToken(line, FIELD_NAME, field_name)) {
 		to_lower_ref(field_name);
 
 		std::vector<token_s> values;
 		splitToToken(line, true, values, ",");
-	
+
 		for (size_t i = 0; i < values.size(); i++) {
 			token_s& currentToken = values[i];
-	
+
 			field_t* new_field = new field_t();
 			parseFieldVal(currentToken, new_field);
 			field_vector.push_back(new_field);
@@ -763,10 +767,11 @@ void	RequestParser::parseField(token_s& it) {
 	token_s line;
 	eReqState next_state;
 
-	if (_req->getReqStatus() == P_HEADERS)
-		next_state = V_HEADERS;
-	else{
-		next_state = V_TRAILERS;
+	switch (_req->getReqStatus()){
+		case (P_HEADERS) : {next_state = V_HEADERS; break;}
+		case (P_TRAILERS) : {next_state = V_TRAILERS; break;}
+		case (P_MULTI) : {next_state = V_MULTI; _mp_p.state = MP_BODY; break;}
+		default : break;
 	}
 
 	while (it.begin != it.end) {
@@ -800,6 +805,7 @@ void	RequestParser::parseBody(token_s& it) {
 			return;
 		}
 		else if (_req->_isMultiPart){
+			_req->setRstate(P_MULTI);
 			parseMultiPart(it);
 			return;
 		}
@@ -856,7 +862,7 @@ bool	RequestParser::parseChunkData(token_s& it, std::string& data) {
 		_req->setPstate(P_AWAIT);
 		return false;
 	}
-	
+
 	token_s chunk;
 	if (*(it.begin + _chunk_size) == '\r' && *(it.begin + _chunk_size + 1) == '\n'){
 		chunk.begin = it.begin;
@@ -871,9 +877,9 @@ bool	RequestParser::parseChunkData(token_s& it, std::string& data) {
 }
 
 bool	RequestParser::parseChunkSize( token_s& it){
-	
+
 	token_s	line;
-	
+
 	if (!parseNextLine(it, line)) {
 		_req->setPstate(P_AWAIT);
 		return false;
@@ -929,41 +935,25 @@ void	RequestParser::parseChunked( token_s& it ){
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 */
 
-	// 1) multipart header will be parsed first 
-	// 2) use this to populate boundary in MultipartMessage struct,			 
-	// 2) then use this boundary to parse the body into parts.
-	// 3) Each part will be stored as a MultipartPart struct, which contains the content type, disposition, filename (if applicable), and the content itself as a vector of chars.
-
-/* 
- MULTIPART STRUCTS
-
-typedef struct  {
-	std::string					contentType;
-	std::string					disposition;
-	std::string					filename;
-	bool						isFile;
-	std::string					tempFilePath;
-	std::vector<unsigned char>	content;
-} MultipartPart;
-
-typedef struct {
-	std::vector<MultipartPart>	parts;
-	std::string					boundary;
-} MultipartMessage;
- */
 void	RequestParser::parseMultiPart( token_s& it ){
+	if (_mp_p.state == MP_NONE){
 
-	while (it.begin == it.end){
-		// parse boundary
-		// parse content type hewill require a recursive call ader
-		// parse boundary delimited parts
-			// for each part, parse headers and content
-				// store content in temp file if isFile is true
-		// store each part in _req->_multipart_message.parts
-		// set _req->_multipart_message.boundary
-		// if Content-Disposition header is present, parse filename and disposition type
-			// if filename is present, set isFile to true and store content in temp file
-			// if filename is not present, set isFile to false and store content in memory
+		_mp_p.boundary =_req->_boundary;
+		_mp_p.boundary_marker =_req->_boundary + "--";
+		_mp_p.state = MP_BOUNDARY;
+	}
+	while (_mp_p.state != MP_COMPLETE && _req->_p_state == P_PARSE){
+		switch (_mp_p.state) {
+			case MP_NONE:		return;
+			case MP_BOUNDARY:	parseBoundaryMP(it); break;
+			case MP_HEADERS:	parseHeadersMP(it); break;
+			case MP_BODY: 		parseBodyMP(it); break;
+			case MP_ERROR:		return;
+			default: break;
+		}
+	}
+	return;
+}
 		// if Content-Type header is present, store content type in MultipartPart struct
 			// if not present, set content type to application/octet-stream
 		// if Content-Type is multipart/mixed, need to recursively parse the content of that part as another multipart message using the same parsing logic, but with a different boundary specified in the Content-Type header of that part.
@@ -972,24 +962,147 @@ void	RequestParser::parseMultiPart( token_s& it ){
 		// once final boundary is reached, set state to P_DONE
 		// if at any point parsing fails, set state to P_ERROR with appropriate message and code
 		// NEED TO CONSIDER CASES WHERE BOUNDARY MAY BE SPLIT ACROSS CHUNKS, OR WHERE HEADERS MAY BE SPLIT ACROSS CHUNKS, ETC. MAY NEED TO IMPLEMENT A BUFFERING MECHANISM TO HANDLE INCOMPLETE DATA.
-		// 		
+		//
+
+		// PARSING:
+
+		//	Each multipart message (entirety of multipart message (boundary/headers/body/end_boundary)
+		// 		- parsed into mpPart_t parts. Each 'part' is pushed to the back of the mpMessage_t.parts vector.
+		//		- parsing status is saved in the last mpMessage_t
+		//
+
+		// SUPPORTED DISPOSITION : multipart/form
+		//	  DISPOSITION FORMAT : mpPart_t->disposition.type (i.e. multipart/form)
+		//	  DISPOSITION VALUES :
+		//
+		// SUPPORTED CONTENT-TYPE :
+void	RequestParser::parseBoundaryMP(token_s& it){
+
+	token_s line;
+
+	if (!parseNextLine(it, line)){
+		_req->setPstate(P_AWAIT);
 		return;
 	}
-// 	std::string		data;
+	std::string str = tokenToString(line);
+	if (str == _mp_p.boundary_marker) {
+    	_mp_p.state = MP_COMPLETE;
+    	_req->setState(P_DONE, V_BODY, "Parsing Complete", 200);
+    	return;
+	}
+	if (str == _mp_p.boundary){
+		_req->setState(P_ERROR, P_BODY, "Malformed Body : Invalid multipart boundary", 400); // CODE CHECK REQUIRED
+		_mp_p.state = MP_ERROR;
+	}
+	mpPart_t	part;
 
-// 	while (it.begin != it.end) {
-// 		if (_chunk_size == 0 && !parseChunkSize(it))
-// 			return;
-// 		if (_chunk_size == 0){
-// 			_req->setRstate(V_BODY);
-// 			_req->setPstate(P_DONE);
-// 			return;
-// 		}
-// 		if (!parseChunkData(it, data))
-// 			return;
-// 		_req->_body += data;
-// 		_chunk_size = 0;
-// 	}
+	_mp_m.parts.push_back(part);
+	_mp_p.current_index = _mp_m.parts.size() - 1;
+	_mp_p.state = MP_HEADERS;
+}
+
+void	RequestParser::parseHeadersMP(token_s& it){
+
+	/* 
+		Transfer-Encoding (e.g., chunked)
+		content-length header is not used for multipart body
+	*/
+	parseField(it); // Double check that a ';' is not mandatory in our function (a trailing ';' is not expected for the last kvpair in multipart)
+/* 	if (_req->_p_state != P_PARSE)
+		return;
+
+	token_s line;
+
+	if (parseNextLine(it, line) && tokenToString(line).length() != 0)
+		_req->setState(P_ERROR, P_BODY, "Malformed Body : Invalid multipart format (missing empty line)", 400); // CODE CHECK REQUIRED
+	_mp_p.state = MP_BODY; */
+}
+
+bool	RequestParser::matchBoundaryMP(std::deque<char>::const_iterator pos, std::deque<char>::const_iterator end, const std::string& boundary){
+	
+	if (std::distance(pos, end) < (ptrdiff_t)boundary.size())
+		return false;
+
+	for (size_t i = 0; i < boundary.size(); i++) {
+		if (*(pos + i) != boundary[i])
+			return false;
+	}
+	return true;
+}
+
+void	RequestParser::parseBodyMP(token_s& it) {
+
+	mpPart_t&							part = currentPart();
+	std::deque<char>::const_iterator	pos = it.begin;
+	size_t								boundary_size = _mp_p.boundary.size() + 4; 				 // safe = size of /r/n--boundary (means we avoid accidently inserting boundary in body)
+
+	while (pos != it.end){
+
+		if (std::distance(pos, it.end) >= (ptrdiff_t)(boundary_size)) {
+
+			if (*pos == '\r' && *(pos + 1) == '\n') {
+
+				std::deque<char>::const_iterator	boundary_pos = pos + 2;
+				
+				if (matchBoundaryMP(boundary_pos, it.end, _mp_p.boundary_marker)){
+					_mp_p.state = MP_COMPLETE;
+					if (part.isFile)
+						appendToTempfileMP(part, it.begin, pos);
+					else
+						appendToBodyMP(part, it.begin, pos);
+					it.begin = boundary_pos + _mp_p.boundary_marker.size();
+				    return;
+				}
+				else if (matchBoundaryMP(boundary_pos, it.end, _mp_p.boundary)){
+					_mp_p.state = MP_BOUNDARY;
+					if (part.isFile)
+						appendToTempfileMP(part, it.begin, pos);
+					else
+						appendToBodyMP(part, it.begin, pos);					
+					it.begin = boundary_pos;
+				    return;
+				}
+			}
+		}
+		pos++;
+	}
+	size_t	available = std::distance(it.begin, it.end);
+
+	if (available > boundary_size){
+		if (part.isFile)
+			appendToTempfileMP(part, it.begin, it.end - boundary_size);
+		else
+			appendToBodyMP(part, it.begin, it.end - boundary_size);
+		it.begin = it.end - boundary_size;
+	}
+	_req->setPstate(P_AWAIT);
+}
+
+void	RequestParser::appendToTempfileMP(mpPart_t& part, std::deque<char>::const_iterator begin, std::deque<char>::const_iterator end) {
+
+	if (!assignTempfile(part.tempFilePath, part.fd, "Multipart_")){
+		part.parse_status = MP_ERROR;
+		return;
+	}	
+
+	std::ofstream ofs(part.tempFilePath.c_str(), std::ios::out | std::ios::binary | std::ios::app);
+    
+	if (!ofs) {
+        part.parse_status = MP_ERROR;
+        return;
+    }
+
+	if (begin != end)
+        ofs.write(&(*begin), std::distance(begin, end));
+    ofs.close();
+}
+
+void	RequestParser::appendToBodyMP(mpPart_t& part, std::deque<char>::const_iterator begin, std::deque<char>::const_iterator end) {
+	part.body.insert(part.body.end(), begin, end);
+}
+
+mpPart_t& RequestParser::currentPart() {
+	return _mp_m.parts[_mp_p.current_index];
 }
 
 std::string	RequestParser::getParsedString(){
@@ -998,11 +1111,11 @@ std::string	RequestParser::getParsedString(){
 }
 
 bool	RequestParser::rlCharsCheck(const token_s& chars, const std::string& error, int errNum){
-	
+
 	std::deque<char>::const_iterator it = chars.begin;
 
 	for (; it != chars.end; it++)
-	{	
+	{
 		if (*it < 32 || *it > 126){
 			if ((it + 1) == chars.end)
 				return true;
@@ -1013,11 +1126,11 @@ bool	RequestParser::rlCharsCheck(const token_s& chars, const std::string& error,
 }
 
 bool	RequestParser::tokenCharValidation(const token_s& chars, const std::string& error, int errNum, bool (*f)(unsigned char)){
-	
+
 	std::deque<char>::const_iterator it = chars.begin;
 
 	for (; it != chars.end; it++)
-	{	
+	{
 		if (f && !f(*it))
 			return _req->setState(P_ERROR, error, errNum);
 	}
@@ -1040,6 +1153,7 @@ void	RequestParser::createContextMap(){
 		_map[PARAM_KEY] = parseContext		(true , DELIM_REQUIRED, "=", "Malformed header : Field Parameter Key", 400, isTokenChar);
 		_map[PARAM_VAL] = parseContext		(false, DELIM_OPTIONAL, ";", "Malformed header : Field Parameter Value", 400, isQuotedParamKeyChar);
 		_map[CHUNKSIZE] = parseContext		(true , DELIM_OPTIONAL, ";", "Malformed Body : Invalid Chunk Size", 400, 0);
+		//_map[BOUNDARY] = parseContext		(true , DELIM_OPTIONAL, "--", "Malformed Body : Invalid Chunk Size", 400, 0);
 	}
 	_contextMap = _map;
 }

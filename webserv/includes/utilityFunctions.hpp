@@ -25,9 +25,11 @@
 #include <dirent.h>
 #include <fcntl.h>
 #include <netdb.h>
+#include <stdlib.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <time.h>
 #include <unistd.h>
 
 
@@ -97,14 +99,11 @@ void								getFilePermissions(fileInfo_s& target);
 fileInfo_s*							getFileInfo(std::string& path, std::string& root_dir);
 fileInfo_s*							getFileInfo(std::string& path);
 void								getFileInfo(std::string& path, fileInfo_s& fileinfo);
+bool								assignTempfile(std::string& target_path, int& target_fd, const std::string& prefix);
 
 /*	FILEPATH MANIPULATION  */
-void								appendPathToRoot(fileInfo_s* target, std::string& path, std::string& root_dir);
-path_t								splitPath(const std::string& path);
-std::vector<std::string> 			split_path(std::istringstream &iss);
-std::string							rebuild_path(std::vector<std::string>::iterator begin, std::vector<std::string>::iterator end);
-std::string 						rebuild_path(std::vector<std::string> segments);
-void 								remove_dot_segments(std::string &str);
+void								appendPathToRoot(fileInfo_s* target, std::string path, std::string root_dir);
+std::string							normalisePath(const std::string& path);
 
 /*  DUPLICATE CHECK */
 template<class T>

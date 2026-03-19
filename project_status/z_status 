@@ -1,8 +1,6 @@
 WIP
 ===
 
-fix path ///
-
 1) Finish multipart (in progress)
 
 2) Validate headers
@@ -68,3 +66,199 @@ do we call that an error, or set up bind for 0.0.0.0 and resolve the ip that the
         - when executing bind(), we only bind if wildcard_port is false
         - when client connects, we need to resolve the ip address before calling creating request with the appropriate listen_instance
         - change overlap error logic (remove)
+
+Matching Paths
+==============
+If the request uri path ends with / then it should be treated as a request for a directory
+If there is no trailing /, it should not
+
+If filesystem_path is a directory AND uri does not end with '/'
+return :
+    301 Moved Permanently
+    Location: uri + "/"
+
+This is another subtle case that causes incorrect redirects or duplicate content in many webserv implementations.
+
+1️⃣ The Situation
+
+Filesystem:
+
+/www/html/
+├── index.html
+├── about.html
+
+Location:
+
+location /html {
+    root /www/html;
+}
+
+Requests that may occur:
+
+/html
+/html/
+/html/index.html
+
+2️⃣ Correct Server Behavior
+Request
+/html
+
+Filesystem path:
+
+/www/html
+
+If it's a directory and the URI does not end with /, the server should redirect:
+
+301 → /html/
+Request
+/html/
+
+Filesystem path:
+
+/www/html/
+
+Server checks for index files:
+
+/www/html/index.html
+
+Response:
+
+200 OK
+
+Serving:
+
+index.html
+Request
+/html/index.html
+
+Filesystem path:
+
+/www/html/index.html
+
+Response:
+
+200 OK
+
+Serving the same file.
+
+3️⃣ Important Detail
+
+Servers do not redirect /html/index.html → /html/.
+
+Even though they serve the same file.
+
+Both URLs remain valid:
+
+URI	Result
+/html/	serves index.html
+/html/index.html	serves index.html
+
+Many students mistakenly implement:
+
+/html/index.html → redirect → /html/
+
+This is incorrect behavior.
+
+4️⃣ Why Servers Don't Redirect
+
+Because index.html is just a normal file.
+
+If the server redirected:
+
+/html/index.html → /html/
+
+it would break cases like:
+
+/html/index.html?download=true
+/html/index.html#section
+
+And static file references like:
+
+<a href="index.html">
+5️⃣ Correct Implementation Rules
+Rule 1
+
+If filesystem path is a directory and URI doesn't end with /:
+
+redirect → uri + "/"
+
+Example:
+
+/html → /html/
+Rule 2
+
+If URI ends with /:
+
+Check for index files:
+
+index.html
+index.htm
+
+Serve them.
+
+Rule 3
+
+If the URI maps directly to a file, serve it.
+
+No redirects.
+
+Example:
+
+/html/index.html
+/html/about.html
+6️⃣ Simple Implementation Logic
+uri → filesystem_path
+        ↓
+stat()
+Case 1: Directory
+is_directory
+
+Check:
+
+uri ends with '/' ?
+
+No:
+
+301 redirect
+
+Yes:
+
+check index files
+Case 2: File
+serve file
+7️⃣ Example Flow
+
+Request:
+
+GET /html
+/www/html → directory
+
+Redirect:
+
+301 Location: /html/
+
+Next request:
+
+GET /html/
+
+Server checks:
+
+/www/html/index.html
+
+Serve file.
+
+8️⃣ Summary
+Request	Behavior
+/html	301 → /html/
+/html/	serve index.html
+/html/index.html	serve file directly
+
+✅ If you're interested, I can also show one last tricky routing case that breaks many webservs involving:
+
+location /
+location /images
+location /images/icons
+
+and why sorting locations by URI length is absolutely critical for correct routing.
+
+

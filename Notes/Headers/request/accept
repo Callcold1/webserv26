@@ -1,0 +1,294 @@
+ACCEPT HEADER 
+=============
+👉 Sent by  : the client
+👉 Meaning  : these are the formats I’m willing to receive.
+👉 Handling : The server may ignore Accept  : ✔ technically allowed, ❌ but not ideal
+            
+    situation : < type not handled > : HTTP/1.1 406 Not Acceptable                                                   HTTP/1.1 406 Not Acceptable 
+        
+RELATED HEADERS
+===============
+Accept          : Indicates preferred media types (MIME types)	
+                    Accept: application/json, text/html;q=0.8
+
+Accept-Language	: Preferred languages	
+                    Accept-Language: en-US, fr;q=0.7
+
+Accept-Encoding	: Preferred content encodings / compression	
+                    Accept-Encoding: gzip, deflate, br
+
+Accept-Charset	: Preferred character sets	
+                    Accept-Charset: utf-8, iso-8859-1;q=0.5
+
+1. Basic Syntax
+===============
+Accept = #( media-range [ accept-params ] )
+
+    Symbol            Meaning
+    ======            =======
+     #              : A comma-separated list 
+    "media-range"   : text/html  (format is : type/subtype)
+    "accept-params" : charset, 
+    []              : optional
+    ;               : end of value (query(s) can follow but are optional)
+    ,               : new value follows 
+    
+media-range = ( "*/*"
+              | type "/*"
+              | type "/" subtype
+              ) *( ";" parameter )
+
+accept-params = weight *( accept-ext )
+
+weight = ";q=" qvalue
+qvalue = ( "0" [ "." 0*3DIGIT ] )
+       | ( "1" [ "." 0*3("0") ] )
+
+e.g. Accept = text/html;q=0.5, text/*;q=0.3
+
+2. Media Ranges
+===============
+
+The Accept header lists media ranges:
+
+            1) Exact type      :           Accept: text/html
+            2) Type wildcard   :           Accept: text/*
+            3) Global wildcard :           Accept: */*
+
+
+3. Parameters
+=============
+
+Media types can include parameters:
+
+            Accept: text/html; charset=utf-8
+
+These parameters are part of the media-range matching (not preference weighting).
+
+Also see file headers/request/media_types_and_parameters
+
+
+4. Quality Values (q)
+=====================
+
+Each media range can include a quality factor (q) to express preference:
+
+Accept: text/html;q=1.0, application/json;q=0.9, */*;q=0.8
+Rules:
+
+Range: 0 to 1
+
+Default: q=1.0 if omitted
+
+q=0 means not acceptable
+
+Examples:
+
+Accept: text/html, application/json;q=0.5
+
+
+5. Matching Rules (Server-Side Selection)
+=========================================
+When the server chooses a response type, it follows:
+
+Step 1: Find all matching media ranges
+
+    Example:
+
+    Accept: text/*;q=0.7, text/html;q=0.9
+    Content-Type: text/html
+
+    Matches:
+
+        text/html (exact)
+        text/* (wildcard)
+
+Step 2: Choose the most specific match
+
+    Priority:
+
+       1) type/subtype (most specific)
+       2) type/*
+       3) */* (least specific)
+
+Step 3: Apply highest q value
+
+    If multiple matches:
+
+        Pick the one with highest q
+
+Step 4: Tie-breaking
+
+    If still tied:
+
+    1) Prefer the most specific
+    2) Then order of appearance (in practice)
+
+6. Precedence Example
+=====================
+Accept: text/*;q=0.5, text/html;q=0.8, */*;q=0.3
+
+For text/html:
+
+    Match	    q	    Specificity
+    =====       =       ===========
+    text/html	0.8	    highest
+    text/*	    0.5	    medium
+    /	        0.3	    lowest
+
+    → Result: text/html;q=0.8
+
+
+7. Extension Parameters (accept-ext)
+====================================
+Rarely used, but allowed:
+
+    Accept: text/html;q=0.9;level=1
+
+Rules:
+
+    1) Must come after q
+    2) Not used for matching, only for extensions
+
+8. Special Cases
+==================
+
+1) No Accept header
+
+    → Means:        */* i.e. Client accepts anything
+
+2) Explicit rejection
+    
+    Accept: text/html;q=0
+
+    → Client explicitly refuses text/html
+
+3) Multiple headers
+
+    Accept: text/html
+    Accept: application/json
+
+    → Equivalent to:
+
+    Accept: text/html, application/json
+
+
+9. HTTP/1.0 vs HTTP/1.1 Differences
+===================================
+
+HTTP/1.0
+========
+Basic support for:
+                    1) media types
+                    2) wildcards
+
+No formal definition of q values (but widely implemented)
+
+HTTP/1.1
+========
+Fully specifies:
+
+                    1) q weighting
+                    2) matching algorithm
+                    3) precedence rules
+                    4) extension parameters
+
+
+
+10. Real-World Example
+=======================
+
+Accept: text/html, application/xhtml+xml;q=0.9, application/json;q=0.8, */*;q=0.5
+
+Preference order:
+
+text/html
+
+application/xhtml+xml
+
+application/json
+
+anything else
+
+
+11. Server Behavior (Important)
+================================
+
+If no acceptable type is found:
+
+HTTP/1.1 406 Not Acceptable
+
+However, many servers:
+
+Ignore Accept
+
+Return a default (often text/html or JSON)
+
+
+12. Summary Rules
+==================
+
+Default is */* if missing
+
+Most specific match wins
+
+Highest q wins
+
+q=0 means forbidden
+
+Order only matters as last tie-breaker
+
+Parameters before q are part of the type
+
+Parameters after q are extensions
+
+HANDLING ACCEPT HEADER
+======================
+
+For a webserv project, you usually don’t need full content negotiation.
+
+    Practical approach
+    ==================
+    1) Ignore Accept header in most cases
+
+    2) Serve based on file extension:
+
+        .html → text/html
+        .css  → text/css
+        .js   → application/javascript
+
+    3) Only return 406 Not Acceptable if you explicitly implement negotiation
+
+    Charset Handling
+    ================
+    You can safely default to:
+
+            text/html; charset=UTF-8
+            text/css; charset=UTF-8
+            application/javascript; charset=UTF-8
+
+    You do NOT need to parse charset from Accept for this project.
+
+    Mapping Table (you’ll likely implement this)
+    ============================================
+    Example:
+
+            Extension   	Content-Type
+            =========       ============
+            .html	        text/html
+            .css	        text/css
+            .js             application/javascript
+            .json	        application/json
+            .png	        image/png
+            .jpg	        image/jpeg
+            .svg	        image/svg+xml
+            .ico	        image/x-icon
+            .woff2	        font/woff2
+
+    
+List of Accept Values and Parameters we'll handle
+=================================================
+
+    Content-Type
+    ============
+    

@@ -1,0 +1,67 @@
+
+
+Suggested media types to support :
+
+1) Essentials 
+
+    Text / markup
+    =============
+    text/html
+    text/plain
+    text/css
+
+    JavaScript
+    ==========
+    application/javascript
+
+    Images
+    ======
+    image/png
+    image/jpeg
+    image/gif
+    image/x-icon
+
+
+With just these, you can serve:
+    
+    1) HTML pages
+    2) CSS styling
+    3) JS scripts
+    4) basic images + favicon
+
+2. Strongly Recommended (modern web)
+
+    Modern images
+    =============
+    image/svg+xml
+    image/webp
+
+    JSON (APIs, AJAX)
+    application/json
+
+    Fonts
+    =====
+    font/woff
+    font/woff2
+
+    Forms / uploads
+    ===============
+    application/x-www-form-urlencoded
+    multipart/form-data
+
+3. Nice-to-Have (depending on scope)
+    
+    XML
+    ===
+    application/xml
+    text/xml
+    
+    PDFs / downloads
+    ================
+    application/pdf
+    application/octet-stream
+
+    Video / audio (basic support)
+    =============================
+    video/mp4
+    audio/mpeg

@@ -25,10 +25,28 @@
 #define NOT_CHUNKED false
 
 enum	eParse 			{ P_PARSE, P_AWAIT, P_DONE, P_ERROR };
-enum	eReqState		{ P_REQLINE, P_REQLINE_PARAMS, V_REQLINE, P_HEADERS, V_HEADERS, P_BODY, V_BODY, P_TRAILERS, V_TRAILERS, REQ_DONE };
+enum	eReqState		{ P_REQLINE, P_REQLINE_PARAMS, V_REQLINE, P_HEADERS, V_HEADERS, P_BODY, V_BODY, P_TRAILERS, V_TRAILERS, P_MULTI, V_MULTI, REQ_DONE };
 enum	eURIstates		{ SCHEME, AUTH, USER, HOST, PORT, PATH, QUERY, FRAG, URI_ERROR, URI_END };
 enum	uri_types		{ ABSOLUTE_FORM, ASTERISK, AUTH_FORM, ORIGIN_FORM };
-enum	eParseContext	{ ABSOLUTE_URI, ORIGIN_URI, USER_NAME, USER_PASS, QUERY_KEY, QUERY_VAL, FIELD_NAME, FIELD_VAL, PARAM_KEY, PARAM_VAL, CHUNKSIZE};
+enum	eBodyStates		{ BODY_CHUNKED, BODY_MULTIPART };
+enum	mpState			{ MP_NONE, MP_BOUNDARY, MP_HEADERS, MP_BODY, MP_CHUNKED, MP_COMPLETE, MP_ERROR };
+enum	eParseContext	{ ABSOLUTE_URI, ORIGIN_URI, USER_NAME, USER_PASS, QUERY_KEY, QUERY_VAL, FIELD_NAME, FIELD_VAL, PARAM_KEY, PARAM_VAL, CHUNKSIZE, BOUNDARY };
+enum	eResponseType	{ RESPOND_NOT_SET, RESPOND_CGI, RESPOND_ERROR, RESPOND_FILE, RESPOND_INDEX, RESPOND_REDIR };
+
+
+struct respond_t{
+	eResponseType	type;
+	std::string		request_path;		// URI FROM REQUEST request->uri.path - TMP
+	std::string		normalised_path;	// NORMALISED URI FROM REQUEST request->uri.path - TMP
+	std::string		leftover_path;		// PATH REMAINING AFTER LOCATION MATCHING - TMP
+	std::string		location_path;		// THE MATCHING LOCATION URI - TMP
+	std::string		location_root;		// ROOT FOR MATCHING LOCATION - TMP
+	std::string		appended_root;		// LEFTOVER APPENDED TO ROOT - KEEP
+	fileInfo_s		target;				// FILEINFO ON APPENDED ROOT
+
+	respond_t():type(RESPOND_NOT_SET){}
+};
+
 
 /*
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -48,6 +66,22 @@ struct token_s {
 
 };
 
+/* 
+
+	Used as part of fieldMap_t (below) 
+
+	fieldMap_t	< string (header_name), vector< field_t *> >
+	field_t 	< string (header_value), vector< pair<string (key), string (value)> > parameters
+
+	Each header is parsed into the headers object which is a fieldMap_t and accessed using 
+	the header_name. 
+
+	The name is mapped to a vector of field_t objects.
+
+	When a new instance of a header name is encountered, or if there are multiple
+	values in the parsed line, the value and any parameters are parsed 
+	into a field_t struct and pushed to the back of the vector mapped to the given header name.
+*/
 typedef struct {
 	std::string val;
 	std::vector<std::pair<std::string, std::string> >params;
@@ -85,24 +119,41 @@ typedef struct parseContext{
 		: last_val(false), delim_req(false), delim(""), error(""), errNum(0), validator(0) {}
 } parseContext;
 
-enum eMultiPartType { MULTI_NONE, MULTI_RELATED, MULTI_FORM_DATA, MULTI_MIXED };
+struct mpMessage_t;
 
-struct MultipartMessage; // forward declaration
+struct mpPart_t {
+	fieldMap_t*											headers; // headers are parsed into here before being validated and moved to the relevant field
+	std::string											name;
+	std::string											filename;
+	std::string											disposition_type;
+	std::vector<std::pair <std::string, std::string> >	disposition_parameters;
+	std::vector<field_t*>								supported_content;
+	std::vector<char>									body;
 
-struct MultipartPart {
-	std::string contentType;
-	std::string disposition;
-	std::string filename;
-	bool isFile;
-	std::string tempFilePath;
-	std::vector<char> content;
-	eMultiPartType type;
-	MultipartMessage* nested;
+	bool												isFile;
+	std::string											tempFilePath;
+	int													fd;
+	mpState												parse_status;
 };
 
-struct MultipartMessage {
-	std::vector<MultipartPart> parts;
-	std::string boundary;
+struct mpMessage_t {
+	std::vector<mpPart_t>	parts;
+	std::string 			boundary;
+	std::string				default_charset;
+};
+
+struct mpParser_t {
+	mpState				state;
+
+	std::string			boundary;
+	std::string			boundary_marker;
+
+	size_t				current_index;
+
+	token_s				header_buffer;
+	std::vector<char>	body_buffer;
+
+	size_t				boundary_match_index;
 };
 /*
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
