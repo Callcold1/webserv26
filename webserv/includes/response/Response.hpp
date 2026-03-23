@@ -13,6 +13,7 @@
 #define PHOTO_PATH "www/photos"
 #define NOT_FOUND_ERROR 404
 #define BAD_REQUEST_ERROR 400
+#define FILE_UPLOAD_REDIREC 303
 
 typedef std::map<std::string, std::string> HeaderMap_t;
 

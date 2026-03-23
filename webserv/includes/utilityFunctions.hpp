@@ -6,7 +6,7 @@
 /*   By: jake <jake@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/11 16:04:15 by kmooney           #+#    #+#             */
-/*   Updated: 2026/03/13 13:31:41 by jake             ###   ########.fr       */
+/*   Updated: 2026/03/13 15:40:41 by jake             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -97,6 +97,7 @@ void								getFilePermissions(fileInfo_s& target);
 fileInfo_s*							getFileInfo(std::string& path, std::string& root_dir);
 fileInfo_s*							getFileInfo(std::string& path);
 void								getFileInfo(std::string& path, fileInfo_s& fileinfo);
+bool 								file_exists(const char* filename);
 
 /*	FILEPATH MANIPULATION  */
 void								appendPathToRoot(fileInfo_s* target, std::string& path, std::string& root_dir);

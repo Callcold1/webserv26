@@ -83,7 +83,8 @@ void Response::defaultHeaders()
 	_headers["Server"] = "WebServ";
 	_headers["Connection"] = "keep-alive";
 	_headers["Date"] = get_date();
-	_headers["Content-Length"] = to_str(get_content_len());
+	if (!_body.empty())
+		_headers["Content-Length"] = to_str(get_content_len());
 }
 
 void Response::addHeader(std::string header, std::string value)

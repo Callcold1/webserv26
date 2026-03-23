@@ -313,11 +313,11 @@ void	Server::handleClientWrite(int fd)
 		return;
 	}
 	Client& client = it->second;
-	std::string response = client.get_msg();
+	std::string &response = client.get_msg();
 
 	ssize_t sent = send(fd, response.c_str(), response.size(), 0);
 
-	if (sent <= 0){
+	if (sent < 0){
 		disconnectClient(fd, "handleClientWrite: sent is less than or equal to zero");
 		return;
 	}
@@ -330,6 +330,50 @@ void	Server::handleClientWrite(int fd)
 	if (response.empty())
 		_sockets[getSocketsPosition(fd)].events &= ~POLLOUT;
 }
+
+// void Server::handleClientWrite(int fd)
+// {
+//     // 1. Keep the iterator search (this prevents the compiler error)
+//     std::map<int, Client>::iterator it = _clients.find(fd);
+//     if (it == _clients.end()) return;
+
+//     Client& client = it->second;
+    
+//     // 2. IMPORTANT: We need to modify the actual buffer, not a copy.
+//     // Since get_msg() returns a copy, we use append_write/clear_out_buff logic
+//     // or manually handle the string.
+//     std::string response = client.get_msg(); 
+
+//     if (response.empty()) {
+//         // If there's nothing to send, just stop asking for POLLOUT and wait.
+//         _sockets[getSocketsPosition(fd)].events &= ~POLLOUT;
+//         return;
+//     }
+
+//     ssize_t sent = send(fd, response.c_str(), response.size(), 0);
+
+//     if (sent < 0) {
+//         disconnectClient(fd, "send failed");
+//         return;
+//     } 
+//     else if (sent > 0) {
+//         // 3. Since we can't easily reach into the buffer (because get_msg is a copy), 
+//         // we have to clear the old buffer and re-add the "unsent" part.
+//         std::string remaining = response.substr(sent);
+//         client.clear_out_buff();
+//         if (!remaining.empty()) {
+//             client.append_write(remaining);
+//         }
+//     }
+
+//     // 4. Only disconnect if we are actually done sending
+//     if (client.get_msg().empty()) {
+//         _sockets[getSocketsPosition(fd)].events &= ~POLLOUT;
+//         if (client.getConn() == CONN_CLOSE) {
+//             disconnectClient(fd, "Connection: close");
+//         }
+//     }
+// }
 
 /*
 >>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<
