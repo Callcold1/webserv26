@@ -182,20 +182,29 @@ void Client::handle_request()
 	int error_catch = 0;
 	std::string path = _request._uri.path;
 
-	if (!_matched_location->getRedirect().url.empty())
+	std::cout << path << std::endl;
+	if (!_matched_location)
 	{
+		_response = new ErrorResponse(NOT_FOUND_ERROR, _request);
+	}
+
+	else if (!_matched_location->getRedirect().url.empty())
+	{
+		std::cout << "redirect found" << std::endl;
 		_response = new RediResponse(_request, _matched_location->getRedirect().url); //TODO is this url validated??
 		_response->generate();
 	}
 
 	else if ((error_catch = if_file_upload(_request)) != 1)
 	{
+		std::cout << "file upload found" << std::endl;
 		if (error_catch >= 400)
 			_response = new ErrorResponse(error_catch, _request);
 	}
 
 	else if (path.find(CGI_PATH) != std::string::npos && path.find((CGI_PATH + std::string("assets"))) == std::string::npos)
 	{
+		std::cout << "cgi found" << std::endl;
 		struct stat st;
 		if (stat(path.c_str(), &st) == 0 && S_ISREG(st.st_mode))
 		{
@@ -214,6 +223,7 @@ void Client::handle_request()
 	}
 	else if (path.find(HTML_PATH) != std::string::npos || path.find(PHOTO_PATH) != std::string::npos)
 	{
+		std::cout << "static page found" << std::endl;
 		_response = new StaticResponse(_request);
 		if ((error_catch = _response->generate()) != 0)
 		{
@@ -222,7 +232,11 @@ void Client::handle_request()
 		}
 	}
 	else
+	{
+		std::cout << "nothing found" << std::endl;
 		_response =  new ErrorResponse(NOT_FOUND_ERROR, _request); //defaults to 404 not found
+	}
+	
 	append_write(_response->serialize());
 	delete _response;
 }

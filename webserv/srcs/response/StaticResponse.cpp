@@ -31,7 +31,7 @@ int StaticResponse::generate()
 {
 	int re_status;
 
-	_path = _request._uri.path;
+	_path = _request.get_root_dir() + _request._uri.path;
 	if ((re_status = get_file()) != 0)
 		return (re_status);
 	defaultHeaders();
@@ -99,16 +99,18 @@ int StaticResponse::gen_index_page()
 int StaticResponse::get_file()
 {
 	struct stat st;
-
+	std::cout << "get file entered: " << _path << std::endl;
 	if (stat(_path.c_str(), &st) == 0)
 	{
 		if (S_ISDIR(st.st_mode))
 		{
+			std::cout << "dir" << std::endl;
 			gen_index_page();
 			_is_dir = true;
 		}
 		else if (S_ISREG(st.st_mode))
 		{
+			std::cout << "file found" << std::endl;
 			std::ifstream in(_path.c_str(), std::ios::binary);
 			std::string s((std::istreambuf_iterator<char>(in)), \
             	std::istreambuf_iterator<char>());

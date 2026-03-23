@@ -6,7 +6,7 @@
 /*   By: jake <jake@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/30 11:28:22 by kmooney           #+#    #+#             */
-/*   Updated: 2026/03/13 13:33:04 by jake             ###   ########.fr       */
+/*   Updated: 2026/03/23 14:25:47 by jake             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -190,6 +190,11 @@ std::string	Request::getRequestStr(){
 
 std::string	Request::getUnparsedStr(){
 	return _parser->tokenToString(_unparsed);
+}
+
+std::string Request::get_root_dir()
+{
+	return(_matched_location->getRootDir());
 }
 
 /*

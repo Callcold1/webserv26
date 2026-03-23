@@ -51,10 +51,6 @@ void ErrorResponse::gen_error_page()
 			<p>" + err_msg + "</p>\n\
 		</body>\n\
 	</html>";
-
-	int fd = open("errfile.html", O_CREAT| O_WRONLY | O_TRUNC, 0644);
-	write(fd, _body.c_str(), get_content_len());
-	close(fd);
 }
 
 void ErrorResponse::error_headers()

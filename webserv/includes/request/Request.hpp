@@ -46,6 +46,7 @@ class Request {
 	eReqState			getReqStatus();
 	std::string			getRequestStr();
 	std::string			getUnparsedStr();
+	std::string			get_root_dir();
 
 						/* SETTERS */
 

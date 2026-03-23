@@ -112,16 +112,16 @@ int RediResponse::save_file(std::string filename, std::string file_body)
 	return (0);
 }
 
-int RediResponse::save_mp_file(std::vector<MultipartPart> mp_vec)
+int RediResponse::save_mp_file(std::vector<mpPart_t> mp_vec)
 {
-	std::vector<MultipartPart>::iterator it;
+	std::vector<mpPart_t>::iterator it;
 	std::string body;
 
 	for(it = mp_vec.begin(); it != mp_vec.end(); it++)
 	{
 		if ((*it).isFile)
 		{
-			body = std::string((*it).content.begin(), (*it).content.end());
+			body = std::string((*it).body.begin(), (*it).body.end());
 			return (save_file((*it).filename, body));
 		}
 	}

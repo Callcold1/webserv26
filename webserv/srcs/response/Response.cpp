@@ -34,14 +34,14 @@ std::string Response::serialize()
 {
 	std::stringstream s;
 
-	s << HTTP_VERSION << " " << _status << " " << status_text() << "/r/n";
+	s << HTTP_VERSION << " " << _status << " " << status_text() << "\r\n";
 
 	for (HeaderMap_t::iterator it = _headers.begin(); \
 			it != _headers.end(); it++)
 	{
-		s << it->first << ": " << it->second << "/r/n";
+		s << it->first << ": " << it->second << "\r\n";
 	}
-	s << "/r/n/r/n";
+	s << "\r\n";
 
 	s << _body;
 
@@ -107,7 +107,7 @@ std::string Response::get_date()
 
 size_t Response::get_content_len()
 {
-	return(_body.size());
+	return(_body.length());
 }
 
 //debug:

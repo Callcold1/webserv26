@@ -1,0 +1,3 @@
+2026-03-23 14:33:02 [INFO]  [TYPE_ACCESS] New client connected: fd [13]
+2026-03-23 14:33:02 [INFO]  [TYPE_ACCESS] Client disconnected: fd [13] : Read size of zero
+2026-03-23 14:33:02 [INFO]  [TYPE_ACCESS] Client disconnected: fd [13] : handleEvents: POLLERR | POLLHUP | POLLNVAL

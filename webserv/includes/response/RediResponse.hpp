@@ -17,7 +17,7 @@ public:
 
 	//file creation
 	int		save_file(std::string filename, std::string file_body);
-	int		save_mp_file(std::vector<MultipartPart> mp_vec);
+	int		save_mp_file(std::vector<mpPart_t> mp_vec);
 
 	//headers:
 	void redi_headers();

@@ -6,7 +6,7 @@
 /*   By: jake <jake@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/30 11:26:19 by kmooney           #+#    #+#             */
-/*   Updated: 2026/03/10 16:18:21 by jake             ###   ########.fr       */
+/*   Updated: 2026/03/23 12:05:07 by jake             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -472,20 +472,10 @@ bool	RequestValidator::validateMultiPartHeader(const std::string& val, const std
 	std::string	boundary; //MUST NOT BE MORE THAN 70 CHARS?
 	std::string	type;
 
-<<<<<<< HEAD
-	while (true){
-		if (val == "multipart/related" || val == "multipart/form-data" || val == "multipart/mixed")
-			break;
-		else
-			return _req->setState(P_ERROR, V_HEADERS, "Unsupported multipart type", 415);
-	}
-	bool has_boundary = false;
-=======
 	if (val != "multipart/form-data")
 		return _req->setState(P_ERROR, V_HEADERS, ERR_MP_TYPE_NOT_SUPPORTED, 415);
 	
-	bool has_boundary;
->>>>>>> kev
+	bool has_boundary = false;
 	bool has_type;
 
 	if (size != 0) {
