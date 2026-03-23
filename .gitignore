@@ -7,4 +7,4 @@
 .vscode?
 
 #ignore logfiles
-logs/*
+webserv/logs/*
