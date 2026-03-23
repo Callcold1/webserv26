@@ -285,7 +285,7 @@ bool	RequestParser::splitToToken( token_s& it, bool last_val, token_s& tkn, cons
 	}
 	if (last_val == true && it.begin != it.end){
 		setIterators(tkn, it.begin, it.end);
-		it.begin = it.end; // added today 902/02
+		it.begin = it.end;
 		return true;
 	}
 	return false;
@@ -636,6 +636,51 @@ bool	RequestParser::URInormalisation( void ){
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 */
 
+bool	RequestParser::parseFieldValue(token_s& value_tkn, field_t* field){
+
+	if (!tokenCharValidation(value_tkn, "Malformed Field : Invalid Character in Field Value", 400, isTextChar))
+		return false;
+	tokenToString(value_tkn, field->val);
+	trimWS(field->val);
+	return true;
+}
+
+bool	RequestParser::parseFieldParamKey(token_s& token_key, std::string& key){
+	tokenToString(token_key, key);
+	trimWS(key);
+    if (!tokenCharValidationStr(key, "Malformed Field : Invalid parameter key", 400, isTokenChar))
+		return false;
+	to_lower_ref(key);
+	return true;
+}
+
+
+bool	RequestParser::parseFieldParamValue(token_s& token_val, std::string& value){	
+	tokenToString(token_val, value);
+	trimWS(value);
+    return tokenCharValidationStr(value, "Malformed Field : Invalid parameter key", 400, isTokenChar);
+}
+ 
+bool	RequestParser::parseFieldParams(std::vector<token_s>& params, field_t* field){	
+	
+	std::string param_val;
+	std::string param_key;
+	std::vector<token_s> vec;
+	
+	for (size_t i = 0; i < params.size(); i++) {
+		vec.clear();
+		size_t count = splitToToken(params[i], true, vec, "=");
+		if (count != 2)
+    		return _req->setState(P_ERROR, _req->_r_state, "Malformed Field : Parameter(s)", 400);
+		if (!parseFieldParamKey(vec[0], param_key))
+			return false;
+		if (!parseFieldParamValue(vec[1], param_val))
+			return false;
+		field->params.push_back(std::make_pair(param_key, param_val));
+	}
+	return true;
+}
+
 /**
  * @brief Parses the value of an HTTP header field, extracting the main value and its parameters.
  *
@@ -644,51 +689,27 @@ bool	RequestParser::URInormalisation( void ){
  * Remaining tokens are treated as optional key-value parameters and stored in the `params` list
  * of the `field_t` object.
  *
- * Each optional parameter is parsed as a key-value pair (e.g., `"charset=UTF-8"`).
- * If a space precedes, or follows "=", _req->setState is called to change the state to P_ERROR and return false.
- * Keys are converted to lowercase for normalization.
- *
- * @param value_tkn The token representing the raw value of the header field (possibly with parameters).
+ * parseFieldParams() is called if the size of the param_vector is greater than 1 where
+ * each optional parameter is parsed as a key-value pair (e.g., `"charset=UTF-8"`).
+ * @param line_tkn The token representing the raw value of the header field (possibly with parameters).
  * @param new_field A pointer to a `field_t` struct that will be populated with the parsed data.
  * @return true Always returns true (parsing is assumed successful).
  *
  * @see splitToToken()
- * @see parseSingleToken()
- * @see tokenToString()
- * @see setState()
- * @see to_lower_ref()
+ * @see parseFieldValue()
+ * @see parseFieldParams()
  */
-bool	RequestParser::parseFieldVal(token_s& value_tkn, field_t* field) {
+bool	RequestParser::splitFieldLine(token_s& line_tkn, field_t* field) {
 
-	std::vector<token_s>			param_vector;
-	std::vector<token_s>::iterator	it;
+	std::vector<token_s>	param_vector;
 
-	token_s token;
-	std::string	param_key;
-	std::string	param_val;
-
-	splitToToken(value_tkn, true, param_vector, ";");
-	{
-		it = param_vector.begin();
-		if (!tokenCharValidation(*it, "Malformed Field : Invalid Character in Field Value", 400, isTextChar))
-			return false;
-		tokenToString(*it++, field->val);
-		trimWS(field->val);
-
-		for (; it != param_vector.end(); it++) {
-			if (parseSingleToken(*it, PARAM_KEY, param_key)) {
-				tokenToString(*it, param_val);
-				if ((!param_key.empty() && param_key[param_val.size() - 1] == ' ') ||
-			 		(!param_val.empty() && param_val[0] == ' '))
-					return _req->setState(P_ERROR, _req->_r_state, "Malformed Field : Parameters (Space before or after \"=\")", 400);
-				trimWS(param_val);
-				trimWS(param_key);
-				to_lower_ref(param_key);
-				field->params.push_back(std::make_pair(param_key, param_val));
-			}
-		}
-	}
-	return true;
+	splitToToken(line_tkn, true, param_vector, ";");
+	if (!parseFieldValue(param_vector[0], field))
+		return false;
+	if (param_vector.size() == 1)
+		return true;
+	std::vector<token_s> params(param_vector.begin() + 1, param_vector.end());
+	return parseFieldParams(params, field);
 }
 
 /**
@@ -732,7 +753,7 @@ bool	RequestParser::parseFieldLine(token_s& line) {
 			token_s& currentToken = values[i];
 
 			field_t* new_field = new field_t();
-			parseFieldVal(currentToken, new_field);
+			splitFieldLine(currentToken, new_field);
 			field_vector.push_back(new_field);
 		}
 		(*fieldMap)[field_name] = field_vector;
@@ -1137,6 +1158,14 @@ bool	RequestParser::tokenCharValidation(const token_s& chars, const std::string&
 	return true;
 }
 
+bool	RequestParser::tokenCharValidationStr(const std::string& str, const std::string& error, int errNum, bool (*f)(unsigned char)) {
+    for (size_t i = 0; i < str.size(); i++) {
+        if (!f || !f(str[i]))
+            return _req->setState(P_ERROR, error, errNum);
+    }
+    return true;
+}
+
 void	RequestParser::createContextMap(){
 
 	static std::map< eParseContext, parseContext> _map;
@@ -1146,7 +1175,7 @@ void	RequestParser::createContextMap(){
 		_map[ORIGIN_URI] = parseContext		(false, DELIM_OPTIONAL, "/", "Request Line Malformed : Scheme", 400, isSchemeChar);
 		_map[USER_NAME] = parseContext		(true , DELIM_OPTIONAL, ":", "Request Line Malformed : User", 400, isSchemeChar);
 		_map[USER_PASS] = parseContext		(true , DELIM_OPTIONAL, "", "Request Line Malformed : Pass", 400, isSchemeChar);
-		_map[QUERY_KEY] = parseContext		(true , DELIM_REQUIRED, ":", "Request Line Malformed : Query key", 400, isQueryChar);
+		_map[QUERY_KEY] = parseContext		(true , DELIM_REQUIRED, "=", "Request Line Malformed : Query key", 400, isQueryChar);
 		_map[QUERY_VAL] = parseContext		(false, DELIM_OPTIONAL, "", "Request Line Malformed : Query val", 400, isQueryChar);
 		_map[FIELD_NAME] = parseContext		(false, DELIM_REQUIRED, ":", "Malformed header : Field Name", 400, isTokenChar);
 		_map[FIELD_VAL] = parseContext		(false, DELIM_OPTIONAL, ".", "Malformed header : Field Val", 400, isFieldValueChar);

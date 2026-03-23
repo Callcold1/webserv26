@@ -107,8 +107,8 @@ typedef bool (*charValFUnc)(unsigned char);
 typedef struct parseContext{
 	bool					last_val;
 	bool					delim_req;
-	const char*				delim;
-	const char*				error;
+	std::string				delim;
+	std::string				error;
 	int						errNum;
 	charValFUnc				validator;
 

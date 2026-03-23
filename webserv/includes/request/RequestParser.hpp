@@ -49,7 +49,11 @@ class RequestParser {
 
 	void			parseField(token_s& it);
 	bool			parseFieldLine(token_s& line);
-	bool			parseFieldVal(token_s& value_tkn, field_t* field);
+	bool			splitFieldLine(token_s& value_tkn, field_t* field);
+	bool			parseFieldValue(token_s& value_tkn, field_t* field);
+	bool			parseFieldParams(std::vector<token_s>& params, field_t* field);
+	bool			parseFieldParamKey(token_s& token_key, std::string& key);
+	bool			parseFieldParamValue(token_s& token_val, std::string& value);
 
 	void			parseBody(token_s& it);
 	void			parsePlain(token_s& it);
@@ -84,6 +88,7 @@ class RequestParser {
 	void			setIterators();
 
 	bool			tokenCharValidation(const token_s& chars, const std::string& error, int errNum, bool (*f)(unsigned char));
+	bool			tokenCharValidationStr(const std::string& str, const std::string& error, int errNum, bool (*f)(unsigned char));
 	bool			rlCharsCheck(const token_s& chars, const std::string& error, int errNum);
 	void			createContextMap();
 
