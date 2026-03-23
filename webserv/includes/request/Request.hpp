@@ -63,7 +63,7 @@ class Request {
 	bool 				setState(eParse p_state, std::string err_mess, unsigned int err_num );
 	bool 				setState(eParse p_state, eReqState r_state, std::string err_mess, unsigned int err_num );
 
-	void				matchServerToHostHeader(void);
+	bool				matchServerToHostHeader(void);
 	void				matchLocationToURIPath(void);
 
 	std::vector<field_t* >		findRequestHeaderValue(const std::string& header_name);
@@ -71,7 +71,6 @@ class Request {
 	RequestParser*		_parser;
 	RequestValidator*	_validator;
 	//RequestHandler*		_requestHandler;
-	//Config*			    _config;
 	listenInstance_s*	_listen_instance;
 	const CLocation*	_matched_location;
 	CServer*			_matched_server;
@@ -83,10 +82,9 @@ class Request {
 	fieldMap_t 			_headers;
 	fieldMap_t 			_trailers;
 	std::string 		_body;
-	//Body				_newBody;
 	std::string 		_boundary;
-	std::string 		_defaultMultiType;
-	MultipartMessage	_multipart;
+	std::string 		_defaultMultiContentType;
+	mpMessage_t			_multipart;
 
 	void                resetParser();
 	void                resetValidator();
@@ -99,6 +97,8 @@ class Request {
 	uint64_t			_content_length, _body_length, _unparsed_length; //_content_length is used when content length is provided. body_length is used to track length parsed
 
 	bool 				_hasBody, _isChunked, _isMultiPart, _bodyUTF8;
+
+	respond_t			_re;
 
 	private : 
 };

@@ -33,7 +33,7 @@ Request::Request( listenInstance_s* listen_instance ) : _parser(NULL), _validato
 Request::Request(const Request &other) : _parser(NULL), _validator(NULL), _listen_instance(other._listen_instance),
 	_matched_location(other._matched_location), _matched_server(other._matched_server),  _method(other._method),
 	_uri_str(other._uri_str), _version(other._version), _req_line(other._req_line), _uri(other._uri), _headers(other._headers), 
-	_body(other._body),_boundary(other._boundary), _defaultMultiType(other._defaultMultiType), _multipart(other._multipart),
+	_body(other._body),_boundary(other._boundary), _defaultMultiContentType(other._defaultMultiContentType), _multipart(other._multipart),
 	_errNum(other._errNum), _errMess(other._errMess), _p_state(other._p_state), _r_state(other._r_state), 
 	_content_length(other._content_length), _body_length(other._body_length), _unparsed_length(other._unparsed_length),
 	_hasBody(other._hasBody), _isChunked(other._isChunked), _isMultiPart(other._isMultiPart), _bodyUTF8(other._bodyUTF8){}
@@ -51,7 +51,7 @@ Request& Request::operator=(const Request &other){
 		_headers = other._headers;
 		_body = other._body;
 		_boundary = other._boundary;
-		_defaultMultiType = other._defaultMultiType;
+		_defaultMultiContentType = other._defaultMultiContentType;
 		_multipart = other._multipart;
 		_errNum = other._errNum;
 		_errMess = other._errMess;
@@ -101,7 +101,7 @@ void	Request::clear() {
 	_headers.clear();
 	_body.clear();
 	_boundary.clear();
-	_defaultMultiType.clear();
+	_defaultMultiContentType.clear();
 
 	_errNum = 200;
 	_errMess.clear();
@@ -215,7 +215,7 @@ void	Request::setBoundaryString( const std::string& boundary ){
 }
 
 void	Request::setDefaultMultiPartType( const std::string& type ){
-	_defaultMultiType = type;
+	_defaultMultiContentType = type;
 }
 
 void	Request::setRstate(eReqState r_state){
@@ -279,14 +279,45 @@ void	Request::setHostname(const std::string& hostname){
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<
 */
 
-void	Request::matchServerToHostHeader(void){
+bool	Request::matchServerToHostHeader(void){
 	
-	if (_listen_instance->name_to_srv.find(_host_header) == _listen_instance->name_to_srv.end())
-		_matched_server = _listen_instance->def_srv;
+	std::string hostname;
+
+	size_t pos = _host_header.find(':');
+
+	if (pos != std::string::npos){
+		int port;
+
+	    hostname = _host_header.substr(0, pos);
+	    port = atoi(_host_header.substr(pos + 1).c_str());
+		if (!(port >= 0 && port <= 65535))
+			return this->setState(P_ERROR, "Malformed Request : Invalid Port Number", 400);
+	}
 	else
-		_matched_server = (_listen_instance->name_to_srv.find(_host_header))->second;		
+	    hostname = _host_header;
+
+	if (_listen_instance->name_to_srv.find(hostname) == _listen_instance->name_to_srv.end())
+		if (_version.compare("HTTP/1.0") == 0)
+			_matched_server = _listen_instance->def_srv;
+		else
+			return false;
+	else
+		_matched_server = (_listen_instance->name_to_srv.find(hostname))->second;
+	return true;		
 }
 
 void	Request::matchLocationToURIPath(void){
-	_matched_location = _matched_server->getLocationForPath(_uri.path);
+	
+	char	buffer[1024];
+	
+	getcwd(buffer, sizeof(buffer));
+	_matched_location = _matched_server->getLocationForPath(_uri.path, _re.leftover_path);
+	_re.location_path = _matched_location->getURI();// temporary (testing respond_t)
+	_re.location_root = _matched_location->getRootDir(); // temporary (testing respond_t)
+	appendPathToRoot(&_re.target, _re.leftover_path, _re.location_root); // temporary (testing respond_t)
+	_re.appended_root = _re.target.path;
+	appendPathToRoot(&_re.target, _re.appended_root, buffer);
+	getFilePermissions(_re.target);
+	std::cout << _re.target.path << std::endl;
+
 }

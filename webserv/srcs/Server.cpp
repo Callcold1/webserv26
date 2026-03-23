@@ -66,23 +66,18 @@ void	Server::listenInstanceCreate(int fd, listen_s listen, std::vector<CServer*>
 
 		listenInstanceNameServerMap(instance.name_to_srv, servers[i], (servers[i])->getServerName());
 		
-		if (instance.def_srv && listenInstanceDefaultServer(servers[i]->getListen(), listen))
-			throw std::runtime_error("Multiple default_server for same port");
-		
-		else if (listenInstanceDefaultServer(servers[i]->getListen(), listen)){
-		
+		if (listenInstanceDefaultServer(servers[i]->getListen(), listen)){
+			if (instance.def_srv)
+				throw std::runtime_error("Multiple default_server for same port");
 			instance.def_srv = servers[i];
-			std::vector<std::string> name = instance.def_srv->getServerName();
-	
-			if (!name.empty())
-				instance.def_srv_name = createArgsString(name);
-			else
-				instance.def_srv_name = "--NO NAME--";
 		}
 	}
 	if (!instance.def_srv)
 		instance.def_srv = servers[0];
-	
+	if (!instance.def_srv->getServerName().empty())
+		instance.def_srv_name = createArgsString(instance.def_srv->getServerName());
+	else
+		instance.def_srv_name = "--NO NAME--";
 	Log::instance().log(Log::INFO, Log::TYPE_CONF, "listening socket created : " + printstream(instance), false);
 	
 	_listen_sockets.push_back(instance);

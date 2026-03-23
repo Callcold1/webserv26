@@ -281,7 +281,7 @@ void    CServer::setTimeoutRW(int timeout_in_seconds, bool set_from_config_file)
 	_timeout_rw = timeout_in_seconds;
 }
 
-const CLocation*	CServer::getLocationForPath(const std::string& uri_path) const {
+const CLocation*	CServer::getLocationForPath(const std::string& uri_path, std::string& leftover){
 	
 	size_t size = _locations.size(); 
 	
@@ -289,8 +289,10 @@ const CLocation*	CServer::getLocationForPath(const std::string& uri_path) const 
         
 		const std::string& loc_path = _locations[i].getURI();
 
-        if (uri_path.compare(0, loc_path.size(), loc_path) == 0)
-            return &_locations[i];
+        if (uri_path.compare(0, loc_path.size(), loc_path) == 0){
+			leftover = uri_path.substr(loc_path.size());
+        	return &_locations[i];
+		}
 	}
 	return NULL;
 }

@@ -70,8 +70,8 @@ class Client {
 			listenInstance_s*	_listen_instance;
 			int					_fd;
 
-			CServer*			_matched_server;
-			CLocation*			_matched_location;
+			const CServer*		_matched_server;
+			const CLocation*	_matched_location;
 
 			Request				_request;
 			Response*			_response;
