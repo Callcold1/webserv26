@@ -59,6 +59,28 @@ void trimEndChar(std::string &str, char target)
 		str.erase(str.size() - 1);
 }
 
+/* TRIM LEADING WHITESPACE */
+void trimLWS(std::string &str)
+{
+	size_t start = 0;
+
+	while (start < str.size() && std::isspace(static_cast<unsigned char>(str[start]))) {
+		start++;
+	}
+	str.erase(0, start);
+}
+
+/* TRIM TRAILING WHITESPACE */
+void trimTWS(std::string &str)
+{
+	size_t end = str.size();
+
+	while (end > 0 && std::isspace(static_cast<unsigned char>(str[end - 1]))) {
+		--end;
+	}
+	str.erase(end);
+}
+
 /* TRIM WHITESPACE FROM BOTH ENDS OF A STRING */
 void trimWS(std::string &str)
 {

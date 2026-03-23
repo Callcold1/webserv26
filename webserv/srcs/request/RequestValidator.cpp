@@ -439,9 +439,9 @@ bool	RequestValidator::validateContentType(){ // CHECK SERVER SUPPORTS TYPE
 }
 
 bool	temporaryIsValidContentType(const std::string& name){ // THESE ARE TEST VALUES TO BE REPLACED WITH SERVER CHECK
-	
+
 	static std::vector<std::string> validTypes;
-	
+
 	if (validTypes.empty()){
 		validTypes.push_back("application/javascript");
 		validTypes.push_back("application/json");
@@ -470,13 +470,12 @@ bool	temporaryIsValidContentType(const std::string& name){ // THESE ARE TEST VAL
 bool	RequestValidator::validateMultiPartHeader(const std::string& val, const std::vector< std::pair<std::string, std::string> >& options){
 	size_t		size = options.size();
 	std::string	boundary; //MUST NOT BE MORE THAN 70 CHARS?
-	std::string	type;
+	std::string	charset;
+	bool 		has_boundary = 0;
+	bool 		has_charset = 0;
 
 	if (val != "multipart/form-data")
 		return _req->setState(P_ERROR, V_HEADERS, ERR_MP_TYPE_NOT_SUPPORTED, 415);
-	
-	bool has_boundary;
-	bool has_type;
 
 	if (size != 0) {
 
@@ -490,19 +489,19 @@ bool	RequestValidator::validateMultiPartHeader(const std::string& val, const std
 				boundary = option_val;
 				has_boundary = true;
 			}
-			else if (option_key == "type"){
-				type = option_val;
-				has_type = true;
+			else if (option_key == "charset"){
+				charset = option_val;
+				if (!temporaryIsValidContentType(charset))
+					return _req->setState(P_ERROR, V_HEADERS, ERR_MP_BOUNDARY_LENGTH, 415);
+				has_charset = true;
 			}
 		}
 	}
 	if (!has_boundary)
 		return _req->setState(P_ERROR, V_HEADERS, ERR_MP_BOUNDARY_MISSING, 400);
-	if (!temporaryIsValidContentType(type))
-		return _req->setState(P_ERROR, V_HEADERS, ERR_MP_TYPE_NOT_SUPPORTED, 415); // ?? Is this required
 	_req->setBoundaryString("--" + boundary);
-	if (has_type)
-		_req->setDefaultMultiPartType(type); // Only required if we handle nested and multiple mp types?
+	if (has_charset)
+		_req->setDefaultMultiPartType(charset);
 	_req->_isMultiPart = true;
 	return true;
 }
@@ -711,8 +710,7 @@ bool	RequestValidator::validateMultiPartBody(const mpMessage_t& multipart){
 	return true;
 }
 
-//bool	RequestValidator::validateCharset(const std::string& val, const std::vector< std::pair<std::string, std::string> >& options){
-bool	RequestValidator::validateCharset(const std::vector< std::pair<std::string, std::string> >& options){ // i.e CONTENT TYPE
+bool	RequestValidator::validateCharset(const std::vector< std::pair<std::string, std::string> >& options){
 	
 	const std::string& option_key = options[0].first;
 	const std::string& option_val = options[0].second;

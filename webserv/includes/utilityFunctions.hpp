@@ -73,6 +73,8 @@ void								to_upper_ref(std::string& str);
 /* STRING MODIFICATION */
 void								trimLeadingChar( std::string& str, char target);
 void								trimEndChar( std::string& str, char target);
+void								trimLWS(std::string &str);
+void								trimTWS(std::string &str);
 void								trimWS( std::string& str);
 
 /* STRING/CHAR TO NUMBER TYPE CONVERSION */

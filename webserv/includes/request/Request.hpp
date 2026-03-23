@@ -79,7 +79,7 @@ class Request {
 	fieldMap_t 			_trailers;
 	std::string 		_body;
 	std::string 		_boundary;
-	std::string 		_defaultMultiContentType;
+	std::string 		_default_mp_content_type;
 	mpMessage_t			_multipart;
 
 	void                resetParser();

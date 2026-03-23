@@ -134,6 +134,8 @@ struct mpPart_t {
 	std::string											tempFilePath;
 	int													fd;
 	mpState												parse_status;
+
+	mpPart_t(): headers(new fieldMap_t){}
 };
 
 struct mpMessage_t {

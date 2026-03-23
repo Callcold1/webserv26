@@ -75,13 +75,12 @@ class RequestParser {
 	//bool			parseSingleToken(token_s& it, bool last_val, std::string& dest, const std::string& delim, bool delim_req);
 	bool			parseSingleToken( token_s& it, eParseContext context, std::string& dest);
 	bool			parseNextLine(token_s& it, token_s& line);
-
+	bool			parseQuotedString(token_s& it, std::string& out);
 	size_t			splitToToken(token_s& it, bool last_val, std::vector<token_s>& tkns, const std::string& delim);
 	bool			splitToToken(token_s& it, bool last_val, token_s& tkn, const std::string& delim);
 	bool			splitToTokenMultiDelims(token_s& it, bool last_val, token_s& tkn, const std::string& delims, char& found_delim);
 
 	std::string		getParsedString();
-	std::string		get();
 
 	template <class T>
 	void			setIterators(token_s& t, T& begin, T& end);
