@@ -94,7 +94,7 @@ int RediResponse::save_file(std::string filename, std::string file_body)
 
 	while (file_exists(file_path.c_str()))
 	{
-		file_path = base + "_" + std::to_string(i) + ext;
+		file_path = base + "_" + toString(i) + ext;
 		i++;
 	}
 	
