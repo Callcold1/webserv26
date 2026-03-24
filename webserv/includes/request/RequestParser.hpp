@@ -49,7 +49,11 @@ class RequestParser {
 
 	void			parseField(token_s& it);
 	bool			parseFieldLine(token_s& line);
-	bool			parseFieldVal(token_s& value_tkn, field_t* field);
+	bool			splitFieldLine(token_s& value_tkn, field_t* field);
+	bool			parseFieldValue(token_s& value_tkn, field_t* field);
+	bool			parseFieldParams(std::vector<token_s>& params, field_t* field);
+	bool			parseFieldParamKey(token_s& token_key, std::string& key);
+	bool			parseFieldParamValue(token_s& token_val, std::string& value);
 
 	void			parseBody(token_s& it);
 	void			parsePlain(token_s& it);
@@ -71,19 +75,19 @@ class RequestParser {
 	//bool			parseSingleToken(token_s& it, bool last_val, std::string& dest, const std::string& delim, bool delim_req);
 	bool			parseSingleToken( token_s& it, eParseContext context, std::string& dest);
 	bool			parseNextLine(token_s& it, token_s& line);
-
+	bool			parseQuotedString(token_s& it, std::string& out);
 	size_t			splitToToken(token_s& it, bool last_val, std::vector<token_s>& tkns, const std::string& delim);
 	bool			splitToToken(token_s& it, bool last_val, token_s& tkn, const std::string& delim);
 	bool			splitToTokenMultiDelims(token_s& it, bool last_val, token_s& tkn, const std::string& delims, char& found_delim);
 
 	std::string		getParsedString();
-	std::string		get();
 
 	template <class T>
 	void			setIterators(token_s& t, T& begin, T& end);
 	void			setIterators();
 
 	bool			tokenCharValidation(const token_s& chars, const std::string& error, int errNum, bool (*f)(unsigned char));
+	bool			tokenCharValidationStr(const std::string& str, const std::string& error, int errNum, bool (*f)(unsigned char));
 	bool			rlCharsCheck(const token_s& chars, const std::string& error, int errNum);
 	void			createContextMap();
 

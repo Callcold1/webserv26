@@ -107,8 +107,8 @@ typedef bool (*charValFUnc)(unsigned char);
 typedef struct parseContext{
 	bool					last_val;
 	bool					delim_req;
-	const char*				delim;
-	const char*				error;
+	std::string				delim;
+	std::string				error;
 	int						errNum;
 	charValFUnc				validator;
 
@@ -134,6 +134,8 @@ struct mpPart_t {
 	std::string											tempFilePath;
 	int													fd;
 	mpState												parse_status;
+
+	mpPart_t(): headers(new fieldMap_t){}
 };
 
 struct mpMessage_t {
