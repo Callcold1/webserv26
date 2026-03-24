@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jake <jake@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: junruh <junruh@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/30 11:28:22 by kmooney           #+#    #+#             */
-/*   Updated: 2026/03/23 14:25:47 by jake             ###   ########.fr       */
+/*   Updated: 2026/03/24 14:59:42 by junruh           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -323,6 +323,6 @@ void	Request::matchLocationToURIPath(void){
 	_re.appended_root = _re.target.path;
 	appendPathToRoot(&_re.target, _re.appended_root, buffer);
 	getFilePermissions(_re.target);
-	std::cout << _re.target.path << std::endl;
+	std::cout << "TARGET PATH" << _re.target.path << std::endl;
 
 }

@@ -6,7 +6,7 @@
 /*   By: junruh <junruh@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/30 11:26:19 by kmooney           #+#    #+#             */
-/*   Updated: 2026/03/24 13:45:08 by junruh           ###   ########.fr       */
+/*   Updated: 2026/03/24 14:21:52 by junruh           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -368,8 +368,10 @@ bool	RequestValidator::validateHostHeader() {
 			return _req->setState(P_ERROR, V_HEADERS, "Missing 'Host' header value", 400);
 		else if ( count > 1)
 			return _req->setState(P_ERROR, V_HEADERS, "Multiple 'Host' header values", 400);
-		else
+		else{
 			_req->setHostname(it->second[0]->val); // need to check syntax (valid port if present, doesn't start with port etc)
+			_req->_host_header = it->second[0]->val;
+		}
 	}
 	else {
 		if (_req->_version.compare("HTTP/1.1") == 0)

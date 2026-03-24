@@ -31,7 +31,8 @@ int StaticResponse::generate()
 {
 	int re_status;
 
-	_path = _request.get_root_dir() + _request._uri.path;
+	//_path = _request.get_root_dir() + _request._uri.path;
+	_path = _request._re.target.path;
 	if ((re_status = get_file()) != 0)
 		return (re_status);
 	defaultHeaders();

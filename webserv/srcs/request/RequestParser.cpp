@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   RequestParser.cpp                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
+/*   By: junruh <junruh@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/23 01:37:52 by kmooney           #+#    #+#             */
-/*   Updated: 2026/03/06 15:21:16 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/03/24 13:59:25 by junruh           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -733,7 +733,8 @@ bool	RequestParser::splitFieldLine(token_s& line_tkn, field_t* field) {
 	if (param_vector.size() == 1)
 		return true;
 	std::vector<token_s> params(param_vector.begin() + 1, param_vector.end());
-	return parseFieldParams(params, field);
+	return true;
+	//return parseFieldParams(params, field);
 }
 
 /**
