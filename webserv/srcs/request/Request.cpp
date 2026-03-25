@@ -274,8 +274,9 @@ bool	Request::matchServerToHostHeader(void){
 	else
 	    hostname = _host_header;
 
-	if (_listen_instance->name_to_srv.find(hostname) == _listen_instance->name_to_srv.end())
-		if (_version.compare("HTTP/1.0") == 0)
+	if (_listen_instance->name_to_srv.find(hostname) == _listen_instance->name_to_srv.end() &&
+			_listen_instance->name_to_srv.find(_host_header) == _listen_instance->name_to_srv.end())
+		if (_version == "HTTP/1.0")
 			_matched_server = _listen_instance->def_srv;
 		else
 			return false;
