@@ -4,12 +4,13 @@
 
 import cgi
 import sys
+import os
 import textwrap
 from PIL import Image, ImageDraw, ImageFont
 
 def draw_multiline_centered(draw, text, box_x, box_y, box_w, box_h, font, fill="white"):
 	# wrap lines to fit box
-	lines = textwrap.wrap(text, width=23) # TODO figure out way to calc width
+	lines = textwrap.wrap(text, width=23)
 
 	# Measure total text height
 	line_heights = []
@@ -29,21 +30,23 @@ def draw_multiline_centered(draw, text, box_x, box_y, box_w, box_h, font, fill="
 
 
 env = cgi.FieldStorage()
-jim_text = env.getvalue('jim', 'JIM')
-dwight_text = env.getvalue('dwight', 'DWIGHT')
-michael_text = env.getvalue('michael', 'MICHAEL')
+jim_text = env.getvalue('jimtext', 'JIM')
+dwight_text = env.getvalue('dwighttext', 'DWIGHT')
+michael_text = env.getvalue('michaeltext', 'MICHAEL')
 
-#print("jim: ")
-#jim_text = input()
-#print("dwight: ")
-#dwight_text = input()
-#print("michael: ")
-#michael_text = input()
+try:
+	img_path = os.path.join(os.path.dirname(__file__), "assets", "officememe.png")	
+	img = Image.open(img_path)
+except:
+	sys.exit()
 
-img = Image.open("assets/officememe.png")
 draw = ImageDraw.Draw(img)
 
-font = ImageFont.truetype("assets/open-sans/static/OpenSans-SemiBold.ttf", 14)
+#try:
+#	font_path = os.path.join(os.path.dirname(__file__), "assets", "open-sans", "static", "OpenSans-SemiBold.ttf")
+#	font = ImageFont.truetype(font_path, 14)
+#except:
+font = ImageFont.load_default(size=14)
 
 j_box = (50, 130, 130, 200)
 d_box = (260, 600, 220, 170)
@@ -53,4 +56,4 @@ draw_multiline_centered(draw, jim_text, *j_box, font=font)
 draw_multiline_centered(draw, dwight_text, *d_box, font=font)
 draw_multiline_centered(draw, michael_text, *m_box, font=font)
 
-img.save("out.png")
+img.save(sys.stdout.buffer, 'PNG')

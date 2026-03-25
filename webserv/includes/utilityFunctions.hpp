@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   utilityFunctions.hpp                               :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
+/*   By: jake <jake@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/11 16:04:15 by kmooney           #+#    #+#             */
-/*   Updated: 2026/03/05 14:07:13 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/03/23 11:42:03 by jake             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -101,6 +101,7 @@ void								getFilePermissions(fileInfo_s& target);
 fileInfo_s*							getFileInfo(std::string& path, std::string& root_dir);
 fileInfo_s*							getFileInfo(std::string& path);
 void								getFileInfo(std::string& path, fileInfo_s& fileinfo);
+bool 								file_exists(const char* filename);
 bool								assignTempfile(std::string& target_path, int& target_fd, const std::string& prefix);
 
 /*	FILEPATH MANIPULATION  */

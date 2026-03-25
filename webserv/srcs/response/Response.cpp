@@ -2,15 +2,16 @@
 #include <ctime>
 #include <iostream>
 
-Response::Response()
-	: _status(200)
+Response::Response(Request &request)
+	: _status(200), _request(request)
 {}
 
-Response::Response(int status)
-	: _status(status)
+Response::Response(int status, Request &request)
+	: _status(status), _request(request)
 {}
 
 Response::Response(const Response &other)
+	: _request(other._request)
 {
 	_status = other._status;
 	_headers.insert(other._headers.begin(), other._headers.end());
@@ -33,14 +34,14 @@ std::string Response::serialize()
 {
 	std::stringstream s;
 
-	s << HTTP_VERSION << " " << _status << " " << status_text() << "/r/n";
+	s << HTTP_VERSION << " " << _status << " " << status_text() << "\r\n";
 
 	for (HeaderMap_t::iterator it = _headers.begin(); \
 			it != _headers.end(); it++)
 	{
-		s << it->first << ": " << it->second << "/r/n";
+		s << it->first << ": " << it->second << "\r\n";
 	}
-	s << "/r/n/r/n";
+	s << "\r\n";
 
 	s << _body;
 
@@ -52,7 +53,7 @@ std::string Response::status_text()
 	switch (_status)
 	{
 		case 200: return "OK";
-		case 201: return "Created";
+		case 201: return "Resource Created";
 		case 202: return "Accepted";
 		case 204: return "No Content";
 
@@ -62,13 +63,13 @@ std::string Response::status_text()
 
 		case 400: return "Bad Request";
 		//case 401: return "Unauthorized";
-		case 403: return "Forbidden";
+		//case 403: return "Forbidden";
 		case 404: return "Not Found";
 		case 405: return "Method Not Allowed";
 
 		case 500: return "Internal Server Error";
-		case 501: return "Not Implemented";
-		case 502: return "Bad Gateway";
+		case 501: return "Not Implemented"; //TODO where do we check if requested method is implemented
+		//case 502: return "Bad Gateway";
 		case 503: return "Service Unavailable";
 		//etc
 		default: return "Unknown Error";
@@ -82,7 +83,8 @@ void Response::defaultHeaders()
 	_headers["Server"] = "WebServ";
 	_headers["Connection"] = "keep-alive";
 	_headers["Date"] = get_date();
-	_headers["Content-Length"] = to_str(get_content_len());
+	if (!_body.empty())
+		_headers["Content-Length"] = to_str(get_content_len());
 }
 
 void Response::addHeader(std::string header, std::string value)
@@ -105,7 +107,7 @@ std::string Response::get_date()
 
 size_t Response::get_content_len()
 {
-	return(_body.size());
+	return(_body.length());
 }
 
 //debug:

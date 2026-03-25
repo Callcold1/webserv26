@@ -46,6 +46,7 @@ class Request {
 	eReqState			getReqStatus();
 	std::string			getRequestStr();
 	std::string			getUnparsedStr();
+	std::string			get_root_dir();
 
 						/* SETTERS */
 
@@ -53,6 +54,10 @@ class Request {
 	void				setBodyEncoding( const std::string& encoding );
 	void				setBoundaryString( const std::string& boundary );
 	void				setDefaultMultiPartType( const std::string& type );
+	std::vector<field_t* >	findHeader(const std::string& header_name);
+	void	 			iterateOverFieldT(std::vector<field_t*>& vec );
+	std::string			findQuery(const std::string id);
+	
 	void				setHostname( const std::string& hostname );
 	void 				setPstate(eParse p_state);
 	void 				setRstate(eReqState r_state);

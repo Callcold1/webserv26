@@ -5,8 +5,8 @@
 class StaticResponse : public Response
 {
 public:
-	StaticResponse();
-	StaticResponse(int status);
+	StaticResponse(Request &request);
+	StaticResponse(int status, Request &request);
 	StaticResponse(const StaticResponse &other);
 	StaticResponse &operator=(const StaticResponse &other);
 	~StaticResponse();
@@ -17,6 +17,8 @@ public:
 	int		get_file();
 
 	void	static_headers();
+
+	std::string get_content_type();
 private:
 	std::string _path;
 	bool		_is_dir;

@@ -53,10 +53,12 @@ class Client {
 
 								/* GETTERS */
 			eConn				getConn(void);
-			std::string 		get_msg();
+			std::string& 		get_msg();
 
 								/* HANDLERS */
 			bool				handleClientRead(const char *buffer, size_t len);
+			int 				if_file_upload(Request &request);
+			void				handle_request();
 
 								/* WRITING */
 			void 				append_write(std::string str);

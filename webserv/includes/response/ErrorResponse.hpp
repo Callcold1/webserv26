@@ -5,8 +5,9 @@
 class ErrorResponse : public Response
 {
 public:
-	ErrorResponse();
-	ErrorResponse(int status);
+	ErrorResponse(Request &request);
+	ErrorResponse(int status, Request &request);
+	ErrorResponse(int status, Request &request, std::string err_msg);
 	ErrorResponse(const ErrorResponse &other);
 	ErrorResponse &operator=(const ErrorResponse &other);
 	~ErrorResponse();
@@ -16,4 +17,6 @@ public:
 
 	//headers:
 	void error_headers();
+private:
+	std::string err_msg;
 };

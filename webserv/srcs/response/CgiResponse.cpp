@@ -1,13 +1,15 @@
 #include "CgiResponse.hpp"
 #include <unistd.h>
 #include <sys/wait.h>
+#include <fcntl.h>
+#include <iostream>
 
 
-CgiResponse::CgiResponse() : Response()
+CgiResponse::CgiResponse(Request &request) : Response(request)
 {
 }
 
-CgiResponse::CgiResponse(int status) : Response(status)
+CgiResponse::CgiResponse(int status, Request &request) : Response(status, request)
 {
 }
 
@@ -25,7 +27,7 @@ CgiResponse::~CgiResponse()
 
 int	CgiResponse::generate()
 {
-	_path = "www/cgi-bin/meme.py";
+	_path = _request._uri.path;
 	if (execute() != 0)
 	{
 		return(500);
@@ -35,7 +37,7 @@ int	CgiResponse::generate()
 	return(0);
 }
 
-int CgiResponse::execute()
+int CgiResponse::execute() //TODO maybe remove one of the pipes 
 {
 	int toCgi[2];
 	int toServer[2];
@@ -73,12 +75,10 @@ int CgiResponse::execute()
 		};
 
 		const char *envp[] = {
-			"jimtext=sryj",
-			"dwighttext=srthaze",
-			"michaeltext=sethser",
+			_request._uri.query.c_str(),
 			NULL
 		};
-		execve(_path.c_str(), args, const_cast<char * const *>(envp)); //get env, especially the ones from query string
+		execve(_path.c_str(), args, const_cast<char * const *>(envp)); 
 		_exit(1);
 	}
 	else //parent
@@ -89,20 +89,38 @@ int CgiResponse::execute()
 		// if (write(toCgi[1], _request, sizeof(_request)) < 0)
 		// 	{
 		// 		close(toCgi[1]); close(toServer[0]);
-		// 		waitpid(0, NULL, 0);
+		// 		waitpid(pid, NULL, 0);
 		// 		return(3);
 		// 	}
-		close(toCgi[1]);
 		
-		char *buf[2048];
-		if (read(toServer[0], buf, 2048) < 0)
-			{
-				close(toCgi[1]); close(toServer[0]);
-				waitpid(0, NULL, 0);
-				return(4);
-			}
+		char buf[2048];
+		std::string img;
+		ssize_t bytes_read;
+		ssize_t total_bytes = 0;
+		while ((bytes_read = read(toServer[0], buf, 2048)) > 0)
+		{
+			img.append(buf, bytes_read);
+			total_bytes += bytes_read;
+		}
+		if (bytes_read < 0)
+		{
+			close(toCgi[1]); close(toServer[0]);
+			waitpid(pid, NULL, 0);
+			return(4);
+		}
+		if (total_bytes <= 0)
+		{
+			close(toCgi[1]); close(toServer[0]);
+			waitpid(pid, NULL, 0);
+			return(4);
+		}
+		int fd = open("outfile.png", O_CREAT| O_WRONLY | O_TRUNC, 0644);
+		write(fd, img.c_str(), total_bytes);
+		close(fd);
+		_body = img;
 		close(toServer[0]);
-		waitpid(0, NULL, 0);
+		close(toCgi[1]);
+		waitpid(pid, NULL, 0);
 	}
 	return(0);
 }

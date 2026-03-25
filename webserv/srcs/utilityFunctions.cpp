@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   utilityFunctions.cpp                               :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
+/*   By: jake <jake@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/16 15:33:48 by kmooney           #+#    #+#             */
-/*   Updated: 2026/03/05 14:06:22 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/03/23 11:42:32 by jake             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -443,6 +443,12 @@ fileInfo_s* getFileInfo(std::string& path, std::string& root_dir){
 	getFilePermissions(fileinfo);
 
 	return fileinfo;
+}
+
+bool file_exists(const char* filename)
+{
+    struct stat buffer;
+    return (stat(filename, &buffer) == 0);
 }
 
 bool	assignTempfile(std::string& target_path, int& target_fd, const std::string& prefix){

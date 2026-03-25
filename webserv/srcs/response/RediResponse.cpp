@@ -1,15 +1,19 @@
 #include "RediResponse.hpp"
+#include "utilityFunctions.hpp"
 #include <unistd.h>
 #include <fcntl.h>
 
-RediResponse::RediResponse() : Response()
+RediResponse::RediResponse(Request &request, std::string url) : Response(request), _location(url), _is_upload(false)
 {
-	generate();
+	_status = 301;
 }
 
-RediResponse::RediResponse(int status) : Response(status)
+RediResponse::RediResponse(int status, Request &request, std::string url) : Response(status, request), _location(url), _is_upload(false)
 {
-	generate();
+}
+
+RediResponse::RediResponse(int status, Request &request, bool is_multipart) : Response(status, request), _is_upload(true), _is_mp(is_multipart)
+{
 }
 
 RediResponse::RediResponse(const RediResponse &other) : Response(other)
@@ -26,11 +30,24 @@ RediResponse::~RediResponse()
 
 int RediResponse::generate()
 {
-	get_location();
-	gen_redi_page();
+	int error_catch = 0;
+	if (_is_upload)
+	{
+		if (_is_mp)
+			error_catch = save_mp_file(_request._multipart.parts);
+		else
+		{
+			_filename = _request.findQuery("ImportFile");
+			error_catch = save_file(_filename, _request._body);
+		}
+	}
+	else
+	{
+		gen_redi_page();
+		redi_headers();
+	}
 	defaultHeaders();
-	redi_headers();
-	return (0);
+	return (error_catch);
 }
 
 void RediResponse::gen_redi_page()
@@ -48,9 +65,9 @@ void RediResponse::gen_redi_page()
 		</body>\n\
 	</html>";
 
-	int fd = open("redifile.html", O_CREAT| O_WRONLY | O_TRUNC, 0644);
-	write(fd, _body.c_str(), get_content_len());
-	close(fd);
+	// int fd = open("redifile.html", O_CREAT| O_WRONLY | O_TRUNC, 0644);
+	// write(fd, _body.c_str(), get_content_len());
+	// close(fd);
 }
 
 void RediResponse::redi_headers()
@@ -59,9 +76,54 @@ void RediResponse::redi_headers()
 	_headers["Location"] = _location;
 }
 
-
-//TODO figure out actual location here:
-void RediResponse::get_location()
+int RediResponse::save_file(std::string filename, std::string file_body)
 {
-	_location = "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Content-Type";
+	std::string base = filename;
+	std::string ext;
+
+	size_t dot = filename.find_last_of('.');
+	if (dot != std::string::npos)
+	{
+		base = filename.substr(0, dot);
+		ext = filename.substr(dot);
+	}
+
+	std::string file_path = "../photos/" + filename;
+	base = "../photos/" + base;
+	int i = 2;
+
+	while (file_exists(file_path.c_str()))
+	{
+		file_path = base + "_" + toString(i) + ext;
+		i++;
+	}
+	
+	int fd = open(file_path.c_str(), O_CREAT | O_WRONLY | O_EXCL, 0644);
+	if (fd < 0)
+		return (500);
+	if (write(fd, file_body.c_str(), file_body.length()) < 1)
+	{
+		close(fd);
+		return (500);
+	}
+	close(fd);
+	_location = file_path.substr(2);
+	addHeader("Location", _location);
+	return (0);
+}
+
+int RediResponse::save_mp_file(std::vector<mpPart_t> mp_vec)
+{
+	std::vector<mpPart_t>::iterator it;
+	std::string body;
+
+	for(it = mp_vec.begin(); it != mp_vec.end(); it++)
+	{
+		if ((*it).isFile)
+		{
+			body = std::string((*it).body.begin(), (*it).body.end());
+			return (save_file((*it).filename, body));
+		}
+	}
+	return(1);
 }

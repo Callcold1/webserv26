@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
+/*   By: junruh <junruh@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/30 11:28:22 by kmooney           #+#    #+#             */
-/*   Updated: 2026/03/06 15:58:14 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/03/24 14:59:42 by junruh           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -192,6 +192,11 @@ std::string	Request::getUnparsedStr(){
 	return _parser->tokenToString(_unparsed);
 }
 
+std::string Request::get_root_dir()
+{
+	return(_matched_location->getRootDir());
+}
+
 /*
 >>>>>>>>>>>>>>><<<<<<<<<<<<<<<
 >>>>>>		SETTERS		<<<<<<
@@ -242,17 +247,39 @@ bool	Request::setState(eParse p_state, eReqState r_state, std::string err_mess, 
 }
 
 
-std::vector<field_t* >	Request::findRequestHeaderValue(const std::string& header_name){
+std::vector<field_t* >	 Request::findHeader(const std::string& header_name){
 	fieldMap_t::iterator header = _headers.find(header_name);
+	
+	if (header == _headers.end())
+        return std::vector<field_t*>(); 
+	
 	return header->second;
 }
 
+// void	 Request::iterateOverFieldT(std::vector<field_t*>& vec ){
+
+// 	size_t size = vec.size();
+
+// 	for (size_t i = 0; i < size; i++){
+// 	const std::string&	 val	 = vec[i]->val;
+// 	const std::vector< std::pair<std::string, std::string> >&	 options = vec[i]->params;
+// 	}
+// }
+
+std::string Request::findQuery(const std::string id)  //function to get specific query value 
+{
+    for (query_t::iterator it = _uri.queries.begin(); it != _uri.queries.end(); ++it) {
+        if (it->first == id) {
+            return it->second;
+        }
+    }
+    return "";
+}
 void	Request::setHostname(const std::string& hostname){
 	_host_header = hostname;
 }
 
 /*
->>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<
 >>>>>>		FIND MATCHING SERVER/LOCATION		<<<<<<
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<
 */
@@ -297,16 +324,6 @@ void	Request::matchLocationToURIPath(void){
 	_re.appended_root = _re.target.path;
 	appendPathToRoot(&_re.target, _re.appended_root, buffer);
 	getFilePermissions(_re.target);
-	std::cout << _re.target.path << std::endl;
+	std::cout << "TARGET PATH" << _re.target.path << std::endl;
 
 }
-
-// void	Request::iterateOverFieldT(std::vector<field_t*>& vec ){
-	
-// 	size_t size = vec.size();
-	
-// 	for (size_t i = 0; i < size; i++){
-// 		const std::string&	 										val 	= vec[i]->val;
-// 		const std::vector< std::pair<std::string, std::string> >&	options = vec[i]->params;
-// 	}
-// }

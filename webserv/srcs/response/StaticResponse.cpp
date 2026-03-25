@@ -7,11 +7,11 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-StaticResponse::StaticResponse() : Response(), _is_dir(false)
+StaticResponse::StaticResponse(Request &request) : Response(request), _is_dir(false)
 {
 }
 
-StaticResponse::StaticResponse(int status) : Response(status), _is_dir(false)
+StaticResponse::StaticResponse(int status, Request &request) : Response(status, request), _is_dir(false)
 {
 }
 
@@ -30,12 +30,14 @@ StaticResponse::~StaticResponse()
 int StaticResponse::generate()
 {
 	int re_status;
-	//_path = "html/redifile.html"; //TODO change this to get actual path from response
-	_path = "html/lalala";
+
+	//_path = _request.get_root_dir() + _request._uri.path;
+	_path = _request._re.target.path;
 	if ((re_status = get_file()) != 0)
 		return (re_status);
 	defaultHeaders();
-	static_headers();
+	if (!_body.empty())
+		static_headers();
 	return (0);
 }
 
@@ -62,7 +64,8 @@ int directory_tree(int it, std::stringstream *outfile, std::string path)
 		{
 			if (S_ISDIR(st.st_mode))
 			{
-				directory_tree(it + 1, outfile, fullpath);
+				if (directory_tree(it + 1, outfile, fullpath) != 0)
+					return (1);
 			}
 		}
 	}
@@ -88,25 +91,27 @@ int StaticResponse::gen_index_page()
 	</html>";
 
 	_body = ss.str();
-	int fd = open("Index.html", O_CREAT| O_WRONLY | O_TRUNC, 0644);
-	write(fd, _body.c_str(), get_content_len());
-	close(fd);
+	// int fd = open("Index.html", O_CREAT| O_WRONLY | O_TRUNC, 0644);
+	// write(fd, _body.c_str(), get_content_len());
+	// close(fd);
 	return(0);
 }
 
 int StaticResponse::get_file()
 {
 	struct stat st;
-
+	std::cout << "get file entered: " << _path << std::endl;
 	if (stat(_path.c_str(), &st) == 0)
 	{
 		if (S_ISDIR(st.st_mode))
 		{
+			std::cout << "dir" << std::endl;
 			gen_index_page();
 			_is_dir = true;
 		}
 		else if (S_ISREG(st.st_mode))
 		{
+			std::cout << "file found" << std::endl;
 			std::ifstream in(_path.c_str(), std::ios::binary);
 			std::string s((std::istreambuf_iterator<char>(in)), \
             	std::istreambuf_iterator<char>());
@@ -118,8 +123,29 @@ int StaticResponse::get_file()
 	return (0);
 }
 
+std::string StaticResponse::get_content_type()
+{
+	const unsigned char png_magic[] = {
+		0x89, 0x50, 0x4E, 0x47,
+		0x0D, 0x0A, 0x1A, 0x0A
+	};
+
+	if (_body.size() >= 15 && _body.compare(0, 15, "<!doctype html>") == 0)
+	{
+		return("text/html");
+	}
+	else if (_body.size() >= sizeof(png_magic) &&
+        std::memcmp(_body.data(), png_magic, sizeof(png_magic)) == 0)
+    {
+        return("image/png");
+    }
+	else
+	{
+		return("application/octet-stream");
+	}
+}
+
 void StaticResponse::static_headers()
 {
-	
-	_headers["Content-Type"] = "text/html; charset=utf-8";
+	_headers["Content-Type"] = get_content_type();
 }

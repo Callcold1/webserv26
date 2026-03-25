@@ -5,8 +5,9 @@
 class RediResponse : public Response
 {
 public:
-	RediResponse();
-	RediResponse(int status);
+	RediResponse(Request &request, std::string url);
+	RediResponse(int status, Request &request, std::string url);
+	RediResponse(int status, Request &request, bool is_multipart);
 	RediResponse(const RediResponse &other);
 	RediResponse &operator=(const RediResponse &other);
 	~RediResponse();
@@ -14,9 +15,15 @@ public:
 	int		generate();
 	void	gen_redi_page();
 
+	//file creation
+	int		save_file(std::string filename, std::string file_body);
+	int		save_mp_file(std::vector<mpPart_t> mp_vec);
+
 	//headers:
 	void redi_headers();
-	void get_location();
 private:
 	std::string _location;
+	std::string _filename;
+	bool		_is_upload;
+	bool		_is_mp;
 };

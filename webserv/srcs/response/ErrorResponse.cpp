@@ -2,12 +2,17 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-ErrorResponse::ErrorResponse() : Response()
+ErrorResponse::ErrorResponse(Request &request) : Response(request), err_msg("Something went wrong")
 {
 	generate();
 }
 
-ErrorResponse::ErrorResponse(int status) : Response(status)
+ErrorResponse::ErrorResponse(int status, Request &request) : Response(status, request), err_msg("Something went wrong")
+{
+	generate();
+}
+
+ErrorResponse::ErrorResponse(int status, Request &request, std::string custom_err_msg) : Response(status, request), err_msg(custom_err_msg)
 {
 	generate();
 }
@@ -43,13 +48,9 @@ void ErrorResponse::gen_error_page()
 		</head>\n\
 		<body>\n\
 			<h1>" + title + "</h1>\n\
-			<p>Something went wrong.</p>\n\
+			<p>" + err_msg + "</p>\n\
 		</body>\n\
 	</html>";
-
-	int fd = open("errfile.html", O_CREAT| O_WRONLY | O_TRUNC, 0644);
-	write(fd, _body.c_str(), get_content_len());
-	close(fd);
 }
 
 void ErrorResponse::error_headers()

@@ -5,3 +5,6 @@
 #ignore vscode
 .vscode
 .vscode?
+
+#ignore logfiles
+webserv/logs/*

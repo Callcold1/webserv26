@@ -196,10 +196,13 @@ void	Server::loop(){
 
 void	Server::handleEvents(void){
 
-	for (int i = 0; i < (int)_sockets.size(); i++) {
+	for (int i = 0; i < (int)_sockets.size(); ) {
 
 		if (_sockets[i].revents == 0)
+		{
+			i++;
 			continue;
+		}
 
 		if (i < _port_count)
 			handleAccept(i);
@@ -215,9 +218,13 @@ void	Server::handleEvents(void){
 				handleClientWrite(fd);
 
 			if (_sockets[i].revents & (POLLERR | POLLHUP | POLLNVAL))
+			{
 				disconnectClient(fd, "handleEvents: POLLERR | POLLHUP | POLLNVAL");
+				continue;
+			}
 		}
 		_sockets[i].revents = 0;
+		i++;
 	}
 }
 
@@ -282,7 +289,7 @@ void	Server::handleClientRead(int fd){
 		Log::instance().log(Log::ERROR, Log::TYPE_ERROR, "handleClientRead: unknown fd [" + toString(fd) + "] : ", true);
 		return;
 	}
-
+	std::cout << "hasnt segfaulted" << std::endl;
 	Client&	client = it->second;
 
 	char buffer[BUF_SIZE];
@@ -308,11 +315,11 @@ void	Server::handleClientWrite(int fd)
 		return;
 	}
 	Client& client = it->second;
-	std::string response = client.get_msg();
+	std::string &response = client.get_msg();
 
 	ssize_t sent = send(fd, response.c_str(), response.size(), 0);
 
-	if (sent <= 0){
+	if (sent < 0){
 		disconnectClient(fd, "handleClientWrite: sent is less than or equal to zero");
 		return;
 	}
@@ -325,6 +332,39 @@ void	Server::handleClientWrite(int fd)
 	if (response.empty())
 		_sockets[getSocketsPosition(fd)].events &= ~POLLOUT;
 }
+
+// void    Server::handleClientWrite(int fd)
+// {
+//     std::map<int, Client>::iterator it = _clients.find(fd);
+//     if (it == _clients.end()) return;
+
+//     Client& client = it->second;
+//     std::string &response = client.get_msg();
+
+//     // 1. Attempt to send as much as the OS buffer will take
+//     ssize_t sent = send(fd, response.c_str(), response.size(), 0);
+
+//     if (sent < 0) {
+//         disconnectClient(fd, "send error");
+//         return;
+//     }
+
+//     // 2. Remove only the bytes that were actually sent
+//     response.erase(0, sent);
+
+//     // 3. CRITICAL: Only consider disconnecting if the buffer is now empty
+//     if (response.empty()) {
+//         // We are done sending the current message
+//         _sockets[getSocketsPosition(fd)].events &= ~POLLOUT;
+
+//         // NOW check if we should close the connection
+//         if (client.getConn() == CONN_CLOSE) {
+//             disconnectClient(fd, "Finished sending: Connection set to type 'close'");
+//         }
+//     }
+//     // If response is NOT empty, we don't disconnect. 
+//     // We leave POLLOUT active and wait for the next event to send the rest.
+// }
 
 /*
 >>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<
