@@ -81,7 +81,7 @@ std::string Response::status_text()
 void Response::defaultHeaders()
 {
 	_headers["Server"] = "WebServ";
-	_headers["Connection"] = "keep-alive";
+	_headers["Connection"] = "close"; //"keep-alive";
 	_headers["Date"] = get_date();
 	if (!_body.empty())
 		_headers["Content-Length"] = to_str(get_content_len());

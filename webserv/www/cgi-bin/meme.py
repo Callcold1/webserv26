@@ -1,6 +1,6 @@
-#!/opt/pyenv/versions/3.13.1/bin/python3
+#!/usr/bin/env python3
 
-##!/usr/bin/env python3
+##!/opt/pyenv/versions/3.13.1/bin/python3
 
 import cgi
 import sys
@@ -12,14 +12,14 @@ def draw_multiline_centered(draw, text, box_x, box_y, box_w, box_h, font, fill="
 	# wrap lines to fit box
 	lines = textwrap.wrap(text, width=23)
 
-	# Measure total text height
+	# measure total text height
 	line_heights = []
 	for line in lines:
 		h = font.size
 		line_heights.append(h)
 	total_h = sum(line_heights)
 
-	# Start y so that the block is vertically centered in the box
+	# start y so that the block is vertically centered in the box
 	y = box_y + (box_h - total_h) / 2
 
 	for line, h in zip(lines, line_heights):
@@ -29,23 +29,20 @@ def draw_multiline_centered(draw, text, box_x, box_y, box_w, box_h, font, fill="
 		y += h
 
 
+
 env = cgi.FieldStorage()
 jim_text = env.getvalue('jimtext', 'JIM')
 dwight_text = env.getvalue('dwighttext', 'DWIGHT')
 michael_text = env.getvalue('michaeltext', 'MICHAEL')
 
 try:
-	img_path = os.path.join(os.path.dirname(__file__), "assets", "officememe.png")	
+	img_path = os.path.join(os.path.dirname(__file__), "..", "assets", "officememe.png")
 	img = Image.open(img_path)
 except:
 	sys.exit()
 
 draw = ImageDraw.Draw(img)
 
-#try:
-#	font_path = os.path.join(os.path.dirname(__file__), "assets", "open-sans", "static", "OpenSans-SemiBold.ttf")
-#	font = ImageFont.truetype(font_path, 14)
-#except:
 font = ImageFont.load_default(size=14)
 
 j_box = (50, 130, 130, 200)

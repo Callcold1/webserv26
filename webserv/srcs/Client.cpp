@@ -3,7 +3,7 @@
 #include "Client.hpp"
 #include "CgiResponse.hpp"
 #include "ErrorResponse.hpp"
-#include "StaticResponse.hpp"
+#include "SuccessResponse.hpp"
 #include "RediResponse.hpp"
 
 /*
@@ -135,20 +135,25 @@ bool	Client::handleClientRead(const char *buffer, size_t len){
 		p_state = _request.parseRequest(buffer, len);
 		_matched_server = _request.getMatchedServer();
 		_matched_location = _request.getMatchedLocation();
+		std::cout << "ala" << std::endl;
+		
 	}
 	catch(const std::exception& e){
 		std::string err = e.what();
 		throw std::runtime_error("handleClientRead() : " + err);
 	}
 
+	std::cout << "lala" << std::endl;
+
 	switch(p_state){
-		case P_PARSE	: 	{ _state = READ; generateLogMessage(); return false; }
-		case P_AWAIT	: 	{ _state = READ; generateLogMessage(); return false;}
-		case P_DONE		:	{ _state = WRITE; generateLogMessage();	break; }
-		case P_ERROR	: 	{ _state = ERROR;_request._re.type = RESPOND_ERROR; _conn = CONN_CLOSE; generateLogMessage(); break;}
+		case P_PARSE	: 	{ _state = READ; /* generateLogMessage(); */ return false; }
+		case P_AWAIT	: 	{ _state = READ; /* generateLogMessage(); */ return false;}
+		case P_DONE		:	{ _state = WRITE; /* generateLogMessage(); */	break; }
+		case P_ERROR	: 	{ _state = ERROR;_request._re.type = RESPOND_ERROR; _conn = CONN_CLOSE; /* generateLogMessage(); */ break;}
 		default	: break;
 	}
 	 if (_state == WRITE){
+		std::cout << "lalala" << std::endl;
 	 	handle_request();
 	}
 	return true;
@@ -180,9 +185,12 @@ int Client::if_file_upload(Request &request)
 void Client::handle_request()
 {
 	int error_catch = 0;
-	std::string path = _request._uri.path;
+	std::cout << _request._uri.path << std::endl;
+	std::string path = _request.get_root_dir() + _request._uri.path;
 
 	std::cout << path << std::endl;
+	std::cout << _matched_location->getRedirect().url << std::endl;
+
 	if (!_matched_location)
 	{
 		_response = new ErrorResponse(NOT_FOUND_ERROR, _request);
@@ -202,7 +210,7 @@ void Client::handle_request()
 			_response = new ErrorResponse(error_catch, _request);
 	}
 
-	else if (path.find(CGI_PATH) != std::string::npos && path.find((CGI_PATH + std::string("assets"))) == std::string::npos)
+	else if (path.find(CGI_PATH) != std::string::npos)
 	{
 		std::cout << "cgi found" << std::endl;
 		struct stat st;
@@ -221,10 +229,10 @@ void Client::handle_request()
 			_response = new ErrorResponse(NOT_FOUND_ERROR, _request); //again, could be 403 for directories etc but this is for security
 		}
 	}
-	else if (path.find(HTML_PATH) != std::string::npos || path.find(PHOTO_PATH) != std::string::npos)
+	else if (path.find(HTML_PATH) != std::string::npos || path.find(PHOTO_PATH) != std::string::npos || path.find("assets/") != std::string::npos)
 	{
 		std::cout << "static page found" << std::endl;
-		_response = new StaticResponse(_request);
+		_response = new SuccessResponse(_request);
 		if ((error_catch = _response->generate()) != 0)
 		{
 			delete _response;

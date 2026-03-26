@@ -18,7 +18,7 @@ SRCS        := main.cpp \
 				response/Response.cpp \
 				response/ErrorResponse.cpp \
 				response/RediResponse.cpp \
-				response/StaticResponse.cpp \
+				response/SuccessResponse.cpp \
 				response/CgiResponse.cpp \
 				utilityFunctions.cpp \
 				Log.cpp \

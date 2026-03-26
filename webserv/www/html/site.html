@@ -6,8 +6,8 @@
 		<body>
 			<h1>The best website in existence!</h1>
 			<h2>Meme generator</h2>
-			<img src="../cgi-bin/assets/officememe.png" alt="could not find the office meme template" style="width:400px;height:500px;">
-			<form action="../cgi-bin/meme.py" method="GET">
+			<img src="/assets/officememe.png" alt="could not find the office meme template" style="width:400px;height:500px;">
+			<form action="/cgi-bin/meme.py" method="GET">
 				<div>
 					<label for="jimtext">Jim(left):</label><br>
 					<input type="text" id="jimtext" name="jimtext" maxlength="200" size="50"><br>
@@ -36,6 +36,11 @@
 				<div>
 					<button type="submit">Submit</button>
 				</div>
+			</form>
+			<form action="/photos" method="GET">
+				<div>
+					<button type="submit">View Gallery</button>
+				</div> 
 			</form>
 		</body>
 	</html>
