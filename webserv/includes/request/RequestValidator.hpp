@@ -153,17 +153,17 @@ class RequestValidator {
 	//	const HeaderFlags*				findHeaderFlags(const std::string& name);
 		int								compute_received_flags(const std::string& name, std::vector<field_t*> values);
 
-		bool							validateMethodHeaders();
+		bool							validateMethodHeaders(void);
 
-		void							validateBody();
+		void							validateBody(void);
 
-		bool							validateMPheaders();
+		bool							validateMPheaders(void);
 		bool							validateMPContentDisposition(mpPart_t& part, const std::vector<field_t*>& header);
 		bool							validateMPContentType(mpPart_t& part, const std::vector<field_t*>& header);
 		bool							updateMPparams(mpPart_t& part, const std::vector<std::pair< str_t, str_t> >& params);
-		bool							validateMultiPartBody(const mpMessage_t& multipart);
+		bool							validateMultiPartBody(void);
 
-		void							validateTrailers();
+		void							validateTrailers(void);
 
 		int								countHeaderValues (const fieldMap_t& headers, const std::string& headerName);
 		int								countOptions(const std::vector<std::pair<std::string, std::string> >& options);

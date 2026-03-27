@@ -51,7 +51,7 @@ struct redirect_s {
     int status;
     std::string url;
 
-	redirect_s(void){}
+	redirect_s(void): status(0){}
 	redirect_s(int stat, const std::string& url_str) : status(stat), url(url_str){}
 };
 

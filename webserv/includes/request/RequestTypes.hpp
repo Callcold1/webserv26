@@ -25,11 +25,11 @@
 #define NOT_CHUNKED false
 
 enum	eParse 			{ P_PARSE, P_AWAIT, P_DONE, P_ERROR };
-enum	eReqState		{ P_REQLINE, P_REQLINE_PARAMS, V_REQLINE, P_HEADERS, V_HEADERS, P_BODY, V_BODY, P_TRAILERS, V_TRAILERS, P_MULTI, V_MULTI, REQ_DONE };
+enum	eReqState		{ P_REQLINE, P_REQLINE_PARAMS, V_REQLINE, P_HEADERS, V_HEADERS, P_BODY, V_BODY, P_TRAILERS, V_TRAILERS, P_MULTI, V_MPHEADERS, V_MPBODY, REQ_DONE };
 enum	eURIstates		{ SCHEME, AUTH, USER, HOST, PORT, PATH, QUERY, FRAG, URI_ERROR, URI_END };
 enum	uri_types		{ ABSOLUTE_FORM, ASTERISK, AUTH_FORM, ORIGIN_FORM };
 enum	eBodyStates		{ BODY_CHUNKED, BODY_MULTIPART };
-enum	mpState			{ MP_NONE, MP_BOUNDARY, MP_HEADERS, MP_BODY, MP_CHUNKED, MP_COMPLETE, MP_ERROR };
+enum	mpState			{ MP_NONE, MP_BOUNDARY, MP_HEADERS, MP_BODY, MP_CHUNKED, MP_FINAL, MP_COMPLETE, MP_ERROR };
 enum	eParseContext	{ ABSOLUTE_URI, ORIGIN_URI, USER_NAME, USER_PASS, QUERY_KEY, QUERY_VAL, FIELD_NAME, FIELD_VAL, PARAM_KEY, PARAM_VAL, CHUNKSIZE, BOUNDARY };
 enum	eResponseType	{ RESPOND_NOT_SET, RESPOND_CGI, RESPOND_ERROR, RESPOND_FILE, RESPOND_INDEX, RESPOND_REDIR };
 
@@ -133,9 +133,7 @@ struct mpPart_t {
 	bool												isFile;
 	std::string											tempFilePath;
 	int													fd;
-	mpState												parse_status;
-
-	mpPart_t(): headers(new fieldMap_t){}
+	mpPart_t(): headers(new fieldMap_t), isFile(0), fd(-1){}
 };
 
 struct mpMessage_t {
@@ -152,10 +150,12 @@ struct mpParser_t {
 
 	size_t				current_index;
 
-	token_s				header_buffer;
-	std::vector<char>	body_buffer;
+	//token_s				header_buffer;
+	//std::vector<char>	body_buffer;
 
 	size_t				boundary_match_index;
+
+	mpParser_t(): state(MP_NONE), current_index(0), boundary_match_index(0) {}
 };
 /*
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<

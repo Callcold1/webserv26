@@ -460,9 +460,9 @@ bool	assignTempfile(std::string& target_path, int& target_fd, const std::string&
     char timestamp[32];
     strftime(timestamp, sizeof(timestamp), "%Y%m%d_%H%M%S", &tm_now);
     
-	// Template for mkstemp (must end with XXXXXX.extension)
+	// Template for mkstemp (must end with XXXXXX)
 	// mkstemp requires a writable char array
-	std::string			tmpTemplate = "/tmp/" + prefix + timestamp + "_XXXXXX" + ".tmp";
+	std::string			tmpTemplate = "/tmp/" + prefix + timestamp + "_XXXXXX";
     std::vector<char>	tmpFilename(tmpTemplate.begin(), tmpTemplate.end());
     
 	tmpFilename.push_back('\0');

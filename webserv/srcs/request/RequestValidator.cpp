@@ -40,11 +40,13 @@ void	RequestValidator::validate() {
 		case V_REQLINE	: { validateReqLine() ; break;}
 		case V_HEADERS	: { validateHeaders() ; break;}
 		case V_BODY		: { validateBody() ; break;}
+		case V_MPHEADERS: { validateMPheaders() ; break;}
+		case V_MPBODY	: { validateMultiPartBody() ; break;}
 		case V_TRAILERS	: { validateTrailers() ; break;}
 		default 		: { break; } 
 	}
 }
-
+ 
 /*
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 >>>>>>				 		REQUEST LINE VALIDATION 					   <<<<<<
@@ -547,7 +549,7 @@ bool	RequestValidator::validateMultiPartHeader(const std::string& val, const std
 		Form parts with identical field names MUST NOT be coalesced
 */
 bool	RequestValidator::validateMPheaders(){
-
+		
 	mpPart_t&	part = _req->_parser->currentPart();
 
 	const std::vector<field_t*>* cont_disp = getHeader(part.headers, "content-disposition");
@@ -557,7 +559,7 @@ bool	RequestValidator::validateMPheaders(){
 	const std::vector<field_t*>* cont_type = getHeader(part.headers, "content-type");
 	if (cont_type && (!validateMPContentType(part, *cont_type)))
 		return false;
-
+	_req->setRstate(P_BODY);
 	return true;
 }
 
@@ -643,15 +645,15 @@ bool	RequestValidator::validateParamsForContentType(const std::string& type, con
 	return true;
 }
 
-bool	RequestValidator::validateMultiPartBody(const mpMessage_t& multipart){
+bool	RequestValidator::validateMultiPartBody(){
 	
 	// file signatures (magic bytes) - body check
 	// size limits - parser check?
 	// allowed types - map file type to content type?
 
-	std::vector<mpPart_t>::const_iterator it = multipart.parts.begin();
-
-	/* 
+	mpPart_t&	part = _req->_parser->currentPart();
+	(void)part;
+	/* void
 		Multipart body rules :
 		
 			Headers : 	content-disposition
@@ -696,19 +698,12 @@ bool	RequestValidator::validateMultiPartBody(const mpMessage_t& multipart){
 												:	allowed MIME types
 
 	*/
-	for (;it != multipart.parts.end(); it++){
-		if (it->name.length() == 0)
-			_req->setState(P_ERROR, P_BODY, "Malformed Multipart: Invalid multipart header: expected 'name' parameter", 400); // CODE CHECK REQUIRED
-		else if (it->name == "file"){
-			if (it->isFile == 0 || it->filename.length() == 0)
-				_req->setState(P_ERROR, P_BODY, "Malformed Multipart: Invalid multipart header: expected 'filename' parameter", 400); // CODE CHECK REQUIRED
-			// check filename is of correct format
-		} 
-		if (it->disposition_type != "form-data")
-			_req->setState(P_ERROR, P_BODY, "Malformed Multipart: Invalid multipart header: multipart type unsupported", 400); // CODE CHECK REQUIRED
-		
-		// 
+	if (*_req->_mp_state == MP_COMPLETE){
+		_req->setRstate(REQ_DONE);
+		_req->setPstate(P_DONE);
 	}
+	else
+		_req->_r_state = P_BODY;
 	return true;
 }
 

@@ -1,7 +1,11 @@
 WIP
 ===
+https://chatgpt.com/share/69c66ead-85e8-8385-a998-f7d51ac917ad // MP PROBLEMS
+Update req->re with a set of parameters from request so that Jake has a single source of information to handle request.
 
 1) Finish multipart (in progress)
+    2nd part of mp message not working : could be that the current_part is not being updated correctly
+    Fix parsing of header field parameters (look at user_agent)
 
 2) Validate headers
 

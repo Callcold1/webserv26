@@ -133,8 +133,10 @@ bool	Client::handleClientRead(const char *buffer, size_t len){
 		return false;
 	try {
 		p_state = _request.parseRequest(buffer, len);
-		_matched_server = _request.getMatchedServer();
-		_matched_location = _request.getMatchedLocation();
+		if (!_matched_server){
+			_matched_server = _request.getMatchedServer();
+			_matched_location = _request.getMatchedLocation();
+		}
 	}
 	catch(const std::exception& e){
 		std::string err = e.what();

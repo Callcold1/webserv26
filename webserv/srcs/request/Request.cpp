@@ -33,7 +33,7 @@ Request::Request( listenInstance_s* listen_instance ) : _parser(NULL), _validato
 Request::Request(const Request &other) : _parser(NULL), _validator(NULL), _listen_instance(other._listen_instance),
 	_matched_location(other._matched_location), _matched_server(other._matched_server),  _method(other._method),
 	_uri_str(other._uri_str), _version(other._version), _req_line(other._req_line), _uri(other._uri), _headers(other._headers), 
-	_body(other._body),_boundary(other._boundary), _default_mp_content_type(other._default_mp_content_type), _multipart(other._multipart),
+	_body(other._body),_boundary(other._boundary), _default_mp_content_type(other._default_mp_content_type), _mp_m(other._mp_m),
 	_errNum(other._errNum), _errMess(other._errMess), _p_state(other._p_state), _r_state(other._r_state), 
 	_content_length(other._content_length), _body_length(other._body_length), _unparsed_length(other._unparsed_length),
 	_hasBody(other._hasBody), _isChunked(other._isChunked), _isMultiPart(other._isMultiPart), _bodyUTF8(other._bodyUTF8){}
@@ -52,7 +52,7 @@ Request& Request::operator=(const Request &other){
 		_body = other._body;
 		_boundary = other._boundary;
 		_default_mp_content_type = other._default_mp_content_type;
-		_multipart = other._multipart;
+		_mp_m = other._mp_m;
 		_errNum = other._errNum;
 		_errMess = other._errMess;
 		_p_state = other._p_state;
@@ -280,6 +280,7 @@ void	Request::setHostname(const std::string& hostname){
 }
 
 /*
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<
 >>>>>>		FIND MATCHING SERVER/LOCATION		<<<<<<
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<
 */

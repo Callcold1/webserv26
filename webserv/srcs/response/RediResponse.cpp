@@ -34,7 +34,7 @@ int RediResponse::generate()
 	if (_is_upload)
 	{
 		if (_is_mp)
-			error_catch = save_mp_file(_request._multipart.parts);
+			error_catch = save_mp_file(_request._mp_m.parts);
 		else
 		{
 			_filename = _request.findQuery("ImportFile");
@@ -97,7 +97,13 @@ int RediResponse::save_file(std::string filename, std::string file_body)
 		file_path = base + "_" + toString(i) + ext;
 		i++;
 	}
-	
+	// char dir[1000]; 
+	// getcwd(dir, 1000);
+	// std::cout << dir << std::endl;
+	// std::string path = dir;
+	// path.append("/");
+	// path.append(file_path);
+	// path = normalisePath(path);
 	int fd = open(file_path.c_str(), O_CREAT | O_WRONLY | O_EXCL, 0644);
 	if (fd < 0)
 		return (500);
@@ -112,17 +118,20 @@ int RediResponse::save_file(std::string filename, std::string file_body)
 	return (0);
 }
 
-int RediResponse::save_mp_file(std::vector<mpPart_t> mp_vec)
+int RediResponse::save_mp_file(std::vector<mpPart_t>& mp_vec)
 {
 	std::vector<mpPart_t>::iterator it;
-	std::string body;
+	std::string body; // If it's a file, see below 
 
 	for(it = mp_vec.begin(); it != mp_vec.end(); it++)
 	{
 		if ((*it).isFile)
 		{
+			// Any files will already be saved to part.tempFilePath and part.body will be empty
+			// We just need to move the file to the appropriate folder and rename it to filename (which we should definitely sanitise first)
+			// i.e. _matched_location->_root_dir + upload_path
 			body = std::string((*it).body.begin(), (*it).body.end());
-			return (save_file((*it).filename, body));
+			return (save_file((*it).filename, body)); // If we have to handle more than one file? If so, should this iterate until end
 		}
 	}
 	return(1);

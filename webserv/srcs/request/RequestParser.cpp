@@ -23,8 +23,9 @@ RequestParser::RequestParser(Request* request): _req(){
 	_req = request;
 	_req->setRstate(P_REQLINE);
 	_req->setPstate(P_PARSE);
-	_unparsed_len = 0;
+	_os_body_len = 0;
 	_expected_len = 0;
+	_parsed_body_len = 0;
 	_chunk_size = 0;
 	_chunk_parser_status = PARSE_CHUNK_SIZE;
 	_mp_p.state = MP_NONE;
@@ -37,12 +38,12 @@ void	RequestParser::clear() {
 	_tknLst.clear();
 
 	_p_it = token_s();
-	_unparsed_len = 0;
+	_os_body_len = 0;
 	_expected_len = 0;
 	_parsed_body_len = 0;
 	_chunk_size = 0;
 	_chunk_parser_status = PARSE_CHUNK_SIZE;
-	//_mp_state = MP_NONE;
+	_mp_p.state = MP_NONE;
 }
 
 /**
@@ -50,7 +51,7 @@ void	RequestParser::clear() {
  *
  * This function feeds raw HTTP data into the parser, initializes internal iterators,
  * and triggers the parsing process. It processes as much of the request as possible
- * given the available data. Any remaining unparsed data length is recorded in `_unparsed_len`.
+ * given the available data. Any remaining unparsed data length is recorded in `_req->_unparsed_len`.
  *
  * @param data A pointer to the raw HTTP request data buffer.
  * @param length The size of the data buffer in bytes.
@@ -637,7 +638,7 @@ bool	RequestParser::URInormalisation( void ){
 */
 
 bool	RequestParser::parseFieldValue(token_s& value_tkn, field_t* field){
-	
+
 	std::deque<char>::const_iterator	parse_pos = value_tkn.begin;
 
 	while (*parse_pos == ' ' || *parse_pos == '\t')
@@ -647,7 +648,7 @@ bool	RequestParser::parseFieldValue(token_s& value_tkn, field_t* field){
 		if (parseQuotedString(value_tkn, field->val))
 			return true;
 		else
-			return _req->setState(P_ERROR, "Malformed Field : Invalid Field Value", 400);		
+			return _req->setState(P_ERROR, "Malformed Field : Invalid Field Value", 400);
 	}
 	else {
 		if (!tokenCharValidation(value_tkn, "Malformed Field : Invalid Character in Field Value", 400, isTextChar))
@@ -669,14 +670,14 @@ bool	RequestParser::parseFieldParamKey(token_s& token_key, std::string& key){
 
 
 bool	RequestParser::parseFieldParamValue(token_s& token_val, std::string& value){
-	
+
 	std::deque<char>::const_iterator	parse_pos = token_val.begin;
 
 	if (*parse_pos == '"'){
 		if (parseQuotedString(token_val, value))
 			return true;
 		else
-			return _req->setState(P_ERROR, "Malformed Field : Invalid parameter value", 400);		
+			return _req->setState(P_ERROR, "Malformed Field : Invalid parameter value", 400);
 	}
 	else {
 		tokenToString(token_val, value);
@@ -733,8 +734,8 @@ bool	RequestParser::splitFieldLine(token_s& line_tkn, field_t* field) {
 	if (param_vector.size() == 1)
 		return true;
 	std::vector<token_s> params(param_vector.begin() + 1, param_vector.end());
-	return true;
-	//return parseFieldParams(params, field);
+	//return true;
+	return parseFieldParams(params, field);
 }
 
 /**
@@ -781,7 +782,7 @@ bool	RequestParser::parseFieldLine(token_s& line) {
 			splitFieldLine(currentToken, new_field);
 			field_vector.push_back(new_field);
 		}
-		(*fieldMap)[field_name] = field_vector; // multipart fails on 2nd 
+		(*fieldMap)[field_name] = field_vector; // multipart fails on 2nd
 
 		return true;
 	}
@@ -817,7 +818,7 @@ void	RequestParser::parseField(token_s& it) {
 	switch (_req->getReqStatus()){
 		case (P_HEADERS) : {next_state = V_HEADERS; break;}
 		case (P_TRAILERS) : {next_state = V_TRAILERS; break;}
-		case (P_MULTI) : {next_state = V_MULTI; _mp_p.state = MP_BODY; break;}
+		case (P_MULTI) : {next_state = V_MPHEADERS; break;}
 		default : break;
 	}
 
@@ -828,6 +829,8 @@ void	RequestParser::parseField(token_s& it) {
 		}
 		if (line.begin == line.end) {
 			_req->setRstate(next_state);
+			if (next_state == V_MPHEADERS)
+				_mp_p.state = MP_BODY;
 			return;
 		}
 		if (!parseFieldLine(line)) {
@@ -984,7 +987,6 @@ void	RequestParser::parseChunked( token_s& it ){
 
 void	RequestParser::parseMultiPart( token_s& it ){
 	if (_mp_p.state == MP_NONE){
-
 		_mp_p.boundary =_req->_boundary;
 		_mp_p.boundary_marker =_req->_boundary + "--";
 		_mp_p.state = MP_BOUNDARY;
@@ -992,10 +994,11 @@ void	RequestParser::parseMultiPart( token_s& it ){
 	while (_mp_p.state != MP_COMPLETE && _req->_p_state == P_PARSE){
 		switch (_mp_p.state) {
 			case MP_NONE:		return;
-			case MP_BOUNDARY:	parseBoundaryMP(it); break;
-			case MP_HEADERS:	parseHeadersMP(it); break;
-			case MP_BODY: 		parseBodyMP(it); break;
-			case MP_ERROR:		return;
+			case MP_BOUNDARY:	parseBoundaryMP(it); _req->_mp_state = &_mp_p.state; break;
+			case MP_HEADERS:	parseField(it); _req->_mp_state = &_mp_p.state; return;
+			case MP_BODY: 		parseBodyMP(it); _req->_mp_state = &_mp_p.state; return; // Need to validate body before next boundary is processed
+			case MP_FINAL:		parseFinalMP(it); _req->_mp_state = &_mp_p.state; return;
+			case MP_ERROR:		_req->_mp_state = &_mp_p.state; return;
 			default: break;
 		}
 	}
@@ -1005,54 +1008,84 @@ void	RequestParser::parseMultiPart( token_s& it ){
 void	RequestParser::parseBoundaryMP(token_s& it){
 
 	token_s line;
+	bool	final = false;
 
 	if (!parseNextLine(it, line)){
 		_req->setPstate(P_AWAIT);
 		return;
 	}
-	std::string str = tokenToString(line);
-	if (str == _mp_p.boundary_marker) {
-		_mp_p.state = MP_COMPLETE;
-		_req->setState(P_DONE, V_BODY, "Parsing Complete", 200);
+	if (matchBoundaryMP(line.begin, line.end, final)) {
+		if (final){
+			_mp_p.state = MP_FINAL;
+			_req->setState(P_DONE, REQ_DONE, "Parsing Complete", 200);
+			parseFinalMP(it);
+		}
+		else {
+			mpPart_t	part;
+
+			_req->_mp_m.parts.push_back(part);
+			_mp_p.current_index = _req->_mp_m.parts.size() - 1;
+			_mp_p.state = MP_HEADERS;
+		}
 		return;
 	}
-	if (str != _mp_p.boundary){
-		_req->setState(P_ERROR, P_BODY, "Malformed Body : Invalid multipart boundary", 400); // CODE CHECK REQUIRED
-		_mp_p.state = MP_ERROR;
-	}
-	mpPart_t	part;
-
-	_mp_m.parts.push_back(part);
-	_mp_p.current_index = _mp_m.parts.size() - 1;
-	_mp_p.state = MP_HEADERS;
+	_req->setState(P_ERROR, P_BODY, "Malformed Body : Invalid multipart boundary", 400); // CODE CHECK REQUIRED
+	_mp_p.state = MP_ERROR;
+	return;
 }
 
-void	RequestParser::parseHeadersMP(token_s& it){
+bool	RequestParser::matchBoundaryMP(std::deque<char>::const_iterator pos, std::deque<char>::const_iterator end, bool& final){
 
-	/*
-		Transfer-Encoding (e.g., chunked)
-		content-length header is not used for multipart body
-	*/
-	parseField(it);
-}
+	size_t size = _mp_p.boundary.size();
+	size_t final_size = size + 2;
+	bool match = true;
 
-bool	RequestParser::matchBoundaryMP(std::deque<char>::const_iterator pos, std::deque<char>::const_iterator end, const std::string& boundary){
-
-	if (std::distance(pos, end) < (ptrdiff_t)boundary.size())
+	if (std::distance(pos, end) < (ptrdiff_t)size)
 		return false;
 
-	for (size_t i = 0; i < boundary.size(); i++) {
-		if (*(pos + i) != boundary[i])
+	else if (std::distance(pos, end) >= (ptrdiff_t)final_size){
+
+		for (size_t i = 0; i < final_size; i++) {
+			if (*(pos + i) != _mp_p.boundary_marker[i]){
+				match = false;
+				break;
+			}
+		}
+		if (match == true){
+			final = true;
+			return true;
+		}
+	}
+	for (size_t i = 0; i < size; i++) {
+		if (*(pos + i) != _mp_p.boundary[i])
 			return false;
 	}
+	final = false;
 	return true;
+}
+
+void	RequestParser::parseFinalMP(token_s& it) {
+
+	token_s line;
+
+	if (!parseNextLine(it, line) && !(*it.begin == '\r' && (it.begin + 1 == it.end))) //await final \n or treat as complete?
+		_req->setState(P_ERROR, P_BODY, "Invalid characters following final boundary", 400); // CODE
+	else
+		_req->setPstate(P_AWAIT);
+	if (it.begin == it.end){
+		_req->setState(P_DONE, V_MPBODY, "Parsing Complete", 200);
+		_mp_p.state = MP_COMPLETE;
+	}
+	else
+		_req->setState(P_ERROR, P_BODY, "Invalid characters following final boundary", 400); // CODE : If we allow pipelining, then we should alter and save for next request
 }
 
 void	RequestParser::parseBodyMP(token_s& it) {
 
 	mpPart_t&							part = currentPart();
 	std::deque<char>::const_iterator	pos = it.begin;
-	size_t								boundary_size = _mp_p.boundary.size() + 4; 				 // safe = size of /r/n--boundary (means we avoid accidently inserting boundary in body)
+	size_t								boundary_size = _mp_p.boundary.size() + 4;
+	bool								final = false;
 
 	while (pos != it.end){
 
@@ -1062,22 +1095,17 @@ void	RequestParser::parseBodyMP(token_s& it) {
 
 				std::deque<char>::const_iterator	boundary_pos = pos + 2;
 
-				if (matchBoundaryMP(boundary_pos, it.end, _mp_p.boundary_marker)){
-					_mp_p.state = MP_COMPLETE;
-					if (part.isFile)
-						appendToTempfileMP(part, it.begin, pos);
-					else
-						appendToBodyMP(part, it.begin, pos);
-					it.begin = boundary_pos + _mp_p.boundary_marker.size();
-					return;
-				}
-				else if (matchBoundaryMP(boundary_pos, it.end, _mp_p.boundary)){
+				if (matchBoundaryMP(boundary_pos, it.end, final)){
 					_mp_p.state = MP_BOUNDARY;
+					_req->setRstate(V_MPBODY);
 					if (part.isFile)
 						appendToTempfileMP(part, it.begin, pos);
 					else
 						appendToBodyMP(part, it.begin, pos);
-					it.begin = boundary_pos;
+					if (final)
+						it.begin = boundary_pos;
+					else
+						it.begin = boundary_pos;
 					return;
 				}
 			}
@@ -1098,15 +1126,17 @@ void	RequestParser::parseBodyMP(token_s& it) {
 
 void	RequestParser::appendToTempfileMP(mpPart_t& part, std::deque<char>::const_iterator begin, std::deque<char>::const_iterator end) {
 
-	if (!assignTempfile(part.tempFilePath, part.fd, "Multipart_")){
-		part.parse_status = MP_ERROR;
-		return;
+	if (part.tempFilePath.length() == 0 || part.fd == -1){
+		if (!assignTempfile(part.tempFilePath, part.fd, "Multipart_")){
+			_mp_p.state = MP_ERROR;
+			return;
+		}
 	}
 
 	std::ofstream ofs(part.tempFilePath.c_str(), std::ios::out | std::ios::binary | std::ios::app);
 
 	if (!ofs) {
-		part.parse_status = MP_ERROR;
+		_mp_p.state = MP_ERROR;
 		return;
 	}
 
@@ -1120,13 +1150,19 @@ void	RequestParser::appendToBodyMP(mpPart_t& part, std::deque<char>::const_itera
 }
 
 mpPart_t& RequestParser::currentPart() {
-	return _mp_m.parts[_mp_p.current_index];
+	return _req->_mp_m.parts[_mp_p.current_index];
 }
 
 std::string	RequestParser::getParsedString(){
 	std::string str = tokenToString(_p_it);
 	return str;
 }
+
+/*
+>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<
+>>>>>>		CHARACTER VALIDATION		<<<<<<
+>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<
+*/
 
 bool	RequestParser::rlCharsCheck(const token_s& chars, const std::string& error, int errNum){
 
@@ -1163,6 +1199,12 @@ bool	RequestParser::tokenCharValidationStr(const std::string& str, const std::st
 	return true;
 }
 
+/*
+>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<
+>>>>>>		PARSING CONTEXT MAP		<<<<<<
+>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<
+*/
+
 void	RequestParser::createContextMap(){
 
 	static std::map< eParseContext, parseContext> _map;
@@ -1185,7 +1227,7 @@ void	RequestParser::createContextMap(){
 }
 
 bool	RequestParser::parseQuotedString(token_s& it, std::string& out) {
-	
+
 	std::deque<char>::const_iterator	pos = it.begin;
 	std::deque<char>::const_iterator	end = it.end;
 
@@ -1193,11 +1235,11 @@ bool	RequestParser::parseQuotedString(token_s& it, std::string& out) {
 		return false;
 
 	pos++;
-	
+
 	std::string result;
 
 	while (pos != end) {
-		
+
 		char c = *pos;
 
 		if (c == '"') {

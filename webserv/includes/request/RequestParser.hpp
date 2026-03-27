@@ -66,13 +66,13 @@ class RequestParser {
 	void			parseBoundaryMP(token_s& it);
 	void			parseHeadersMP(token_s& it);
 	void			parseBodyMP(token_s& it);
-	bool			matchBoundaryMP(std::deque<char>::const_iterator pos, std::deque<char>::const_iterator end, const std::string& boundary);
+	void			parseFinalMP(token_s& it);
+	bool			matchBoundaryMP(std::deque<char>::const_iterator pos, std::deque<char>::const_iterator end, bool& final);
 	void			appendToTempfileMP(mpPart_t& part, std::deque<char>::const_iterator begin, std::deque<char>::const_iterator end);
 	void			appendToBodyMP(mpPart_t& part, std::deque<char>::const_iterator begin, std::deque<char>::const_iterator end);
 	void			tokenToString(const token_s& token, std::string& dest);
 	std::string		tokenToString(const token_s& token);
 
-	//bool			parseSingleToken(token_s& it, bool last_val, std::string& dest, const std::string& delim, bool delim_req);
 	bool			parseSingleToken( token_s& it, eParseContext context, std::string& dest);
 	bool			parseNextLine(token_s& it, token_s& line);
 	bool			parseQuotedString(token_s& it, std::string& out);
@@ -100,13 +100,12 @@ private:
 	std::vector<token_s>	_tknLst;
 	token_s					_p_it;
 
-	size_t					_unparsed_len;
+	size_t					_os_body_len;
 	size_t					_expected_len;
 	size_t					_parsed_body_len;
 	uint64_t				_chunk_size;
 	bool					_chunk_parser_status;
 	mpParser_t				_mp_p;
-	mpMessage_t				_mp_m;
 };
 
 bool	bytesAvailable(token_s& it, size_t required);

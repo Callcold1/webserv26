@@ -2,8 +2,10 @@ PROJECT_ROOT := $(realpath ./)
 
 NAME        := webserv
 
-CXX         := c++
-CXXFLAGS    := -Wall -Werror -Wextra -std=c++98 -g
+# CXX         := c++
+CXX         := g++
+#CXXFLAGS    := -Wall -Werror -Wextra -std=c++98 -g
+CXXFLAGS    := -Wall -Werror -Wextra -std=c++98 -fsanitize=address -g
 
 INCLUDES    :=	-I $(PROJECT_ROOT)/includes \
 				-I $(PROJECT_ROOT)/includes/response \

@@ -85,7 +85,8 @@ class Request {
 	std::string 		_body;
 	std::string 		_boundary;
 	std::string 		_default_mp_content_type;
-	mpMessage_t			_multipart;
+	mpMessage_t			_mp_m;
+	mpState*			_mp_state;
 
 	void                resetParser();
 	void                resetValidator();
