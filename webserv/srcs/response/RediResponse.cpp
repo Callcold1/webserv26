@@ -129,7 +129,13 @@ int RediResponse::save_mp_file(std::vector<mpPart_t>& mp_vec)
 		{
 			// Any files will already be saved to part.tempFilePath and part.body will be empty
 			// We just need to move the file to the appropriate folder and rename it to filename (which we should definitely sanitise first)
-			// i.e. _matched_location->_root_dir + upload_path
+
+			// I will try to to populate _request->_re._target with the upload path
+			// This should contain a variable "fileInfo_s target"
+			// The file info/permissions etc should be populated
+			
+			// If we want to handle multiple uploads, then maybe we add a target path property to the 
+			// multipart struct (more direct)
 			body = std::string((*it).body.begin(), (*it).body.end());
 			return (save_file((*it).filename, body)); // If we have to handle more than one file? If so, should this iterate until end
 		}
