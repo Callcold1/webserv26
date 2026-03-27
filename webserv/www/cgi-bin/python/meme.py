@@ -36,7 +36,9 @@ dwight_text = env.getvalue('dwighttext', 'DWIGHT')
 michael_text = env.getvalue('michaeltext', 'MICHAEL')
 
 try:
-	img_path = os.path.join(os.path.dirname(__file__), "..", "assets", "officememe.png")
+	#img_path = os.path.join(os.path.dirname(__file__), "..", "..", "assets", "officememe.png")
+	base = os.path.dirname(os.path.realpath(__file__))
+	img_path = os.path.realpath(os.path.join(base, "../../assets/officememe.png"))
 	img = Image.open(img_path)
 except:
 	sys.exit()

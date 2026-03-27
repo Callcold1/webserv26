@@ -216,7 +216,10 @@ void Client::handle_request()
 		struct stat st;
 		if (stat(path.c_str(), &st) == 0 && S_ISREG(st.st_mode))
 		{
-			_response =  new CgiResponse(_request);
+			if (path.find("www/cgi-bin/python/") != std::string::npos)
+				_response =  new CgiResponse(_request, true);
+			else if (path.find("www/cgi-bin/php/") != std::string::npos)
+				_response =  new CgiResponse(_request, false);
 			error_catch = _response->generate();
 			if (error_catch != 0)
 			{

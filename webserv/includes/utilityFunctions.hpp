@@ -6,7 +6,7 @@
 /*   By: jake <jake@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/11 16:04:15 by kmooney           #+#    #+#             */
-/*   Updated: 2026/03/23 11:42:03 by jake             ###   ########.fr       */
+/*   Updated: 2026/03/27 13:47:19 by jake             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -107,6 +107,7 @@ bool								assignTempfile(std::string& target_path, int& target_fd, const std::
 /*	FILEPATH MANIPULATION  */
 void								appendPathToRoot(fileInfo_s* target, std::string path, std::string root_dir);
 std::string							normalisePath(const std::string& path);
+std::string							get_absolute_path(const std::string server_path);
 
 /*  DUPLICATE CHECK */
 template<class T>

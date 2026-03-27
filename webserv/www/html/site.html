@@ -5,9 +5,16 @@
 		</head>
 		<body>
 			<h1>The best website in existence!</h1>
-			<h2>Meme generator</h2>
+			<h2>First, let's say hello to our website! (php cgi test)</h2>
+			<p>What's your name?</p>
+			<form action="/cgi-bin/php/say_hello.php" method="GET">
+				<input type="text" name="firstname">
+				<button type="submit">Say Hello</button>
+			</form>
+			<p></p>
+			<h2>Meme generator (python cgi test)</h2>
 			<img src="/assets/officememe.png" alt="could not find the office meme template" style="width:400px;height:500px;">
-			<form action="/cgi-bin/meme.py" method="GET">
+			<form action="/cgi-bin/python/meme.py" method="GET">
 				<div>
 					<label for="jimtext">Jim(left):</label><br>
 					<input type="text" id="jimtext" name="jimtext" maxlength="200" size="50"><br>
@@ -19,7 +26,7 @@
 				</div> 
 			</form>
 			<p></p>
-			<h2>Submit File</h2>
+			<h2>Upload a picture to our Gallery!</h2>
 			<form>
 				<div>
 					<input id="ImportFile"
@@ -34,7 +41,7 @@
 					<p>Accepted file type: .png</p>
 				</div>
 				<div>
-					<button type="submit">Submit</button>
+					<button type="submit">Upload</button>
 				</div>
 			</form>
 			<form action="/photos" method="GET">

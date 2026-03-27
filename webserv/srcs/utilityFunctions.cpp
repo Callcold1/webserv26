@@ -6,7 +6,7 @@
 /*   By: jake <jake@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/16 15:33:48 by kmooney           #+#    #+#             */
-/*   Updated: 2026/03/23 11:42:32 by jake             ###   ########.fr       */
+/*   Updated: 2026/03/27 14:26:50 by jake             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -529,6 +529,16 @@ std::string normalisePath(const std::string& path) {
     if (path.size() > 1 && path[path.size() - 1] == '/' && result[result.size() - 1] != '/')
         result += '/';
     return result;
+}
+
+std::string get_absolute_path(const std::string server_path)
+{
+    char cwd[PATH_MAX];
+    if (getcwd(cwd, sizeof(cwd)) != NULL) {
+        std::string full(cwd);
+        return full + "/" + server_path;
+    }
+    return "";
 }
 
 /*

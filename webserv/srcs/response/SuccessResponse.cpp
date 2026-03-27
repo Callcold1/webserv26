@@ -115,10 +115,13 @@ int SuccessResponse::gen_index_page(bool is_gallery)
 {
 	std::stringstream ss;
 
+	std::string title = "Index";
+	if (is_gallery)
+		title = "Gallery";
     ss << "<!doctype html>\n\
 	<html>\n\
 		<head>\n\
-			<title>Index</title>\n\
+			<title>" << title << "</title>\n\
 			<style>\n\
                 .delete-btn {\n\
                     margin-left: 15px;\n\
@@ -139,7 +142,7 @@ int SuccessResponse::gen_index_page(bool is_gallery)
             </style>\n\
 		</head>\n\
 		<body>\n\
-			<h1>Index</h1>\n";
+			<h1>" << title << "</h1>\n";
 	ss << "<pre>\n";
 	directory_tree(0, &ss, _request._uri.path, _path, is_gallery);
 	ss << "<pre>\n";
