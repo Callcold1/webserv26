@@ -27,7 +27,8 @@ CgiResponse::~CgiResponse()
 
 int	CgiResponse::generate()
 {
-	_path = _request._uri.path;
+	//_path = _request._uri.path;
+	_path = _request._re.paths.resource_path.path;
 	if (execute() != 0)
 	{
 		return(500);

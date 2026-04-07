@@ -35,6 +35,8 @@ class Request {
 	void	    		clear();
 	
 	eParse				parseRequest(const char* rawData, size_t length);
+	void				resetRequest(void);
+
 
 						/* GETTERS */
 	const std::string&	getErrMsg(void) const;
@@ -65,13 +67,15 @@ class Request {
 	bool 				setState(eParse p_state, eReqState r_state, std::string err_mess, unsigned int err_num );
 
 	bool				matchServerToHostHeader(void);
-	void				matchLocationToURIPath(void);
+	bool				matchLocationToURIPath(void);
+	void				updateTargetPathInfo(std::string& leftover);
+	void				updateErrorPagePath(std::string& target, std::string& root);
+	void				updateRe(void);
 
 	std::vector<field_t* >		findRequestHeaderValue(const std::string& header_name);
 
 	RequestParser*		_parser;
 	RequestValidator*	_validator;
-	//RequestHandler*		_requestHandler;
 	listenInstance_s*	_listen_instance;
 	const CLocation*	_matched_location;
 	CServer*			_matched_server;
@@ -97,8 +101,8 @@ class Request {
 	eReqState			_r_state;
 	
 	uint64_t			_content_length, _body_length, _unparsed_length; //_content_length is used when content length is provided. body_length is used to track length parsed
-
-	bool 				_hasBody, _isChunked, _isMultiPart, _bodyUTF8;
+	
+	bool 				_hasBody, _isCGI, _isChunked, _isMultiPart, _bodyUTF8, _isRedirect;
 
 	respond_t			_re;
 

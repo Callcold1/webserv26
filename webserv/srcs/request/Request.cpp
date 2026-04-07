@@ -20,23 +20,77 @@
 >>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<
 */
 
-Request::Request(void) : _parser(NULL), _validator(NULL), _listen_instance(NULL), 
-		 _matched_server(NULL), _method(""), _uri_str(""), _version(""),
-		_errNum(200), _errMess(""), _p_state (P_PARSE), _r_state (P_REQLINE), _content_length(0),
-		_unparsed_length(0), _hasBody(false), _isChunked(false), _isMultiPart(false), _bodyUTF8(false){}
+Request::Request(void) : 
+	_parser(NULL), 
+	_validator(NULL), 
+	_listen_instance(NULL), 
+	_matched_server(NULL), 
+	_method(""), 
+	_uri_str(""), 
+	_version(""),
+	_errNum(200), 
+	_errMess(""), 
+	_p_state (P_PARSE), 
+	_r_state (P_REQLINE), 
+	_content_length(0),
+	_unparsed_length(0), 
+	_hasBody(false), 
+	_isCGI(false), 
+	_isChunked(false), 
+	_isMultiPart(false), 
+	_bodyUTF8(false),
+	_isRedirect(false){}
 
-Request::Request( listenInstance_s* listen_instance ) : _parser(NULL), _validator(NULL), _listen_instance(listen_instance),
-		_matched_server(NULL),  _method(""), _uri_str(""), _version(""),
-		_errNum(200), _errMess(""), _p_state (P_PARSE), _r_state (P_REQLINE), _content_length(0),
-		_unparsed_length(0), _hasBody(false), _isChunked(false), _isMultiPart(false), _bodyUTF8(false){}
+Request::Request( listenInstance_s* listen_instance ) : 
+	_parser(NULL), 
+	_validator(NULL), 
+	_listen_instance(listen_instance),
+	_matched_server(NULL), 
+	_method(""), 
+	_uri_str(""), 
+	_version(""),
+	_errNum(200), 
+	_errMess(""), 
+	_p_state (P_PARSE),
+	_r_state (P_REQLINE), 
+	_content_length(0),
+	_unparsed_length(0), 
+	_hasBody(false), 
+	_isCGI(false), 
+	_isChunked(false), 
+	_isMultiPart(false), 
+	_bodyUTF8(false),
+	_isRedirect(false){}
 
-Request::Request(const Request &other) : _parser(NULL), _validator(NULL), _listen_instance(other._listen_instance),
-	_matched_location(other._matched_location), _matched_server(other._matched_server),  _method(other._method),
-	_uri_str(other._uri_str), _version(other._version), _req_line(other._req_line), _uri(other._uri), _headers(other._headers), 
-	_body(other._body),_boundary(other._boundary), _default_mp_content_type(other._default_mp_content_type), _mp_m(other._mp_m),
-	_errNum(other._errNum), _errMess(other._errMess), _p_state(other._p_state), _r_state(other._r_state), 
-	_content_length(other._content_length), _body_length(other._body_length), _unparsed_length(other._unparsed_length),
-	_hasBody(other._hasBody), _isChunked(other._isChunked), _isMultiPart(other._isMultiPart), _bodyUTF8(other._bodyUTF8){}
+Request::Request(const Request &other) : _parser(NULL), 
+	_validator(NULL), 
+	_listen_instance(other._listen_instance),
+	_matched_location(other._matched_location), 
+	_matched_server(other._matched_server), 
+	_method(other._method),
+	_uri_str(other._uri_str), 
+	_version(other._version), 
+	_req_line(other._req_line), 
+	_uri(other._uri), 
+	_headers(other._headers), 
+	_body(other._body),
+	_boundary(other._boundary), 
+	_default_mp_content_type(other._default_mp_content_type), 
+	_mp_m(other._mp_m),
+	_errNum(other._errNum), 
+	_errMess(other._errMess), 
+	_p_state(other._p_state), 
+	_r_state(other._r_state), 
+	_content_length(other._content_length), 
+	_body_length(other._body_length), 
+	_unparsed_length(other._unparsed_length),
+	_hasBody(other._hasBody), 
+	_isCGI(other._isCGI), 
+	_isChunked(other._isChunked), 
+	_isMultiPart(other._isMultiPart), 
+	_bodyUTF8(other._bodyUTF8),
+	_isRedirect(other._isRedirect),
+	_re(other._re){}
 				
 Request& Request::operator=(const Request &other){
 	if (this != &other){
@@ -61,10 +115,13 @@ Request& Request::operator=(const Request &other){
 		_body_length = other._body_length;
 		_unparsed_length = other._unparsed_length;
 		_hasBody = other._hasBody;
+		_isCGI = other._isCGI;
 		_isChunked = other._isChunked;
 		_isMultiPart = other._isMultiPart;
 		_bodyUTF8 = other._bodyUTF8;
-	}	
+		_isRedirect = other._isRedirect;
+		_re = other._re;
+	}
 	return *this;
 }
 
@@ -93,10 +150,21 @@ Request::~Request( void ){
 }
 
 void	Request::clear() {
+
+	size_t leftover = _unparsed.end - _unparsed.begin;
+	if (leftover){
+		_buffer.erase(_buffer.begin(), _buffer.begin() + leftover);
+	}
+	else
+		_buffer.erase(_buffer.begin(), _buffer.end());
+	_unparsed.begin = 0;
+	_unparsed.end = leftover;
+	_matched_location = NULL;
 	_method.clear();
 	_uri_str.clear();
 	_version.clear();
 	_req_line.clear();
+	_host_header.clear();
 	_uri = uri_t();
 	_headers.clear();
 	_body.clear();
@@ -110,22 +178,19 @@ void	Request::clear() {
 	_r_state = P_REQLINE;
 
 	_content_length = 0;
+	_unparsed_length = _unparsed.end - _unparsed.begin;
 
 	_hasBody = false;
+	_isCGI = false; 
 	_isChunked = false;
 	_isMultiPart = false;
 	_bodyUTF8 = false;
-
-	if (_parser)
-		_parser->clear();
-	// if (_validator) {
-	// 	_validator->clear();
-	//}
+    if (_parser)
+        _parser->clear();
 }
 
 void	Request::resetParser() {
-    if (_parser)
-        _parser->clear();
+
 }
 
 /*
@@ -146,6 +211,7 @@ eParse	Request::parseRequest(const char* rawData, size_t length) {
 		if (_p_state == P_PARSE)
 			_parser->parseRequest();
 	}
+	updateRe();
 	return _p_state;
 }
 
@@ -310,21 +376,106 @@ bool	Request::matchServerToHostHeader(void){
 			return false;
 	else
 		_matched_server = (_listen_instance->name_to_srv.find(hostname))->second;
+	_re.server = _matched_server;
 	return true;		
 }
 
-void	Request::matchLocationToURIPath(void){
+bool	Request::matchLocationToURIPath(void){
 	
-	char	buffer[1024];
-	
-	getcwd(buffer, sizeof(buffer));
-	_matched_location = _matched_server->getLocationForPath(_uri.path, _re.leftover_path);
-	_re.location_path = _matched_location->getURI();// temporary (testing respond_t)
-	_re.location_root = _matched_location->getRootDir(); // temporary (testing respond_t)
-	appendPathToRoot(&_re.target, _re.leftover_path, _re.location_root); // temporary (testing respond_t)
-	_re.appended_root = _re.target.path;
-	appendPathToRoot(&_re.target, _re.appended_root, buffer);
-	getFilePermissions(_re.target);
-	std::cout << "TARGET PATH" << _re.target.path << std::endl;
+	std::string leftover;
 
+	_matched_location = _matched_server->getLocationForPath(_uri.path, leftover);
+	if (!_matched_location)
+		return false;
+	if (_matched_location->isCGIMapSet())
+		_isCGI = true;
+	_re.location = _matched_location;
+	updateTargetPathInfo(leftover);
+	return true;
+}
+
+/*
+>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<
+>>>>>>		UPDATE _RE		<<<<<<
+>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<
+*/
+
+void	Request::updateTargetPathInfo(std::string& leftover){
+
+	char	cwd[2048];
+	cwd[0] = '\0';
+	//getcwd(cwd, sizeof(cwd));
+
+	std::string fs_root = appendPathToRoot(_matched_location->getRootDir(), cwd); 			// base path : i.e. cwd + location_root
+	appendPathToRoot(&_re.paths.resource_path, leftover, fs_root); 				  			// base path + leftover uri (i.e. target resource)
+	getFilePermissions(_re.paths.resource_path);
+	
+	if (_matched_location->isRedirectSet()){
+		_re.paths.redirect_url = _matched_location->getRedirectURL();				   		// redirect URI from location (no interaction with filesystem)
+		_re.status = _matched_location->getRedirectStatus();
+		_isRedirect = true;
+	}
+	_re.paths.upload_base = appendPathToRoot(_matched_location->getUploadPath(), cwd);		//  upload path is not appended to location root
+}
+
+void	Request::updateErrorPagePath(std::string& target, std::string& root){
+	
+	char	cwd[2048];
+	//getcwd(cwd, sizeof(cwd));
+	cwd[0] = '\0';
+	
+	std::string	fs_root = appendPathToRoot(root, cwd);
+	std::string	error_page = appendPathToRoot(target, fs_root);
+	getFileInfo(error_page, _re.paths.error_path);
+}
+
+void	Request::updateRe(void){
+
+	_re.status = this->_errNum;
+	_re.message = this->_errMess;
+	
+	if (_p_state == P_ERROR){
+		_re.type = RESPOND_ERROR;
+
+		if (_matched_location){
+			std::string target = _matched_location->getErrorPage(_errNum);
+			std::string root = _matched_location->getRootDir();
+			if (target.length() > 0 && root.length() > 0)
+				updateErrorPagePath(target, root);
+			else
+				Log::instance().log(Log::ERROR, Log::TYPE_CLASS, "No default error page found", true);
+		}
+		else if (_matched_server){
+			std::string target = _matched_server->getErrorPage(_errNum);
+			std::string root = _matched_server->getRootDir();
+			if (target.length() > 0 && root.length() > 0)
+				updateErrorPagePath(target, root);
+			else
+				Log::instance().log(Log::ERROR, Log::TYPE_CLASS, "No default error page found", true);
+		}
+		else
+			Log::instance().log(Log::ERROR, Log::TYPE_CLASS, "No default error page found", true);
+	}
+	else if (_p_state == P_DONE){
+
+		if (_isMultiPart && _re.paths.upload_paths.size() > 0){
+			_re.type = RESPOND_MP_UP;
+			//update upload pages if file uploaded
+		}
+		else if (_isRedirect){
+			_re.type = RESPOND_REDIR;
+			_re.status = _matched_location->getRedirectStatus(); // duplication?
+		}
+		else if (_isChunked){
+			//_re.type = RESPOND_CHUNKED;
+			//update upload page if saved to file?
+		}
+		else if (_isCGI){
+			_re.type = RESPOND_CGI;
+			_re.status = this->_errNum;
+		}
+		else {
+			_re.type = RESPOND_STATIC;
+		}
+	}
 }

@@ -12,28 +12,6 @@
 >>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<
 */
 
-// Client::Client(Config* config): _config(config){
-// 	fd = -1;
-// 	out_buff = "";
-// 	_state = CONNECTED;
-// 	_conn = CONN_KEEP_ALIVE,
-// 	time(&last_active);
-
-// 	has_output = false;
-
-// 	_request = Request(config);
-// }
-
-// Client::Client(Config* config, int new_fd) : _config(config){
-// 	fd = new_fd;
-// 	out_buff = "";
-// 	_state = CONNECTED;
-// 	_conn = CONN_KEEP_ALIVE,
-// 	time(&last_active);
-// 	has_output = false;
-// 	_request = Request(config);
-// }
-
 Client::Client(listenInstance_s* listen_instance, int fd) :
 	_listen_instance(listen_instance),
 	_fd(fd),
@@ -115,6 +93,10 @@ eConn	Client::getConn(){
 	return _conn;
 }
 
+int	Client::getFD(){
+	return _fd;
+}
+
 std::string&	Client::get_msg(){
 	return(_out_buff);
 }
@@ -132,6 +114,8 @@ bool	Client::handleClientRead(const char *buffer, size_t len){
 	if (!buffer)
 		return false;
 	try {
+		if (_request.getParseStatus() == P_ERROR)
+			return false;
 		p_state = _request.parseRequest(buffer, len);
 		if (!_matched_server){
 			_matched_server = _request.getMatchedServer();
@@ -146,14 +130,15 @@ bool	Client::handleClientRead(const char *buffer, size_t len){
 	switch(p_state){
 		case P_PARSE	: 	{ _state = READ; generateLogMessage(); return false; }
 		case P_AWAIT	: 	{ _state = READ; generateLogMessage(); return false;}
-		case P_DONE		:	{ _state = WRITE; generateLogMessage();	break; }
+		case P_DONE		:	{ _state = WRITE; generateLogMessage();	break;}
 		case P_ERROR	: 	{ _state = ERROR;_request._re.type = RESPOND_ERROR; _conn = CONN_CLOSE; generateLogMessage(); break;}
 		default	: break;
 	}
-	 if (_state == WRITE){
+	if (_state == WRITE || _state == ERROR){
 	 	handle_request();
+		return true;
 	}
-	return true;
+	return false;
 }
 
 int Client::if_file_upload(Request &request)
@@ -182,65 +167,103 @@ int Client::if_file_upload(Request &request)
 void Client::handle_request()
 {
 	int error_catch = 0;
-	std::string path = _request._uri.path;
 
-	std::cout << path << std::endl;
-	if (!_matched_location)
-	{
-		_response = new ErrorResponse(NOT_FOUND_ERROR, _request);
-	}
+	//std::string path = _request._uri.path; // NOT NEEDED HERE - PATH CAN BE ACCESSED THROUGH _request->_re->paths
+	//std::cout << path << std::endl;
+	
+	respond_t& re = _request._re;
 
-	else if (!_matched_location->getRedirect().url.empty())
-	{
-		std::cout << "redirect found" << std::endl;
-		_response = new RediResponse(_request, _matched_location->getRedirect().url); //TODO is this url validated??
-		_response->generate();
+	switch(_request._re.type) {
+		// case(RESPOND_AUTOIND):{ _response = new StaticResponse(_request);
+								// Log::instance().log(Log::INFO, Log::TYPE_RESPONSE, "Static Response initiated (AutoIndex)", true);
+								// break;}
+		case(RESPOND_CGI)    :{	_response = new CgiResponse(_request);
+								Log::instance().log(Log::INFO, Log::TYPE_RESPONSE, "CGI Response initiated", true);
+								break;}
+		//case(RESPOND_DELETE) :{ _response = new DeleteResponse(_request);
+								//Log::instance().log(Log::INFO, Log::TYPE_RESPONSE, "Delete Response initiated", true);
+								//break;}
+		case(RESPOND_ERROR)  :{ _response = new ErrorResponse(re.status, _request);
+								Log::instance().log(Log::INFO, Log::TYPE_RESPONSE, "Error Response initiated", true);
+								break;}
+		case(RESPOND_INDEX)  :{ _response = new StaticResponse(_request);
+								Log::instance().log(Log::INFO, Log::TYPE_RESPONSE, "Static Response initiated (Index)", true);
+								break;}
+		case(RESPOND_NOT_SET):{ _response = new ErrorResponse(NOT_FOUND_ERROR, _request);
+								Log::instance().log(Log::INFO, Log::TYPE_RESPONSE, "Error Response initiated", true);
+								break;}
+		case(RESPOND_MP_UP)	 :{ _response = new RediResponse(FILE_UPLOAD_REDIREC, _request, true);
+								Log::instance().log(Log::INFO, Log::TYPE_RESPONSE, "Redirect Response initiated (Multipart upload)", true);
+								break;}
+		case(RESPOND_REDIR)  :{ _response = new RediResponse(_request, re.paths.redirect_url);
+								Log::instance().log(Log::INFO, Log::TYPE_RESPONSE, "Redirect Response initiated (alt URI)", true);
+								break;}
+		case(RESPOND_STATIC) :{ _response = new StaticResponse(_request);
+								Log::instance().log(Log::INFO, Log::TYPE_RESPONSE, "Static Response initiated", true);
+								break;}
+		case(RESPOND_UPLOAD) :{ _response = new RediResponse(FILE_UPLOAD_REDIREC, _request, false);
+								Log::instance().log(Log::INFO, Log::TYPE_RESPONSE, "Redirect Response initiated (File upload: non-multipart)", true);
+								break;}
+		default				 :{ _response = new ErrorResponse(NOT_FOUND_ERROR, _request);
+								Log::instance().log(Log::INFO, Log::TYPE_RESPONSE, "Error Response initiated", true);
+								break;}
 	}
+	if (re.type != RESPOND_ERROR)
+		error_catch = _response->generate();
+	if (error_catch > 0){
+		delete _response;
+		_response = new ErrorResponse(re.status, _request);
+	}
+	
+	//else if (!_matched_location->getRedirect().url.empty())
+	//{
+	//	std::cout << "redirect found" << std::endl;
+	//	_response = new RediResponse(_request, _matched_location->getRedirect().url); //TODO is this url validated??
+	//	_response->generate();
+	//}
 
-	else if ((error_catch = if_file_upload(_request)) != 1)
-	{
-		std::cout << "file upload found" << std::endl;
-		if (error_catch >= 400)
-			_response = new ErrorResponse(error_catch, _request);
-	}
+	// else if ((error_catch = if_file_upload(_request)) != 1)
+	// {
+	// 	//std::cout << "file upload found" << std::endl;
+	// 	if (error_catch >= 400)
+	// 		_response = new ErrorResponse(error_catch, _request);
+	// }
 
-	else if (path.find(CGI_PATH) != std::string::npos && path.find((CGI_PATH + std::string("assets"))) == std::string::npos)
-	{
-		std::cout << "cgi found" << std::endl;
-		struct stat st;
-		if (stat(path.c_str(), &st) == 0 && S_ISREG(st.st_mode))
-		{
-			_response =  new CgiResponse(_request);
-			error_catch = _response->generate();
-			if (error_catch != 0)
-			{
-				delete _response;
-				_response = new ErrorResponse(error_catch, _request);
-			}
-		}
-		else
-		{
-			_response = new ErrorResponse(NOT_FOUND_ERROR, _request); //again, could be 403 for directories etc but this is for security
-		}
-	}
-	else if (path.find(HTML_PATH) != std::string::npos || path.find(PHOTO_PATH) != std::string::npos)
-	{
-		std::cout << "static page found" << std::endl;
-		_response = new StaticResponse(_request);
-		if ((error_catch = _response->generate()) != 0)
-		{
-			delete _response;
-			_response = new ErrorResponse(error_catch, _request);
-		}
-	}
-	else
-	{
-		std::cout << "nothing found" << std::endl;
-		_response =  new ErrorResponse(NOT_FOUND_ERROR, _request); //defaults to 404 not found
-	}
+	// else if (path.find(CGI_PATH) != std::string::npos && path.find((CGI_PATH + std::string("assets"))) == std::string::npos)
+	// {
+	// 	//std::cout << "cgi found" << std::endl;
+	// 	struct stat st;
+	// 	if (stat(path.c_str(), &st) == 0 && S_ISREG(st.st_mode))
+	// 	{
+	// 		_response =  new CgiResponse(_request);
+	// 		error_catch = _response->generate();
+	// 		if (error_catch != 0)
+	// 		{
+	// 			delete _response;
+	// 			_response = new ErrorResponse(error_catch, _request);
+	// 		}
+	// 	}
+	// 	else
+	// 	{
+	// 		_response = new ErrorResponse(NOT_FOUND_ERROR, _request); //again, could be 403 for directories etc but this is for security
+	// 	}
+	// }
+	// else if (path.find(HTML_PATH) != std::string::npos || path.find(PHOTO_PATH) != std::string::npos)
+	// {
+	// 	//std::cout << "static page found" << std::endl;
+	// 	_response = new StaticResponse(_request);
+	// 	if ((error_catch = _response->generate()) != 0)
+	// 	{
+	// 		delete _response;
+	// 		_response = new ErrorResponse(error_catch, _request);
+	// 	}
+	// }
 	
 	append_write(_response->serialize());
 	delete _response;
+	if (re.keep_alive == true && _request._p_state == P_DONE){
+		_request.clear();
+	}
 }
 
 /*
@@ -266,7 +289,7 @@ void	Client::generateLogMessage(void){
 		case 3	:{status = "P ERROR : " + _request.getErrMsg(); break;}
 		default	:{status = "UNKNOWN"; break;}
 	}
-
+	std::cout << _request._re << std::endl;
 	std::string message = _log_msg + "Parsing : " + status;
 	Log::instance().log(Log::INFO, Log::TYPE_REQUEST_PARSING, message, false);
 	Log::instance().log(Log::INFO, Log::TYPE_REQUEST_PARSING, printstream(_request), false);
@@ -326,19 +349,11 @@ std::ostream& operator<<(std::ostream& os, Request& _request){
 	os << _request._headers;
 
 	if (_request._matched_server){
-		// MATCHED SERVER ADDRESS
 		os << std::left << std::setw(20) << "Matched Server" << std::setw(3) << " : " << _request._matched_server << std::endl;
-		//// MATCHED SERVER INFO
-		//os << std::left << std::setw(20) << "Matched Server" << std::setw(3) << " : \n" << *_request._matched_server << std::endl;
-		// MATCHED SERVER NAME
 		os << std::left << std::setw(20) << "Matched Server Name" << std::setw(3) << " : " << _request._matched_server->getServerName() << std::endl;
 	}
 	if (_request._matched_location){
-		// MATCHED LOCATION ADDRESS
-		//os << std::left << std::setw(20) << "Matched Location" << std::setw(3) << " : " << _request._matched_location << std::endl;
-		//// MATCHED LOCATION INFO
 		os << std::left << std::setw(20) << "Matched Location" << std::setw(3) << " : " << &_request._matched_location << std::endl;
-		// MATCHED LOCATION NAME
 		os << std::left << std::setw(20) << "Matched Location URI" << std::setw(3) << " : " << _request._matched_location->getURI() << std::endl << std::endl;
 		os << std::left << std::setw(20) << "Matched Location root" << std::setw(3) << " : " << _request._matched_location->getRootDir() << std::endl << std::endl;
 	}
@@ -346,7 +361,46 @@ std::ostream& operator<<(std::ostream& os, Request& _request){
 }
 
 /*
->>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<
->>>>>>		PRINTING RESPONSE	<<<<<<
->>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<
+>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<
+>>>>>>		PRINTING REQUEST->_RE	<<<<<<
+>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<
 */
+
+std::ostream& operator<<(std::ostream& os, const std::vector<std::pair <fileInfo_s, std::string> >& upload_paths){
+	for (size_t i = 0; i < upload_paths.size(); i++){
+		os << "\nupload_path[" << i << "]         : path         : " << upload_paths[i].first.path << std::endl; // to consider : do we allow overwriting files? What about delete? fileInfo will tell us if file already exists
+		os << "upload_path[" << i << "]         : tmpfile path : " << upload_paths[i].second << std::endl;
+	}
+	return os;
+}
+
+std::ostream& operator<<(std::ostream& os, const reqPaths_s& paths){
+	os << "error path             : " << paths.error_path.path << std::endl;
+	os << "redirect url           : " << paths.redirect_url << std::endl;
+	os << "resource path          : " << paths.resource_path.path << std::endl;
+	os << "upload_base            : " << paths.upload_base << std::endl;
+	os << paths.upload_paths;
+	return os;
+}
+
+std::ostream& operator<<(std::ostream& os, const respond_t& re){
+	
+	os << "Response Type          : ";
+	switch(re.type){
+		case(RESPOND_NOT_SET)	:{std::cout << "RESPOND_NOT_SET" << std::endl; break;}
+		case(RESPOND_CGI)		:{std::cout << "RESPOND_CGI" << std::endl; break;}
+		case(RESPOND_ERROR)		:{std::cout << "RESPOND_ERROR" << std::endl; break;}
+		case(RESPOND_FILE)		:{std::cout << "RESPOND_FILE" << std::endl; break;}
+		case(RESPOND_INDEX)		:{std::cout << "RESPOND_INDEX" << std::endl; break;}
+		case(RESPOND_REDIR)		:{std::cout << "RESPOND_REDIR" << std::endl; break;}
+		case(RESPOND_UPLOAD)	:{std::cout << "RESPOND_UPLOAD" << std::endl; break;}
+		default : break;
+	}
+	os << "Status                 : " << re.status << std::endl;
+	os << "Message                : " << re.message << std::endl;
+	os << re.paths;
+	os << "uri_path               : " << re.uri_path << std::endl;
+	os << "keep-alive             : " << re.keep_alive << std::endl;
+	os << "Accept content-type(s) : " << re.accept_type << std::endl;
+	return os;
+}

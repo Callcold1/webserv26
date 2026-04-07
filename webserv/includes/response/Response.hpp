@@ -20,6 +20,7 @@ typedef std::map<std::string, std::string> HeaderMap_t;
 class Response
 {
 public:
+	Response();
 	Response(Request &request);
 	Response(int status, Request &request);
 	Response(const Response &other);
@@ -39,10 +40,10 @@ public:
 
 	//debug:
 	void print_response();
+	int			_status;
+	Request&	_request;
 
 protected:
-	int			_status;
 	HeaderMap_t _headers;
 	std::string _body;
-	Request		_request;
 };

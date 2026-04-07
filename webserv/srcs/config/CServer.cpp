@@ -17,8 +17,8 @@
 CServer::CServer( void ) :
 	_autoindex(false), _max_body(DEFAULT_MAX_BODY),	_max_header_size(DEFAULT_MAX_HEAD),
 	_timeout_ka(DEFAULT_TM_KA),	_timeout_rw(DEFAULT_TM_RW), _autoindex_set(false),
-		_charset_set(false), _error_page_set(false), _index_set(false), _listen_set(false), 
-		_max_body_set(false),_max_header_set(false),_method_set(false), _root_set(false), 
+		_charset_set(false), _error_page_set(false), _index_set(false), _listen_set(false),
+		_max_body_set(false),_max_header_set(false),_method_set(false), _root_set(false),
 		_server_name_set(false), _timeout_ka_set(false), _timeout_rw_set(false){}
 
 CServer::~CServer( void ){}
@@ -91,9 +91,9 @@ CServer& CServer::operator=(const CServer& other) {
 */
 
 struct compareByLength_f {
-    bool operator()(const CLocation& a, const CLocation& b) const {
-        return a.getURI().size() > b.getURI().size();
-    }
+	bool operator()(const CLocation& a, const CLocation& b) const {
+		return a.getURI().size() > b.getURI().size();
+	}
 };
 
 /*
@@ -164,6 +164,13 @@ std::vector<std::string>	CServer::getCharset(void) const{
 	return _charset;
 }
 
+std::string	CServer::getErrorPage(int errNum) const {
+	std::map<int, std::string>::const_iterator it = _error_pages.find(errNum);
+	if (it != _error_pages.end())
+		return it->second;
+	return (std::string)"";
+}
+
 std::map<int,std::string>	CServer::getErrorPages(void) const{
 	return _error_pages;
 }
@@ -201,11 +208,11 @@ std::string	CServer::getRootDir(void) const{
 }
 
 int    CServer::getTimeoutKA (void) const{
-    return _timeout_ka;
+	return _timeout_ka;
 }
 
 int    CServer::getTimeoutRW(void) const{
-    return _timeout_rw;
+	return _timeout_rw;
 }
 
 /*
@@ -242,7 +249,7 @@ void	CServer::setListen(const std::vector<listen_s>& ports, bool set_from_config
 void	CServer::setLocations(const std::vector<CLocation>& locations, bool set_from_config_file){
 	_location_set = set_from_config_file;
 	_locations = locations;
-	
+
 	std::sort(_locations.begin(), _locations.end(), compareByLength_f());
 }
 
@@ -281,18 +288,28 @@ void    CServer::setTimeoutRW(int timeout_in_seconds, bool set_from_config_file)
 	_timeout_rw = timeout_in_seconds;
 }
 
-const CLocation*	CServer::getLocationForPath(const std::string& uri_path, std::string& leftover){
-	
-	size_t size = _locations.size(); 
-	
-	for (size_t i = 0; i < size; i++) {
-        
+const	CLocation* CServer::getLocationForPath(const std::string& uri_path, std::string& leftover) {
+
+	const CLocation* best_match = NULL;
+	size_t best_length = 0;
+
+	for (size_t i = 0; i < _locations.size(); i++) {
+		
 		const std::string& loc_path = _locations[i].getURI();
 
-        if (uri_path.compare(0, loc_path.size(), loc_path) == 0){
-			leftover = uri_path.substr(loc_path.size());
-        	return &_locations[i];
+		if (_locations[i].getModifier() == "=" && (uri_path == loc_path)){
+			leftover = uri_path.substr(loc_path.size());		
+			return &_locations[i];
+		}
+		if (uri_path.compare(0, loc_path.size(), loc_path) == 0 && (uri_path.size() == loc_path.size() || uri_path[loc_path.size()] == '/')){
+			if (loc_path.size() > best_length){
+				best_length = loc_path.size();
+				best_match = &_locations[i];
+			}
 		}
 	}
-	return NULL;
+	if (best_match) {
+		leftover = uri_path.substr(best_length);
+	}
+	return best_match;
 }

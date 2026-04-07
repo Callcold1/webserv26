@@ -16,9 +16,9 @@
 #include "RequestParser.hpp"
 
 /*
->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
->>>>>>				 CONSTRUCTION/DESTRUCTION/COPY						   <<<<<<
->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+>>>>>>		CONSTRUCTION/DESTRUCTION/COPY		<<<<<<
+>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 */
 
 RequestValidator::RequestValidator(Request* request) : _req() { 
@@ -28,9 +28,9 @@ RequestValidator::RequestValidator(Request* request) : _req() {
 RequestValidator::~RequestValidator(){}
 
 /*
->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
->>>>>>				 REQUEST VALIDTION CONTROL  						   <<<<<<
->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<
+>>>>>>		REQUEST VALIDATION CONTROL		<<<<<<
+>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<
 */
 
 void	RequestValidator::validate() {
@@ -48,9 +48,9 @@ void	RequestValidator::validate() {
 }
  
 /*
->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
->>>>>>				 		REQUEST LINE VALIDATION 					   <<<<<<
->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< 
+>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<
+>>>>>>		REQUEST LINE VALIDATION		<<<<<<
+>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<< 
 */
 
 void	RequestValidator::validateReqLine(){
@@ -223,7 +223,7 @@ bool	RequestValidator::validatePath() {
 	if (_req->_uri.uri_type == ABSOLUTE_FORM && (!(_req->_uri.path.empty() || _req->_uri.path[0] == '/')))
 		return _req->setState(P_ERROR, ERR_RL_PATH_SYNTAX, 400);
 	_req->_uri.path = normalisePath(_req->_uri.path);
-	_req->_re.normalised_path = _req->_uri.path; // temporary (testing respond_t)
+	_req->_re.uri_path = _req->_uri.path; // temporary (testing respond_t)
 	if (!percentDecode( _req->_uri.path ))
 		return _req->setState(P_ERROR, ERR_RL_PERCENT_ENCODING_PATH, 400);
 	if (!isValidUTF8( _req->_uri.path ))
@@ -298,15 +298,20 @@ void	RequestValidator::validateHeaders( void ){
 	if (!validateHostHeader())
 		return;
 	if (!validateRepresentation())
-		return; 
+		return;
+	if (!validateConnectionHeader())
+		return;
 	//headerDefinitions();
-//	validateAllHeaders(_req->_headers); // USE IF STATEMENT TO RETURN IF NOT TRUE
-	// FURTHER VALIDATION AND SYNTAX CHECKS
+	//	validateAllHeaders(_req->_headers); // USE IF STATEMENT TO RETURN IF NOT TRUE
+
 	if (!_req->matchServerToHostHeader()){
 		_req->setState(P_ERROR, V_HEADERS, ERR_NO_MATCHING_SERVER, 404);
 		return;
 	}
-	_req->matchLocationToURIPath();
+	if (!_req->matchLocationToURIPath()){
+		_req->setState(P_ERROR, V_HEADERS, ERR_NO_MATCHING_LOCATION, 404);
+		return;
+	}
 	if (_req->_hasBody)
 		_req->setRstate(P_BODY);
 	else {
@@ -381,6 +386,44 @@ bool	RequestValidator::validateHostHeader() {
 		else if (_req->_version.compare("HTTP/1.0") == 0)
 			Log::instance().log(Log::INFO, Log::TYPE_REQUEST_PARSING,
 				"Request Parsing : Missing host header : using default server", true);
+	}
+	return true;
+}
+
+/*
+>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<
+>>>>>>		VALIDATE CONNECTION HEADER		<<<<<<
+>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<
+*/
+
+bool	RequestValidator::validateConnectionHeader() {
+	
+	fieldMap_t::const_iterator it = _req->_headers.find("connection");
+
+	if (it == _req->_headers.end()){
+		if (_req->_version == "HTTP/1.1")
+			return _req->setState(P_ERROR, V_HEADERS, "Missing 'Connection' header value", 400);
+		else
+			_req->_re.keep_alive = false;
+	}
+	else {
+		
+		// Need to consider parameters or encodings? Is multiple values automatic rejection?
+		int count = it->second.size();
+		
+		if ( count == 0)
+			return _req->setState(P_ERROR, V_HEADERS, "Missing 'Connection' header value", 400);
+		if (count == 1){ 
+			if (it->second[0]->val == "keep-alive")
+				_req->_re.keep_alive = true;
+			else
+				_req->_re.keep_alive = false;
+			return true;
+		}
+		else if ( count > 1)
+			return _req->setState(P_ERROR, V_HEADERS, "Multiple 'Connection' header values", 400);
+		else
+			return false;
 	}
 	return true;
 }
@@ -519,34 +562,36 @@ bool	RequestValidator::validateMultiPartHeader(const std::string& val, const std
 /*
 	MULTIPART HEADERS 
 	=================
+	Still to consider : Field Format	: 	Strings: length, charset
+											Files: type, extension, size
 
-	form-data
+						Field name 		:	Matches expected schema
+										:	No injection patterns
+										:	Length limits
+
+	form-data	
 	=========
+	Headers : 	content-disposition :	mandatory
+				
+				value 	: 	Acceptable values : "form-data" (just now this is all we accept) 						
 
-		Content-Disposition
-		===================
-		Each part MUST contain a Content-Disposition header field
-		The Content-Disposition header field MUST also contain an additional parameter of "name"
-			(possibly encoded)
-		The file name isn't mandatory for cases where the file name isn't available or is meaningless or
-   		private (e.g. file drag and dropped)
+				params	:	name 			: mandatory
+							filename		: mandatory if "name=file"
 
-		Filenames can be percent-encoded
-		Each form-data field (or part) contains a 'name' parameter
+							name=file 		: then filename parameter is mandatory
+							name=__charset__: then the body of that part should contain the default charset for the form-data
 
-		Content-Type
-		============
-		Each part MAY have an (optional) "Content-Type" header field, which
-   		defaults to "text/plain".  If the contents of a file are to be sent,
-   		the file data SHOULD be labeled with an appropriate media type, if
-   		known, or "application/octet-stream".
+							filename		: Not required when the file name isn't available/meaningless/private (e.g. file drag and dropped))
+											: Can be percent-encoded
+											: needs to be sanitised : normalise and dot removal - no absolute paths?
 
-		Character Set
-		=============
-		If there is a Content-Disposition field with name: "__charset__", then the body of that part
-		should contain the default charset for the form-data
-
-		Form parts with identical field names MUST NOT be coalesced
+	Headers : 	content-type 	: optional (must match expectation (e.g. if file upload ))
+				
+				value		 	: MIME type
+				params		 	: ? 
+				
+				default value   : text/plain (if not a file)
+								: application/octet-stream 
 */
 bool	RequestValidator::validateMPheaders(){
 		
@@ -576,37 +621,69 @@ bool	RequestValidator::validateMPContentDisposition(mpPart_t& part, const std::v
 
 	if (header[0]->val != "form-data")
 		_req->setState(P_ERROR, P_BODY, ERR_MP_CONTENT_DISPOSITION_UNEXPECTED_VALUE, 400); // CODE CHECK REQUIRED
-	
 	part.disposition_type = header[0]->val;
 
 	if (duplicateOptionCheck(header[0]->params))
 		_req->setState(P_ERROR, P_BODY, ERR_MP_CONTENT_DISPOSITION_DUPLICATE_PARAMS, 400); // CODE CHECK REQUIRED
 
-	if (!updateMPparams(part, header[0]->params))
+	if (!updateMPparams(part, header[0]->params)) // populates name/filename/content-disposition params etc and sanitises filename
 		return false;
 
 	if (part.name.length() == 0)
 		return _req->setState(P_ERROR, P_BODY, ERR_MP_CONTENT_DISPOSITION_NO_NAME, 400); // CODE CHECK REQUIRED
-	else if (part.name == "file" && part.filename.length() == 0)
-		return _req->setState(P_ERROR, P_BODY, ERR_MP_CONTENT_DISPOSITION_FILENAME_MISSING, 400); // CODE CHECK REQUIRED
-
-	// filename character check?
-	// filename accessibility check?
-	// filename suffix (type) check?
-	return true;
+	else if (part.name == "file" || part.name == "File"){
+		if (part.filename.length() == 0)
+			return _req->setState(P_ERROR, P_BODY, ERR_MP_CONTENT_DISPOSITION_FILENAME_MISSING, 415); // CODE CHECK REQUIRED
+		else {
+			appendPathToRoot(&part.upload_dest, part.filename, _req->_re.paths.upload_base);
+			getFilePermissions(part.upload_dest);
+			if (part.upload_dest.not_found == false){
+				*_req->_mp_state = MP_ERROR;
+				return _req->setState(P_ERROR, P_BODY, ERR_MP_CONTENT_DISPOSITION_FILENAME_DUP, 400); // CODE CHECK REQUIRED
+			}
+		}
+		part.isFile = true;
+		_req->_mp_m.filecount++;
+	}
+	// filename suffix (type) check? - check magic number is consistent with filename
+	return true; 
 }
 
 bool	RequestValidator::updateMPparams(mpPart_t& part, const std::vector<std::pair< str_t, str_t> >& params){
 
+	int n = 0;
+	int fn = 0;
+	int fns = 0;
+
 	for (size_t i = 0; i < params.size(); i++) {
-		if (params[i].first == "name")
+		if (params[i].first == "name"){
+			n++;
 			part.name = params[i].second;
-		else if (params[i].first == "filename")
-			part.filename = params[i].second;
+		}
+		if (params[i].first == "filename"){
+			std::string fname = params[i].second;
+			fn++;
+			if (sanitiseFilename(fname))
+				part.filename = fname;
+			else
+				return false;
+		}
+		if (params[i].first == "filename*" ){
+			std::string fname = params[i].second;
+			fns++;
+			if (sanitiseFilenameStar(fname))
+				part.filename = fname;
+			else
+				return false;
+		}
+		if (n > 1)
+			return _req->setState(P_ERROR, P_BODY, ERR_MP_CONTENT_DISPOSITION_NAME_MULTI, 400); // CODE CHECK REQUIRED
+		if (fn > 1)
+			return _req->setState(P_ERROR, P_BODY, ERR_MP_CONTENT_DISPOSITION_FILENAME_MULTI, 400); // CODE CHECK REQUIRED
+		if (fns > 1)
+			return _req->setState(P_ERROR, P_BODY, ERR_MP_CONTENT_DISPOSITION_FILENAME_STAR_MULTI, 400); // CODE CHECK REQUIRED
 		part.disposition_parameters.push_back(params[i]);
 	}
-	if (part.name == "file")
-		part.isFile = true;
 	return true;
 }
 
@@ -621,10 +698,13 @@ bool	RequestValidator::validateMPContentType(mpPart_t& part, const std::vector<f
 	}
 	if (header.size() == 0){
 		field_t*  field = new field_t;
-		field->val = "application/octet-stream"; //default - might need to change type?
+		if (part.isFile)
+			field->val = "application/octet-stream"; //default - might need to change type?
+		else
+			field->val = "text/plain";
 		part.supported_content.push_back(field);
 	}
-	else if (part.supported_content.size() == 0)
+	if (part.supported_content.size() == 0)
 		return _req->setState(P_ERROR, P_BODY, ERR_MP_CONTENT_TYPE_NOT_SUPPORTED, 415); // CODE CHECK REQUIRED
 	return true;
 }
@@ -654,30 +734,17 @@ bool	RequestValidator::validateMultiPartBody(){
 	mpPart_t&	part = _req->_parser->currentPart();
 	(void)part;
 	/* void
-		Multipart body rules :
-		
-			Headers : 	content-disposition
-						: 	mandatory
-						:	name="file" then filename must be provided
-						:	filename : needs to be sanitised : normalise and dot removal - no absolute paths?
-										  	
-			Headers : 	content-type 
-						:	optional
-						:	if none provided, revert to default (application/octet-stream)?		
-						:		if content-type must be valid MIME type and matches expectations (e.g. file upload)
-			
+
+			Multipart body rules :
+
 			Body 	:	length	
 						:	Can be empty (but must be delimited properly)
 						:	Check max body size (whilst parsing)?
+						:	Check content-length
 
-			Body 	:	filetype 
+			Body 	:	filetype
 						:	inspect file signature (magic bytes)
-
-
-			Field name 		:	Matches expected schema
-							:	No injection patterns
-							:	Length limits
-								
+				
 			Size limit 		:	Total request size
 							:	Per-part size
 							:	Number of parts
@@ -686,24 +753,20 @@ bool	RequestValidator::validateMultiPartBody(){
 							:  	No unintended UTF-8 decoding
 							:  	No truncation
 								
-			Duplicate fields:
-
-								Expected fields	:	Required fields present: e.g. username, file
-								
-								Field Format	: 	Strings: length, charset
-												:	Files: type, extension, size
-
-								Server rules	:	only one file allowed
-												:	size (e.g. max 5MB)
-												:	allowed MIME types
+			Server rules	:	only one file allowed
+							:	size (e.g. max 5MB)
+							:	allowed MIME types
 
 	*/
-	if (*_req->_mp_state == MP_COMPLETE){
+	mpState state = *_req->_mp_state;
+	if (state == MP_COMPLETE){
 		_req->setRstate(REQ_DONE);
 		_req->setPstate(P_DONE);
 	}
-	else
-		_req->_r_state = P_BODY;
+	else if (state == MP_FINAL){
+		_req->setRstate(P_BODY);
+		_req->setPstate(P_AWAIT);
+	}
 	return true;
 }
 
@@ -788,7 +851,6 @@ bool	RequestValidator::convertContentLength( void ){
 }
 
 /*   
-
 	All transfer-coding names are case-insensitive and ought to be registered within the HTTP Transfer Coding registry
 	
 	The "TE" header field describes capabilities of the client with regard to transfer codings and trailer sections.
@@ -837,6 +899,50 @@ int	RequestValidator::countHeaderValues(const fieldMap_t& headers, const std::st
 	if (it != headers.end()) 
 		return it->second.size();
 	return 0;
+}
+
+bool	RequestValidator::sanitiseFilename(std::string& name){
+
+	if (name.empty())
+		return false;
+	// strip ../ etc)
+	// normalise encoding
+	// reject control characters
+	// replace ' ' with _
+	// limit length
+	return true;
+}
+
+bool	RequestValidator::sanitiseFilenameStar(std::string& name){
+	
+	std::vector<std::string> split_name; // [0] = charset, [1] = 'Language : ignored!' [2] = filename
+
+	if (!splitFilename(name, split_name))
+		return false;
+	if (!percentDecode(split_name[2]))
+		return _req->setState(P_ERROR, V_MPHEADERS, "Failed percent-decoding", 415); //CODE?
+	if (split_name[0] == "UTF-8"){
+		isValidUTF8(split_name[2]);
+		name = split_name[2];
+	}
+	else if (split_name[0] == "ISO-8859-1")
+		name = ISO8859_1ToUTF8(split_name[2]);
+	else
+		return _req->setState(P_ERROR, V_HEADERS, "Unsupported Media Type (MultiPart filename encoding)", 415);
+	return true;
+}
+
+bool	RequestValidator::splitFilename(std::string& name, std::vector<std::string>& vec){
+	
+	std::string::size_type pos = name.find("'");
+	std::string::size_type pos2 = name.find("'", pos); //pos + 1?
+	
+	if (pos == std::string::npos || pos2 == std::string::npos)
+		return false;
+	vec.push_back(name.substr(0, pos));
+	vec.push_back(name.substr(pos, pos2));
+	vec.push_back(name.substr(pos2));
+	return true;
 }
 
 /*

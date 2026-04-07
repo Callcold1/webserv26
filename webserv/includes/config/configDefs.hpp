@@ -20,6 +20,7 @@
 #include <vector>
 
 class CServer;
+class Config;
 
 // DEFAULT CONFIGURATION FILE (VALUES ARE ARBITARY JUST NOW)
 #define DEFAULT_CONF 		"../default.conf"	// path to the default configuration file
@@ -75,6 +76,7 @@ enum LocationMatchType_e{
 	fd 				: listening socket fd
 	ip 				: listening socket ip
 	port 			: listening socket port
+	config			: pointer to config
 	servers 		: servers listening on the ip:port
 	def_srv 		: default server for that port (used if no hostname in a request, or hostname not found in name_to_srv map)
 	def_srv_name 	: name of default server 
@@ -85,14 +87,15 @@ struct listenInstance_s {
     int 							fd;
     uint32_t 						ip;
     uint16_t 						port;
+	Config*							config;
     CServer* 						def_srv;
     std::vector<CServer*> 			servers;
 	std::string 					def_srv_name;
 	std::map<std::string, CServer*> name_to_srv;
 
-    listenInstance_s( int fd_val, const listen_s& l, std::vector<CServer*>& srvs)
-        : fd(fd_val), ip(l.ip), port(l.port), def_srv(NULL), servers(srvs){
+    listenInstance_s( int fd_val, const listen_s& l, Config* c, std::vector<CServer*>& srvs)
+        : fd(fd_val), ip(l.ip), port(l.port), config(c), def_srv(NULL), servers(srvs){
     }
 
-    listenInstance_s() : fd(0), ip(0), port(0), def_srv(NULL) {}
+    listenInstance_s() : fd(0), ip(0), port(0), config(NULL), def_srv(NULL) {}
 };

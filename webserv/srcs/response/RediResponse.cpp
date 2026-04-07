@@ -2,6 +2,7 @@
 #include "utilityFunctions.hpp"
 #include <unistd.h>
 #include <fcntl.h>
+#include <stdio.h>
 
 RediResponse::RediResponse(Request &request, std::string url) : Response(request), _location(url), _is_upload(false)
 {
@@ -17,7 +18,9 @@ RediResponse::RediResponse(int status, Request &request, bool is_multipart) : Re
 }
 
 RediResponse::RediResponse(const RediResponse &other) : Response(other)
-{}
+{
+}
+
 
 RediResponse &RediResponse::operator=(const RediResponse &other)
 {
@@ -28,13 +31,39 @@ RediResponse &RediResponse::operator=(const RediResponse &other)
 RediResponse::~RediResponse()
 {}
 
+std::string	RediResponse::getMPUploadLocation(){
+	
+	size_t	size = _request._re.paths.upload_paths.size();
+	if (size == 1)
+		return _request._re.paths.upload_paths[0].first.path.substr(_request._re.paths.resource_path.path.length()); // return upload path - cwd
+	else {
+		std::string base = _request._re.paths.upload_base;
+		std::string result_path = base + "/results/" + generate_batch_id(1); //next_folder - int that tracks filename 
+		
+		if (mkdir(result_path.c_str(), 0755) == 0){
+			std::string filepath = result_path + "/" + "results.txt";
+			std::ofstream results (filepath.c_str());
+			for (size_t i = 0; i < size; i++)
+				results << _request._re.paths.upload_paths[i].second.substr(_request._re.paths.resource_path.path.size()) << std::endl;
+			results.close();
+			return result_path;
+		}
+		else
+        	std::cerr << "Error creating results directory" << std::endl;
+        return "";
+	}
+}
+
 int RediResponse::generate()
 {
 	int error_catch = 0;
 	if (_is_upload)
 	{
-		if (_is_mp)
+		if (_is_mp){
 			error_catch = save_mp_file(_request._mp_m.parts);
+			_headers["Location"] = getMPUploadLocation(); // If single file, return upload path + sanitised filename, otherwise create new page (save to)
+			_headers["Content-Length"] = "0";
+		}
 		else
 		{
 			_filename = _request.findQuery("ImportFile");
@@ -97,13 +126,6 @@ int RediResponse::save_file(std::string filename, std::string file_body)
 		file_path = base + "_" + toString(i) + ext;
 		i++;
 	}
-	// char dir[1000]; 
-	// getcwd(dir, 1000);
-	// std::cout << dir << std::endl;
-	// std::string path = dir;
-	// path.append("/");
-	// path.append(file_path);
-	// path = normalisePath(path);
 	int fd = open(file_path.c_str(), O_CREAT | O_WRONLY | O_EXCL, 0644);
 	if (fd < 0)
 		return (500);
@@ -116,29 +138,39 @@ int RediResponse::save_file(std::string filename, std::string file_body)
 	_location = file_path.substr(2);
 	addHeader("Location", _location);
 	return (0);
-}
+}	
 
 int RediResponse::save_mp_file(std::vector<mpPart_t>& mp_vec)
 {
-	std::vector<mpPart_t>::iterator it;
-	std::string body; // If it's a file, see below 
+	(void)mp_vec;
+	size_t size = _request._re.paths.upload_paths.size();
+	
+	for (size_t i = 0; i < size; i++){
 
-	for(it = mp_vec.begin(); it != mp_vec.end(); it++)
-	{
-		if ((*it).isFile)
-		{
-			// Any files will already be saved to part.tempFilePath and part.body will be empty
-			// We just need to move the file to the appropriate folder and rename it to filename (which we should definitely sanitise first)
+		fileInfo_s& dest = _request._re.paths.upload_paths[i].first;
+		std::string& tmp = _request._re.paths.upload_paths[i].second;
 
-			// I will try to to populate _request->_re._target with the upload path
-			// This should contain a variable "fileInfo_s target"
-			// The file info/permissions etc should be populated
-			
-			// If we want to handle multiple uploads, then maybe we add a target path property to the 
-			// multipart struct (more direct)
-			body = std::string((*it).body.begin(), (*it).body.end());
-			return (save_file((*it).filename, body)); // If we have to handle more than one file? If so, should this iterate until end
+		if (dest.not_found && std::rename(tmp.c_str(), dest.path.c_str()) == 0){
+			std::cout << "file successfully saved to upload folder" << std::endl;
+		}
+		else{
+			perror("Error renaming file");
+			std::cerr << "Error moving file to upload folder" << std::endl;
 		}
 	}
-	return(1);
+	return 0;
+	/* 
+		std::vector<mpPart_t>::iterator it;
+		std::string body; // If it's a file, see below 
+
+		for(it = mp_vec.begin(); it != mp_vec.end(); it++)
+		{
+			if ((*it).isFile)
+			{
+				body = std::string((*it).body.begin(), (*it).body.end());
+				return (save_file((*it).filename, body)); // If we have to handle more than one file? If so, should this iterate until end
+			}
+		}
+		return(1);
+	*/
 }

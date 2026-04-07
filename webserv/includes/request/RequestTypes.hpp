@@ -24,6 +24,9 @@
 #define IS_CHUNKED true
 #define NOT_CHUNKED false
 
+class	CLocation; 
+class	CServer;
+
 enum	eParse 			{ P_PARSE, P_AWAIT, P_DONE, P_ERROR };
 enum	eReqState		{ P_REQLINE, P_REQLINE_PARAMS, V_REQLINE, P_HEADERS, V_HEADERS, P_BODY, V_BODY, P_TRAILERS, V_TRAILERS, P_MULTI, V_MPHEADERS, V_MPBODY, REQ_DONE };
 enum	eURIstates		{ SCHEME, AUTH, USER, HOST, PORT, PATH, QUERY, FRAG, URI_ERROR, URI_END };
@@ -31,22 +34,28 @@ enum	uri_types		{ ABSOLUTE_FORM, ASTERISK, AUTH_FORM, ORIGIN_FORM };
 enum	eBodyStates		{ BODY_CHUNKED, BODY_MULTIPART };
 enum	mpState			{ MP_NONE, MP_BOUNDARY, MP_HEADERS, MP_BODY, MP_CHUNKED, MP_FINAL, MP_COMPLETE, MP_ERROR };
 enum	eParseContext	{ ABSOLUTE_URI, ORIGIN_URI, USER_NAME, USER_PASS, QUERY_KEY, QUERY_VAL, FIELD_NAME, FIELD_VAL, PARAM_KEY, PARAM_VAL, CHUNKSIZE, BOUNDARY };
-enum	eResponseType	{ RESPOND_NOT_SET, RESPOND_CGI, RESPOND_ERROR, RESPOND_FILE, RESPOND_INDEX, RESPOND_REDIR };
+enum	eResponseType	{ RESPOND_NOT_SET, RESPOND_CGI, RESPOND_ERROR, RESPOND_FILE, RESPOND_INDEX, RESPOND_MP_UP, RESPOND_REDIR, RESPOND_STATIC, RESPOND_UPLOAD };
 
-
-struct respond_t{
-	eResponseType	type;
-	std::string		request_path;		// URI FROM REQUEST request->uri.path - TMP
-	std::string		normalised_path;	// NORMALISED URI FROM REQUEST request->uri.path - TMP
-	std::string		leftover_path;		// PATH REMAINING AFTER LOCATION MATCHING - TMP
-	std::string		location_path;		// THE MATCHING LOCATION URI - TMP
-	std::string		location_root;		// ROOT FOR MATCHING LOCATION - TMP
-	std::string		appended_root;		// LEFTOVER APPENDED TO ROOT - KEEP
-	fileInfo_s		target;				// FILEINFO ON APPENDED ROOT
-
-	respond_t():type(RESPOND_NOT_SET){}
+struct reqPaths_s {
+	fileInfo_s											 error_path;
+	std::string											 redirect_url;
+    fileInfo_s											 resource_path;
+	std::string											 upload_base;
+    std::vector< std::pair < fileInfo_s, std::string > > upload_paths; //tmpfile path, upload path - can move from tmp to upload path
 };
 
+struct respond_t {
+	eResponseType				type;			// Response Type
+	int							status;			// Response Code
+	std::string					message;		// Response Message
+	const CLocation*			location;		// Matched Location
+	CServer*					server;			// Matched Server
+	reqPaths_s					paths;			// Response Paths
+	std::string					uri_path;		// URI path (parsed from request URI and normalised)
+	bool						keep_alive;		// Connection Preference
+	std::vector<std::string> 	accept_type; 	// Accept types (content-type) in order of preference
+	respond_t():type(RESPOND_NOT_SET), status(0), keep_alive(0){}
+};
 
 /*
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -57,11 +66,11 @@ struct respond_t{
 /* TOKEN : CONTAINS THE */
 struct token_s {
 
-	std::deque<char>::const_iterator	begin;
-	std::deque<char>::const_iterator	end;
+	size_t	begin;
+	size_t	end;
 
-	token_s() {}
-	token_s(std::deque<char>::const_iterator b, std::deque<char>::const_iterator e)
+	token_s():begin(0), end(0) {}
+	token_s(size_t b, size_t e)
 		: begin(b), end(e) {}
 
 };
@@ -122,24 +131,27 @@ typedef struct parseContext{
 struct mpMessage_t;
 
 struct mpPart_t {
-	fieldMap_t*											headers; // headers are parsed into here before being validated and moved to the relevant field
-	std::string											name;
-	std::string											filename;
-	std::string											disposition_type;
-	std::vector<std::pair <std::string, std::string> >	disposition_parameters;
+	fieldMap_t*											headers; 				// headers are parsed into here before being validated and moved to the relevant field
+	std::string											name;	 				// must be present
+	std::string											filename; 				// if name=file, filename or filename* must be present
+	std::string											disposition_type;		// header must be present (this stores value)
+	std::vector<std::pair <std::string, std::string> >	disposition_parameters; // parameters from header
 	std::vector<field_t*>								supported_content;
-	std::vector<char>									body;
+	std::vector<char>									body;					// used if no file upload
 
-	bool												isFile;
-	std::string											tempFilePath;
-	int													fd;
+	bool												isFile;					// set to true if filename is present
+	std::string											tempFilePath;			// created if filename is present and body is appended here each read cycle
+	fileInfo_s											upload_dest;			// populated when validating content-disposition header
+	int													fd; 					// might not be required as fstream is used to append data 
 	mpPart_t(): headers(new fieldMap_t), isFile(0), fd(-1){}
 };
 
 struct mpMessage_t {
 	std::vector<mpPart_t>	parts;
-	std::string 			boundary;
+	//std::string 			boundary;
 	std::string				default_charset;
+	size_t					filecount;
+	mpMessage_t(): filecount(0){}
 };
 
 struct mpParser_t {
@@ -147,12 +159,7 @@ struct mpParser_t {
 
 	std::string			boundary;
 	std::string			boundary_marker;
-
 	size_t				current_index;
-
-	//token_s				header_buffer;
-	//std::vector<char>	body_buffer;
-
 	size_t				boundary_match_index;
 
 	mpParser_t(): state(MP_NONE), current_index(0), boundary_match_index(0) {}

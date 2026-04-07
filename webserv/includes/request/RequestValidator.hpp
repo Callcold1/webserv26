@@ -47,7 +47,8 @@ class RequestParser;
 #define ERR_RL_PATH_SYNTAX "Malformed Request Line: Path Syntax" //400 Bad Request
 
 //MP HEADER ERRORS
-#define ERR_NO_MATCHING_SERVER "Headers: No server matches 'Host' header value " //404?
+#define ERR_NO_MATCHING_SERVER "Headers: No server matches 'Host' header value " //404
+#define ERR_NO_MATCHING_LOCATION "Headers: No location match found on matched server" //404
 #define ERR_MP_BOUNDARY_LENGTH "Multipart Boundary string is too long" //415
 #define ERR_MP_BOUNDARY_MISSING "Missing multiPart boundary"  
 #define ERR_MP_TYPE_NOT_SUPPORTED "MultiPart type not supported" //415 Unsupported Media Type
@@ -55,10 +56,15 @@ class RequestParser;
 //MP PART ERRORS
 #define ERR_MP_CONTENT_DISPOSITION_MISSING "Malformed Body: Invalid multipart header: missing content-disposition"
 #define ERR_MP_CONTENT_DISPOSITION_MULTI_VALS "Malformed Body: Invalid multipart header: multiple content-disposition values"
-#define ERR_MP_CONTENT_DISPOSITION_UNEXPECTED_VALUE "Malformed Body: Invalid Content-Disposition: unexpected content-disposition value"
 #define ERR_MP_CONTENT_DISPOSITION_NO_NAME "Malformed Body: Invalid Content-Disposition: no name parameter" 
+#define ERR_MP_CONTENT_DISPOSITION_NAME_MULTI "Malformed Body: Invalid multipart header: multiple filename values" //400?
+#define ERR_MP_CONTENT_DISPOSITION_FILENAME_MULTI "Malformed Body: Invalid multipart header: multiple filename values" //400?
+#define ERR_MP_CONTENT_DISPOSITION_FILENAME_STAR_MULTI "Malformed Body: Invalid multipart header: multiple filename* values" //400?
+#define ERR_MP_CONTENT_DISPOSITION_UNEXPECTED_VALUE "Malformed Body: Invalid Content-Disposition: unexpected content-disposition value"
 #define ERR_MP_CONTENT_DISPOSITION_DUPLICATE_PARAMS "Malformed Body: Invalid Content-Disposition: Multiple instances of same parameter" //415
-#define	ERR_MP_CONTENT_DISPOSITION_FILENAME_MISSING "Malformed Body: Invalid Content-Disposition: Multiple instances of same parameter"
+#define	ERR_MP_CONTENT_DISPOSITION_FILENAME_MISSING "Malformed Body: Invalid Content-Disposition: No filename parameter provided"
+#define	ERR_MP_CONTENT_DISPOSITION_FILENAME_ERROR "Malformed Body: Invalid Content-Disposition: Unsafe filename"
+#define	ERR_MP_CONTENT_DISPOSITION_FILENAME_DUP "Malformed Body: Invalid Content-Disposition: Duplicate filename is forbidden"
 #define ERR_MP_CONTENT_TYPE_NOT_SUPPORTED "Malformed Body: Content-Type(s): not supported" //415 Unsupported Media Type
 
 enum HeaderFlag
@@ -130,6 +136,7 @@ class RequestValidator {
 		void							validateHeaders();
 		bool							validateHostHeader();
 		bool							validateAbsoluteForm(fieldMap_t::const_iterator& it);
+		bool							validateConnectionHeader();
 		bool							validateRepresentation();
 		bool							identifyLengthHeader();
 		bool							validateTransferEncoding();
@@ -157,12 +164,15 @@ class RequestValidator {
 
 		void							validateBody(void);
 
+		
 		bool							validateMPheaders(void);
 		bool							validateMPContentDisposition(mpPart_t& part, const std::vector<field_t*>& header);
 		bool							validateMPContentType(mpPart_t& part, const std::vector<field_t*>& header);
 		bool							updateMPparams(mpPart_t& part, const std::vector<std::pair< str_t, str_t> >& params);
 		bool							validateMultiPartBody(void);
-
+		bool							sanitiseFilename(std::string& name);
+		bool							sanitiseFilenameStar(std::string& name);
+		bool							splitFilename(std::string& name, std::vector<std::string>& vec);
 		void							validateTrailers(void);
 
 		int								countHeaderValues (const fieldMap_t& headers, const std::string& headerName);

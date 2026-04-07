@@ -77,6 +77,7 @@ class CServer {
 										/*	GETTERS	*/
 		bool							getAutoIndex(void) const;
 		std::vector<std::string>		getCharset(void) const;
+		std::string						getErrorPage(int errNum) const;
 		std::map<int, std::string>		getErrorPages(void) const;
 		std::vector<std::string>		getIndex(void) const;
 		std::vector<listen_s>			getListen(void) const;

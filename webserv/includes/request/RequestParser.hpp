@@ -66,18 +66,19 @@ class RequestParser {
 	void			parseBoundaryMP(token_s& it);
 	void			parseHeadersMP(token_s& it);
 	void			parseBodyMP(token_s& it);
-	void			parseFinalMP(token_s& it);
-	bool			matchBoundaryMP(std::deque<char>::const_iterator pos, std::deque<char>::const_iterator end, bool& final);
-	void			appendToTempfileMP(mpPart_t& part, std::deque<char>::const_iterator begin, std::deque<char>::const_iterator end);
-	void			appendToBodyMP(mpPart_t& part, std::deque<char>::const_iterator begin, std::deque<char>::const_iterator end);
+	void			parseFinalMP(token_s& it, ptrdiff_t size);
+	bool			matchBoundaryMP(size_t begin, size_t end, bool& final);
+	void			appendToTempfileMP(mpPart_t& part, size_t begin, size_t size);
+	void			appendToBodyMP(mpPart_t& part, size_t begin, size_t size);
 	void			tokenToString(const token_s& token, std::string& dest);
 	std::string		tokenToString(const token_s& token);
-
+	
+	bool			parseDelimiterPairs(token_s& it, std::vector<token_s>& out, const std::vector<std::pair <char, char> >& delim_pairs, char primary_delim);
 	bool			parseSingleToken( token_s& it, eParseContext context, std::string& dest);
 	bool			parseNextLine(token_s& it, token_s& line);
 	bool			parseQuotedString(token_s& it, std::string& out);
-	size_t			splitToToken(token_s& it, bool last_val, std::vector<token_s>& tkns, const std::string& delim);
 	bool			splitToToken(token_s& it, bool last_val, token_s& tkn, const std::string& delim);
+	size_t			splitToToken(token_s& it, bool last_val, std::vector<token_s>& tkns, const std::string& delim);
 	bool			splitToTokenMultiDelims(token_s& it, bool last_val, token_s& tkn, const std::string& delims, char& found_delim);
 
 	std::string		getParsedString();

@@ -32,7 +32,7 @@ int StaticResponse::generate()
 	int re_status;
 
 	//_path = _request.get_root_dir() + _request._uri.path;
-	_path = _request._re.target.path;
+	_path = _request._re.paths.resource_path.path; //note that _request._re.paths.resource_path contains info on file (from stat) 
 	if ((re_status = get_file()) != 0)
 		return (re_status);
 	defaultHeaders();
@@ -56,7 +56,8 @@ int directory_tree(int it, std::stringstream *outfile, std::string path)
 	{
 		if (entry->d_name[0] == '.' || std::string(entry->d_name) == "..")
 			continue;
-		fullpath = path + "/" + entry->d_name;
+		//fullpath = path + "/" + entry->d_name; - was causing path//d_name instead of path/d_name
+		fullpath = path + entry->d_name;
 		for (int i = 0; i < it; i++)
 			*outfile << "	";
 		*outfile << "|--->" << "<a href=\"" << fullpath << "\">" << entry->d_name << "</a><br>";

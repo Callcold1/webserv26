@@ -43,17 +43,23 @@ struct path_t {
 // FILE INFO STRUCT
 struct fileInfo_s
 {
-	bool inaccessible;
-	bool is_dir;
-	bool is_exec;
-	bool is_file;
-	bool is_symlink;
-	bool not_found;
-	//__mode_t permissions;
-	std::string path;
+	bool 		inaccessible;
+	bool 		is_dir;
+	bool 		is_exec;
+	bool 		is_file;
+	bool 		is_symlink;
+	bool 		not_found;
+	
+	time_t		last_modified;
+	std::string	mime_type;
+	std::string	path;
+	__mode_t	permissions;
+	off_t		size;
 
-	//fileInfo_s() : inaccessible(false), is_dir(false), is_exec(false), is_file(false), is_symlink(false), not_found(false), permissions(0), path("") {}
-	fileInfo_s() : inaccessible(false), is_dir(false), is_exec(false), is_file(false), is_symlink(false), not_found(false), path("") {}
+	fileInfo_s() : inaccessible(false), is_dir(false), is_exec(false), is_file(false), is_symlink(false), not_found(false),
+					last_modified(0), mime_type(""), path(""), permissions(0), size(0){}
+	//fileInfo_s() : inaccessible(false), is_dir(false), is_exec(false), is_file(false), is_symlink(false), not_found(false),
+	//				last_modified(0), mime_type(""), path(""), size(0){}
 };
 
 template <typename T, T Min, T Max>
@@ -105,6 +111,7 @@ bool 								file_exists(const char* filename);
 bool								assignTempfile(std::string& target_path, int& target_fd, const std::string& prefix);
 
 /*	FILEPATH MANIPULATION  */
+std::string							appendPathToRoot(std::string path, std::string root_dir);
 void								appendPathToRoot(fileInfo_s* target, std::string path, std::string root_dir);
 std::string							normalisePath(const std::string& path);
 
@@ -180,6 +187,16 @@ void	resolveAddress(const std::string& ip_str, const std::string& port_str, uint
 void	splitPortInfo(const std::string& port_info, uint32_t& ip, uint16_t& port);
 
 /*
+>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<
+>>>>>>		GENERATE UNIQUE NAME STRING		<<<<<<
+>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<
+*/
+
+std::string createTimestamp(void);
+std::string	generate_batch_id(int counter);
+
+
+/*
 >>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<
 >>>>>>		CONVERSION TO STRING	<<<<<<
 >>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<
@@ -202,3 +219,4 @@ std::string	printstream(T& src){
 	std::string str = os.str();
 	return str;
 }
+

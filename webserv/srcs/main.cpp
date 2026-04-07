@@ -25,6 +25,7 @@
 #define NO_CLI_ARG "No config file path provided - attempting to use : "
 #define ERR_CONFIG_NOT_OPEN "Error : the configuration file could not be opened : "
 
+
 int	main(int argc, char** argv){
 
 	std::string config_path;
