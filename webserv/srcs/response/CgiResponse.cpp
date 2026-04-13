@@ -178,9 +178,9 @@ int CgiResponse::execute() //TODO maybe remove one of the pipes
 		else
 			_body = res;
 		
-		int fd = open("outfile.html", O_CREAT| O_WRONLY | O_TRUNC, 0644);
-		write(fd, res.c_str(), total_bytes);
-		close(fd);
+		// int fd = open("outfile.html", O_CREAT| O_WRONLY | O_TRUNC, 0644);
+		// write(fd, res.c_str(), total_bytes);
+		// close(fd);
 		close(toServer[0]);
 		waitpid(pid, NULL, 0);
 		return (0);
