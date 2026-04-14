@@ -197,11 +197,11 @@ std::vector<listen_s>	CServer::getListen(void) const{
 	return _listen;
 }
 
-const std::vector<std::string>	CServer::getMethod(void) const{
+std::vector<std::string>	CServer::getMethod(void) const{
 	return _method;
 }
 
-std::map<std::string, std::string>	CServer::getMime(void) const{
+std::map<std::string, std::vector<std::string> >	CServer::getMime(void) const{
 	return _mime;
 }
 
@@ -274,7 +274,7 @@ void	CServer::setMethod(const std::vector<std::string>& method, bool set_from_co
 	_method = method;
 }
 
-void 	CServer::setMime(const std::map<std::string, std::string>& mime, bool set_from_config_file) {
+void 	CServer::setMime(const std::map<std::string, std::vector<std::string> >& mime, bool set_from_config_file) {
 	_mime_set = set_from_config_file;
 	_mime = mime;
 }

@@ -32,11 +32,9 @@ class Request {
 						Request(const Request &other);
 						Request& operator=(const Request &other);
 						~Request(void);
-	void	    		clear();
-	
-	eParse				parseRequest(const char* rawData, size_t length);
-	void				resetRequest(void);
 
+	eParse				parseRequest(const char* rawData, size_t length);
+	void	    		clear();
 
 						/* GETTERS */
 	const std::string&	getErrMsg(void) const;
@@ -93,8 +91,6 @@ class Request {
 	mpMessage_t			_mp_m;
 	mpState*			_mp_state;
 
-	void                resetParser();
-	void                resetValidator();
 	unsigned int		_errNum;
 	std::string			_errMess;
 

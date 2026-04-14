@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/14 09:52:22 by kmooney           #+#    #+#             */
-/*   Updated: 2026/03/06 14:04:20 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/04/14 08:50:03 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,7 +40,7 @@ class Config {
 		int											_max_connections; 		// Max connections to all servers
 		long long									_max_header_size;		// Max acceptable header size in bytes
  		std::vector<std::string>					_method;				// list of method
-		std::map<std::string, std::string>			_mime;					// map of file extension to mime types supported on server
+		std::map<std::string, std::vector<std::string> > _mime;					// map of file extension to mime types supported on server
 		std::string	 								_root_dir;				// Root directory at global level
 		std::vector<CServer>						_servers;				// Vector of servers
 		int											_timeout_ka;			// Length of time before keep-alive timeout (seconds)
@@ -95,7 +95,7 @@ class Config {
 		int											getMaxConnections(void) const;
 		long long									getMaxHeaderSize(void) const;
 		std::vector<std::string>					getMethod(void) const;
-		std::map<std::string, std::string>			getMime(void) const;
+		std::map<std::string, std::vector<std::string> >	getMime(void) const;
 		std::string									getRootDir(void) const;
 		std::vector<CServer>						getServers(void) const;
 		int											getTimeoutKA(void) const;
@@ -114,7 +114,7 @@ class Config {
 		void 										setMaxConnections(int max_connections, bool set_from_config_file);
 		void 										setMaxHeaderSize(long long max_header_size, bool set_from_config_file);
 		void 										setMethod(const std::vector<std::string>& method, bool set_from_config_file);
-		void 										setMime(const std::map<std::string, std::string>& mime, bool set_from_config_file);
+		void 										setMime(const std::map<std::string, std::vector<std::string> >& mime, bool set_from_config_file);
 		void 										setRootDir(std::string& root, bool set_from_config_file);
 		void										setServers(std::vector<CServer>& servers, bool set_from_config_file);
 		void										setTimeoutKA(int timeout_in_seconds, bool set_from_config_file);

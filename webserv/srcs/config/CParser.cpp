@@ -792,23 +792,22 @@ bool	CParser::setMethod(node_t* node, std::vector<std::string>& method){
 	return true;
 }
 
-bool	CParser::setMimeBlock(node_t* mime_node, std::map<std::string, std::string>& mime){
+bool	CParser::setMimeBlock(node_t* mime_node, std::map<std::string, std::vector<std::string> >& mime){
 
 	tempConfig_s tmp;
 
 	for (size_t i = 0; i < mime_node->children.size(); i++){
-
 		node_t* node = mime_node->children[i];
-		tmp.mime[node->type] = node->args[0];
+		tmp.mime[node->type] = node->args;
 		setMime(node, mime);
 	}
 	return true;
 }
 
-bool	CParser::setMime(node_t* node, std::map<std::string, std::string>& mime){
+bool	CParser::setMime(node_t* node, std::map<std::string, std::vector<std::string> >& mime){
 
 	if (isValidMime(node->type))
-			mime.insert(std::pair<std::string, std::string>(node->type, toString(node->args)));
+			mime.insert(std::pair<std::string, std::vector<std::string> >(node->type, node->args));
 		else
 			throw std::runtime_error("invalid mime");
 	return true;

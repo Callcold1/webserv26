@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   utilityFunctions.hpp                               :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jake <jake@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/11 16:04:15 by kmooney           #+#    #+#             */
-/*   Updated: 2026/03/23 11:42:03 by jake             ###   ########.fr       */
+/*   Updated: 2026/04/14 10:52:34 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,6 +60,20 @@ struct fileInfo_s
 					last_modified(0), mime_type(""), path(""), permissions(0), size(0){}
 	//fileInfo_s() : inaccessible(false), is_dir(false), is_exec(false), is_file(false), is_symlink(false), not_found(false),
 	//				last_modified(0), mime_type(""), path(""), size(0){}
+
+	void reset(void){
+		inaccessible = 0;
+		is_dir = 0;
+		is_exec = 0;
+		is_file = 0;
+		is_symlink = 0;
+		not_found = 0;
+		last_modified = 0;
+		mime_type.clear();
+		path.clear() ;
+		permissions = 0;
+		size = 0;
+	}
 };
 
 template <typename T, T Min, T Max>

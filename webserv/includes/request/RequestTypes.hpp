@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   RequestTypes.hpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: junruh <junruh@student.42.fr>              +#+  +:+       +#+        */
+/*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 16:24:23 by kmooney           #+#    #+#             */
-/*   Updated: 2026/03/05 14:44:48 by junruh           ###   ########.fr       */
+/*   Updated: 2026/04/14 10:25:32 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -164,6 +164,28 @@ struct respond_t {
 	std::vector<std::string> 	accept_type; 	// Accept types (content-type) in order of preference (Matched with config mime_types)
 	query_t						query_pairs;	// Query string KV pairs
 	respond_t():type(RESPOND_NOT_SET), status(0), keep_alive(0){}
+
+	void reset(void){
+		type = RESPOND_NOT_SET;
+		status = 0;
+		message.clear();
+		location = NULL;
+		server = NULL;
+		paths.error_path.reset();
+		accept_type.clear();
+		leftover_path.clear();
+		paths.error_path.reset();
+		paths.redirect_url.clear();
+		paths.resource_path.reset();
+		paths.upload_base.clear();
+		paths.upload_paths.clear();
+		query_pairs.clear();
+		uri_path.clear();
+		leftover_path.clear();
+		keep_alive = false;
+		accept_type.clear();
+		query_pairs.clear();
+	}
 };
 
 

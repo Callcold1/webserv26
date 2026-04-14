@@ -29,7 +29,7 @@ class CServer {
 		long long							_max_body;			// Max acceptable body size in bytes
 		long long							_max_header_size;	// Max acceptable header size in bytes
 		std::vector<std::string>			_method;			// Method permitted for all locations on server (can be superceded by location_method)
-		std::map<std::string, std::string> 	_mime;				// Mime permitted for all locations on server 
+		std::map<std::string, std::vector<std::string> > _mime;				// Mime permitted for all locations on server 
 		std::string	 						_root_dir;			// Root directory for server - overrides global value
 		std::vector<std::string> 			_server_name;		// Server names
 		int									_timeout_ka;		// Length of time before keep-alive timeout (seconds)
@@ -86,8 +86,8 @@ class CServer {
 		std::vector<CLocation>				getLocations(void) const;
 		long long							getMaxBodySize(void) const;
 		long long							getMaxHeaderSize(void) const;
-		const std::vector<std::string>		getMethod(void) const;
-		std::map<std::string, std::string>	getMime(void) const;
+		std::vector<std::string>			getMethod(void) const;
+		std::map<std::string, std::vector<std::string> >	getMime(void) const;
 		std::string		 					getRootDir(void) const;
 		std::vector<std::string>			getServerName(void) const;
 		int									getTimeoutKA (void) const;
@@ -103,7 +103,7 @@ class CServer {
 		void 								setMaxBodySize(long long max_body_size, bool set_from_config_file);
 		void 								setMaxHeaderSize(long long max_header_size, bool set_from_config_file);
 		void 								setMethod(const std::vector<std::string>& method, bool set_from_config_file);
-		void								setMime(const std::map<std::string, std::string>& mime, bool set_from_config_file);
+		void								setMime(const std::map<std::string, std::vector<std::string> >& mime, bool set_from_config_file);
 		void 								setServerName(const std::vector<std::string>& names, bool set_from_config_file);
 		void 								setRootDir(std::string& root, bool set_from_config_file);
 		void								setTimeoutKA(int timeout_in_seconds, bool set_from_config_file);

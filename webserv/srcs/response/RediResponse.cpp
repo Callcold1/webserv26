@@ -153,13 +153,24 @@ int RediResponse::save_mp_file(std::vector<mpPart_t>& mp_vec)
 
 		fileInfo_s& dest = _request._re.paths.upload_paths[i].first;
 		std::string& tmp = _request._re.paths.upload_paths[i].second;
+		
+		size_t num = 1;													// number to append
 
-		if (dest.not_found && std::rename(tmp.c_str(), dest.path.c_str()) == 0){
-			std::cout << "file successfully saved to upload folder" << std::endl;
-		}
-		else{
-			perror("Error renaming file");
-			std::cerr << "Error moving file to upload folder" << std::endl;
+		std::string name = dest.path;
+
+		while (42){
+			int i = std::rename(tmp.c_str(), name.c_str());
+			perror("Rename failed : ");
+			std::cout << i << std::endl;
+			if (std::rename(tmp.c_str(), name.c_str()) == 0){
+				dest.path = name;
+				std::cout << "file successfully saved to upload folder as : " << name << std::endl;
+				break;
+			}
+
+			std::cerr << "Existing file with same name : file renamed" << std::endl;
+			name = dest.path + "_" + toString(num);
+			num++;
 		}
 	}
 	return 0;

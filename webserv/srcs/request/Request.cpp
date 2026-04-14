@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: junruh <junruh@student.42.fr>              +#+  +:+       +#+        */
+/*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/30 11:28:22 by kmooney           #+#    #+#             */
-/*   Updated: 2026/03/24 14:59:42 by junruh           ###   ########.fr       */
+/*   Updated: 2026/04/14 10:17:04 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -190,31 +190,11 @@ void	Request::clear() {
 	_isChunked = false;
 	_isMultiPart = false;
 	_bodyUTF8 = false;
-	_re.accept_type.clear();
-	_re.keep_alive = false;
-	_re.leftover_path.clear();
-	_re.location = NULL;
-	_re.message.clear();
-	_re.paths.error_path.path.clear();
-	_re.paths.error_path.mime_type.clear();
-	_re.paths.error_path.permissions = 0; //allocated memory? need to delete?
-	_re.paths.redirect_url.clear();
-	_re.paths.resource_path.path.clear();
-	_re.paths.resource_path.permissions = 0;
-	_re.paths.upload_base.clear();
-	_re.paths.upload_paths.clear();
-	_re.query_pairs.clear();
-	_re.server = NULL;
-	_re.status = 200;
-	_re.type = RESPOND_NOT_SET;
-	_re.uri_path.clear();
 	
+	_re.reset();
+
     if (_parser)
         _parser->clear();
-}
-
-void	Request::resetParser() {
-
 }
 
 /*

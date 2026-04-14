@@ -39,7 +39,7 @@ struct tempConfig_s {
 	int									max_connections;	/*	GLOBAL/SERVER/LOCATION	*/
 	long long							max_header_size;	/*	GLOBAL/SERVER/LOCATION	*/
 	std::vector<std::string>			method;				/*	GLOBAL/SERVER/LOCATION	*/
-	std::map<std::string, std::string>	mime;				/*	GLOBAL */
+	std::map<std::string, std::vector<std::string> > mime;				/*	GLOBAL */
 	LocationMatchType_e					modifier;			/*	LOCATION	*/
 	redirect_s							redirect;			/*	LOCATION	*/
 	bool								redirect_status;	/*	LOCATION	*/	
@@ -171,8 +171,8 @@ class CParser : public Parser
 		bool			setIndex(node_t* node, std::vector<std::string>& index);
 		bool			setLocation(node_t* node, std::vector<CLocation>& locations);
 		bool			setMethod(node_t* node, std::vector<std::string>& method);
-		bool			setMime(node_t* node, std::map<std::string, std::string>& mime);
-		bool			setMimeBlock(node_t* mime_node, std::map<std::string, std::string>& mime);
+		bool			setMime(node_t* node, std::map<std::string, std::vector<std::string> >& mime);
+		bool			setMimeBlock(node_t* mime_node, std::map<std::string, std::vector<std::string> >& mime);
 		bool			setModifier(std::string& str, LocationMatchType_e& modifier);
 		bool			setPath(node_t* node, std::string& path);
 		bool			setPorts(node_t* node, std::vector<listen_s>& ports);

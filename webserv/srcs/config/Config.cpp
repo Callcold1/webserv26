@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/14 09:52:13 by kmooney           #+#    #+#             */
-/*   Updated: 2026/03/06 14:04:15 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/04/14 08:51:54 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -127,7 +127,7 @@ std::vector<std::string>	Config::getMethod(void) const{
 	return _method;
 }
 
-std::map<std::string, std::string>	Config::getMime(void) const{
+std::map<std::string, std::vector<std::string> >	Config::getMime(void) const{
 	return _mime;
 }
 
@@ -225,7 +225,7 @@ void 	Config::setMethod(const std::vector<std::string>& method, bool set_from_co
 	_method = method;
 }
 
-void 	Config::setMime(const std::map<std::string, std::string>& mime, bool set_from_config_file) {
+void 	Config::setMime(const std::map<std::string, std::vector<std::string> >& mime, bool set_from_config_file) {
 	_mime_set = set_from_config_file;
 	_mime = mime;
 }

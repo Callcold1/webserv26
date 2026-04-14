@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   RequestValidator.cpp                               :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: junruh <junruh@student.42.fr>              +#+  +:+       +#+        */
+/*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/30 11:26:19 by kmooney           #+#    #+#             */
-/*   Updated: 2026/03/24 14:21:52 by junruh           ###   ########.fr       */
+/*   Updated: 2026/04/14 08:58:33 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -472,7 +472,7 @@ bool	RequestValidator::validateContentType(){ // CHECK SERVER SUPPORTS TYPE
 	const std::vector< std::pair<std::string, std::string> >&	options 		= header->second[0]->params;
 	//int 														options_size 	= options.size();
 
-	std::map<std::string, std::string> server_content_types = _req->_matched_server->getMime();
+	std::map<std::string, std::vector<std::string> > server_content_types = _req->_matched_server->getMime();
 	if (!isValidContentType(val))
 		return _req->setState(P_ERROR, V_HEADERS, "Content-Type not supported", 415);
 	if (val.find("multipart/") != std::string::npos)
