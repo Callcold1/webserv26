@@ -53,14 +53,14 @@ int CgiResponse::execute() //TODO maybe remove one of the pipes
 		close(toCgi[1]);
 		return(1);
 	}
-	std::cout << "query" << _request._uri.query << std::endl;
-	std::string abs_path = get_absolute_path(_path);
-	if (abs_path.empty())
-	{
-		std::cout << " no target path" << std::endl;
-		return (500);
-	}
-	std::cout << "target path" << abs_path << std::endl;
+	std::cout << "query; " << _request._uri.query << std::endl;
+	// std::string abs_path = get_absolute_path(_path);
+	// if (abs_path.empty())
+	// {
+	// 	std::cout << " no target path" << std::endl;
+	// 	return (500);
+	// }
+	// std::cout << "target path" << abs_path << std::endl;
 
 	pid_t pid;
 	if ((pid = fork()) < 0) //failure
@@ -86,8 +86,9 @@ int CgiResponse::execute() //TODO maybe remove one of the pipes
 			interpreter = "php-cgi";
 
 		char *args[] = {
+			const_cast<char*>("env"), 
 			const_cast<char*>(interpreter.c_str()),              
-			const_cast<char*>(abs_path.c_str()), 
+			const_cast<char*>(_path.c_str()), 
 			NULL
 		};
 
@@ -97,7 +98,7 @@ int CgiResponse::execute() //TODO maybe remove one of the pipes
 		std::string len = "CONTENT_LENGTH=" + toString(_request._body.length());
 		std::string type = "CONTENT_TYPE=application/x-www-form-urlencoded"; // or from headers
 		std::string m = "REQUEST_METHOD=" + _request._method;
-		std::string script = "SCRIPT_FILENAME=" + abs_path; // system path to file
+		std::string script = "SCRIPT_FILENAME=" + _path; // system path to file
 		std::string script_name = "SCRIPT_NAME=" + _path;//_request._uri.path;
 		std::string redirect = "REDIRECT_STATUS=200";    // security handshake for PHP
 		std::string gateway = "GATEWAY_INTERFACE=CGI/1.1";
@@ -116,10 +117,13 @@ int CgiResponse::execute() //TODO maybe remove one of the pipes
 			const_cast<char*>(protocol.c_str()),
 			NULL
 		};
-		std::string interpreter_path = "/usr/bin/python3";
+		//std::string interpreter_path = "/usr/bin/python3";
+		std::string interpreter_path = "~/.local/lib/python3.13/site-packages";
 		if (!_is_py)
-			interpreter_path = "/usr/local/bin/php-cgi";
-		execve(interpreter_path.c_str(), args, const_cast<char * const *>(envp)); 
+			interpreter_path = "/usr/bin/php-cgi";
+			//interpreter_path = "/usr/local/bin/php-cgi";
+		//execve(interpreter_path.c_str(), args, const_cast<char * const *>(envp)); 
+		execve("/usr/bin/env", args, envp);
 		_exit(1);
 	}
 	else //parent
@@ -178,9 +182,9 @@ int CgiResponse::execute() //TODO maybe remove one of the pipes
 		else
 			_body = res;
 		
-		// int fd = open("outfile.html", O_CREAT| O_WRONLY | O_TRUNC, 0644);
-		// write(fd, res.c_str(), total_bytes);
-		// close(fd);
+		int fd = open("outfile.html", O_CREAT| O_WRONLY | O_TRUNC, 0644);
+		write(fd, res.c_str(), total_bytes);
+		close(fd);
 		close(toServer[0]);
 		waitpid(pid, NULL, 0);
 		return (0);

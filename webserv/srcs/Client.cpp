@@ -170,9 +170,9 @@ void Client::handle_request()
 {
 	int error_catch = 0;
 	std::cout << _request._uri.path << std::endl;
-	std::string path = _request.get_root_dir() + _request._uri.path;
+	std::string path = _request._re.paths.resource_path.path; //_request.get_root_dir() + _request._uri.path;
 
-	std::cout << path << std::endl;
+	std::cout << "path hr: " << path << std::endl;
 	std::cout << _matched_location->getRedirect().url << std::endl;
 
 	if (!_matched_location)
@@ -203,13 +203,12 @@ void Client::handle_request()
 		_response = new ErrorResponse(re.status, _request);
 	} */
 	
-	//else if (!_matched_location->getRedirect().url.empty())
-	//{
-	//	std::cout << "redirect found" << std::endl;
-	//	_response = new RediResponse(_request, _matched_location->getRedirect().url); //TODO is this url validated??
-	//	_response->generate();
-	//}
-
+	else if (!_matched_location->getRedirect().url.empty())
+	{
+		std::cout << "redirect found" << std::endl;
+		_response = new RediResponse(_request, _matched_location->getRedirect().url); //TODO is this url validated??
+		_response->generate();
+	}
 
 	else if ((error_catch = if_file_upload(_request)) != 1)
 	{

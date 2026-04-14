@@ -19,16 +19,18 @@ Server::Server(Config &config) : _config(&config), _running(false), _max_conn(co
 
 /* >>>>>>	DESTRUCTOR	<<<<<<*/
 
-Server::~Server(void){
+Server::~Server(void)
+{
+	//for(int i = 0; i < _port_count + _max_conn; i++)
+	for(long unsigned int i = 0; i < _sockets.size(); i++) //the other version causes invalid read, with this one theres memory leaks that come from a bunch of places(probably just werent being detected before)
+	{
+		if (_sockets[i].fd != -1)
+			close(_sockets[i].fd);
+	}
 
 	_sockets.clear();
 	_clients.clear();
 	_listen_sockets.clear();
-
-	for(int i = 0; i < _port_count + _max_conn; i++){
-		if (_sockets[i].fd != -1)
-			close(_sockets[i].fd);
-	}
 }
 
 /*
@@ -354,7 +356,7 @@ void	Server::disconnectClient(int fd, const std::string& reason){
 
 void Server::removeClientFromPoll(int fd) {
 
-	close(fd);
+	//close(fd);
 
 	for (size_t i = 0; i < _sockets.size(); i++){
 		if (_sockets[i].fd == fd){
