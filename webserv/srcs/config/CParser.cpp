@@ -15,7 +15,7 @@
 
 CParser::CParser( const std::string& filename ) : Parser(){
 	openConfigFile(filename);
-	Log::instance().log(Log::INFO, Log::TYPE_CLASS, "Config file successfully opened : " + filename);
+	Log::instance().log(Log::INFO, Log::TYPE_CLASS, "Config file successfully opened : " + filename, false);
 }
 
 CParser::~CParser( void ){
@@ -40,33 +40,29 @@ void	CParser::openConfigFile(const std::string& filename)
 
 void	CParser::parseConfigFile(Config& config){
 	
-	Log::instance().log(Log::INFO, Log::TYPE_CLASS, "Config parsing started....");
+	Log::instance().log(Log::INFO, Log::TYPE_CLASS, "Config parsing started....", false);
 	std::ostringstream oss;
 	try {
 		tokeniseStream();
 		initKeywords();
 
 		parseTokens();
-		Log::instance().log(Log::INFO, Log::TYPE_CONF, "Parsed to _raw_config");
+		Log::instance().log(Log::INFO, Log::TYPE_CONF, "Parsed to _raw_config", false);
 		
 		setConfig(config);
-		Log::instance().log(Log::DEBUG, Log::TYPE_CONF, "Config object created : initial parsing complete : \n\n" + printstream(config));
+		Log::instance().log(Log::DEBUG, Log::TYPE_CONF, "Config object created : initial parsing complete : \n\n" + printstream(config), false);
 
 		config.propagateVarsToChildren();
-		//os << config << std::endl;
-		Log::instance().log(Log::DEBUG, Log::TYPE_CONF, "Variables propagated from global -> server -> location : \n\n" + printstream(config));
+		Log::instance().log(Log::DEBUG, Log::TYPE_CONF, "Variables propagated from global -> server -> location : \n\n" + printstream(config), false);
 		
 		config.mapServersToPorts();
 		config.checkForOverlappingPorts();
-		oss << config.getPortServerMap() << std::endl;
-		Log::instance().log(Log::INFO, Log::TYPE_CONF, "ip:port to server map created : \n\n" + oss.str());
-
 		delete _rawConfig;
-		Log::instance().log(Log::INFO, Log::TYPE_CLASS, "Config parsing successfully completed....");
+		Log::instance().log(Log::INFO, Log::TYPE_CLASS, "Config parsing successfully completed....", false);
 	}
 	catch (std::exception& e){
 		delete _rawConfig;
-		Log::instance().log(Log::ERROR, Log::TYPE_CONF, e.what());
+		Log::instance().log(Log::ERROR, Log::TYPE_CONF, e.what(), true);
 		throw std::runtime_error(e.what());
 	}
 }
@@ -78,7 +74,7 @@ void	CParser::tokeniseStream(void){
 		_tokens = tokeniser.getTokens();
 	}
 	catch ( std::exception& e){
-		Log::instance().log(Log::ERROR, Log::TYPE_CONF, e.what());
+		Log::instance().log(Log::ERROR, Log::TYPE_CONF, e.what(), true);
 		throw std::runtime_error(e.what());
 	} 
 }
@@ -88,7 +84,7 @@ void	CParser::parseTokens(void){
 		_rawConfig = parse();
 	}
 	catch (std::exception& e) {
-		Log::instance().log(Log::ERROR, Log::TYPE_CONF, e.what());
+		Log::instance().log(Log::ERROR, Log::TYPE_CONF, e.what(), true);
 		throw std::runtime_error(e.what());
 	}
 }
@@ -109,7 +105,7 @@ node_t*	CParser::parse(void) {
 	}
 	catch (const std::exception& e){
 		delete root;
-		Log::instance().log(Log::ERROR, Log::TYPE_CONF, e.what());
+		Log::instance().log(Log::ERROR, Log::TYPE_CONF, e.what(), true);
 		throw std::runtime_error(e.what());
 	}
 	return root;
@@ -124,6 +120,12 @@ void	CParser::parseNext(node_t* parent, tokeniser_s awaited){
 		std::string line_num = toString(_tokens[_pos].line_num + 1);
 
 		if (check(T_WORD, "server")){
+			consume();
+			expect(T_SYMBOL, "{");
+			parent->children.push_back(addNode(value, line_num));
+			parseNext(parent->children.back(), tokeniser_s(T_SYMBOL, "}", Tokeniser::getLineCount()));
+		}
+		else if (check(T_WORD, "mime_types")){
 			consume();
 			expect(T_SYMBOL, "{");
 			parent->children.push_back(addNode(value, line_num));
@@ -180,6 +182,8 @@ bool	CParser::checkKeywords(const std::string& context, const std::string& value
 		vec = _location_keywords;
 	else if (context == "global")
 		vec = _global_keywords;
+	else if (context == "mime_types")
+		vec = _mime_keywords;
 	if (std::find(vec.begin(), vec.end(), value) != vec.end())
 		return true;
 	return false;
@@ -236,6 +240,19 @@ void	CParser::initKeywords(void) {
 	_global_keywords.push_back("root");
 	_global_keywords.push_back("keepalive_timeout");
 	_global_keywords.push_back("read_write_timeout");
+	_global_keywords.push_back("mime_types");
+
+	_mime_keywords.push_back("text/plain");
+	_mime_keywords.push_back("text/html");
+	_mime_keywords.push_back("text/css");
+	_mime_keywords.push_back("text/ISO-8859-1");
+	_mime_keywords.push_back("application/octet-stream");
+	_mime_keywords.push_back("application/javascript");
+	_mime_keywords.push_back("application/pdf");
+	_mime_keywords.push_back("image/gif");
+	_mime_keywords.push_back("image/jpeg");
+	_mime_keywords.push_back("image/png");
+	_mime_keywords.push_back("image/x-icon");
 }
 
 /*	GLOBAL
@@ -254,6 +271,8 @@ root				1			no				std::string				Overwrite			Replace if redefined	Global/CServer
 server				block		yes				vector<CServer>			Append				n/a						Global only
 timeout_ka			1			no				int						Overwrite			Replace if redefined	Global/CServer
 timeout_rw			1			no				int						Overwrite			Replace if redefined	Global/CServer
+
+mime_types			block		yes				map<ext, mime_type>		Append				n/a						Global only
 
 */
 
@@ -349,7 +368,8 @@ bool	CParser::setLocation(node_t* location_node, std::vector<CLocation>& locatio
 		temp.uri_set = true;
 	}
 	else
-		throw std::runtime_error("Invalid number of arguments provided for location uri : " + location_node->type + " " + createArgsString(location_node->args) + " : line " + location_node->line_num);
+		throw std::runtime_error("Invalid number of arguments provided for location uri : "
+			+ location_node->type + " " + createArgsString(location_node->args) + " : line " + location_node->line_num);
 
 	for (size_t i = 0; i < location_node->children.size(); i++){
 
@@ -441,6 +461,13 @@ void	CParser::handleMethod(node_t* node, tempConfig_s& tmp){
 	tmp.method_set = setMethod(node, tmp.method);
 }
 
+void	CParser::handleMimeBlock(node_t* node, tempConfig_s& tmp, HandlerContext_e context){
+	if (context == GLOBAL_HANDLER)
+		tmp.mime_set = setMimeBlock(node, tmp.mime);
+	else
+		throw std::runtime_error("Invalid context for mime block : a 'mime' block can only exist in the global context");
+}
+
 void	CParser::handleRedirectStatus(node_t* node, tempConfig_s& tmp, HandlerContext_e context){
 	if (context == LOCATION_HANDLER)
 		tmp.redirect_status_set = setBoolean(node, tmp.redirect_status);
@@ -501,7 +528,6 @@ void	CParser::handleUploadPath(node_t* node, tempConfig_s& tmp, HandlerContext_e
 		throw std::runtime_error("Invalid context for upload_path directive : the 'upload_path' directive can only be used inside a Location block");
 }
 
-
 void	CParser::setVariable(tempConfig_s& tmp, node_t* node, HandlerContext_e context){
 	try{
 		if (node->type == "alias")
@@ -528,6 +554,8 @@ void	CParser::setVariable(tempConfig_s& tmp, node_t* node, HandlerContext_e cont
 			handleMaxHeader(node, tmp, context);
 		else if (node->type == "method")
 			handleMethod(node, tmp);
+		else if (node->type == "mime_types")
+			handleMimeBlock(node, tmp, context);
 		else if (node->type == "redirect_status")
 			handleRedirectStatus(node, tmp, context);
 		else if (node->type == "redirect_path")
@@ -572,6 +600,8 @@ void	CParser::pushToConfig(tempConfig_s& tmp, Config& dest){
 		dest.setMaxHeaderSize(tmp.max_header_size, true);
 	if (tmp.method_set)
 		dest.setMethod(tmp.method, true);
+	if (tmp.mime_set)
+		dest.setMime(tmp.mime, true);
 	if (tmp.root_set)
 		dest.setRootDir(tmp.root, true);
 	if (tmp.servers_set)
@@ -650,7 +680,8 @@ void	CParser::pushToLocation(tempConfig_s& tmp, CLocation& dest){
 bool	CParser::setBoolean(node_t* node, bool& state){
 
 	if (!isOnlyArg(node->args))
-		throw std::runtime_error("Multiple arguments when only one permitted : " + node->type + " " + createArgsString(node->args) + " : line " + node->line_num);
+		throw std::runtime_error("Multiple arguments when only one permitted : " 
+			+ node->type + " " + createArgsString(node->args) + " : line " + node->line_num);
 
 	std::string lowercase = to_lower(node->args[0]);
 
@@ -663,7 +694,8 @@ bool	CParser::setBoolean(node_t* node, bool& state){
 	else if (lowercase.length() == 1 && (lowercase == "0" || lowercase == "f"))
 			state = false;
 	else
-		throw std::runtime_error("value must be boolean (T/F/t/f/true/false/TRUE/FALSE/1/0) : " + node->type + " " + createArgsString(node->args) + " : line " + node->line_num);
+		throw std::runtime_error("value must be boolean (T/F/t/f/true/false/TRUE/FALSE/1/0) : " 
+			+ node->type + " " + createArgsString(node->args) + " : line " + node->line_num);
 	return true;
 }
 
@@ -672,7 +704,8 @@ bool	CParser::setCGImap(node_t* node, std::map<std::string, std::string>& cgi_ma
 	size_t size = node->args.size();
 
 	if (size <= 1)
-		throw std::runtime_error("invalid cgi_path : must contain path and at least one extension type : " + node->type + " " + createArgsString(node->args) + " : line " + node->line_num);
+		throw std::runtime_error("invalid cgi_path : must contain path and at least one extension type : " 
+			+ node->type + " " + createArgsString(node->args) + " : line " + node->line_num);
 	std::string path = node->args[0];
 	std::string ext;
 	for (size_t i = 1; i < size; i++){
@@ -694,7 +727,8 @@ bool	CParser::setCharset(node_t* node, std::vector<std::string>& charset){
 				charset.push_back(node->args[i]);
 		}
 		else
-			throw std::runtime_error("invalid directive : unsupported charset : " + node->type + " " + createArgsString(node->args) + " : line " + node->line_num);
+			throw std::runtime_error("invalid directive : unsupported charset : " 
+				+ node->type + " " + createArgsString(node->args) + " : line " + node->line_num);
 	}
 	return true;
 }
@@ -758,12 +792,33 @@ bool	CParser::setMethod(node_t* node, std::vector<std::string>& method){
 	return true;
 }
 
+bool	CParser::setMimeBlock(node_t* mime_node, std::map<std::string, std::vector<std::string> >& mime){
+
+	tempConfig_s tmp;
+
+	for (size_t i = 0; i < mime_node->children.size(); i++){
+		node_t* node = mime_node->children[i];
+		tmp.mime[node->type] = node->args;
+		setMime(node, mime);
+	}
+	return true;
+}
+
+bool	CParser::setMime(node_t* node, std::map<std::string, std::vector<std::string> >& mime){
+
+	if (isValidMime(node->type))
+			mime.insert(std::pair<std::string, std::vector<std::string> >(node->type, node->args));
+		else
+			throw std::runtime_error("invalid mime");
+	return true;
+}
+
 bool	CParser::setServerName(node_t* node, std::vector<std::string>& names){
 
 	size_t size = node->args.size();
 
-	for (size_t i = 0; i < size - 1; i++)
-			names.push_back(node->args[i]);
+	for (size_t i = 0; i < size; i++)
+		names.push_back(node->args[i]);
 	return true;
 }
 
@@ -839,26 +894,18 @@ bool	CParser::setNumericValue(node_t* node, T& target, T min, T max){
 */
 
 bool	CParser::isValidCharset(const std::string& str){
-	if (str.compare("utf-8") == 0 ||
-		str.compare("iso-8859-1") == 0)
-		return true;
-	else
-		return false;
+	return (str.compare("utf-8") == 0 || str.compare("iso-8859-1") == 0);
 }
 
 bool	CParser::isValidMethod(const std::string& str){
-	if (str.compare("GET") == 0 ||
-		str.compare("POST") == 0 ||
-		str.compare("PUT") == 0 ||
-		str.compare("DELETE") == 0 ||
-		str.compare("HEAD") == 0 ||
-		str.compare("OPTIONS") == 0
-	)
-		return true;
-	else
-		return false;
+	return (str.compare("GET") == 0 || str.compare("POST") == 0 || str.compare("PUT") == 0 ||
+		str.compare("DELETE") == 0 || str.compare("HEAD") == 0 || str.compare("OPTIONS") == 0);
 }
 
 bool	CParser::checkAliasRoot(const std::string& alias, const std::string& root){
 	return (alias.length() > 0 && root.length() > 0);
+}
+
+bool	CParser::isValidMime(const std::string& str){
+	return (str.find("/") != std::string::npos);
 }

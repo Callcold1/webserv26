@@ -1,0 +1,102 @@
+# POST requests/uploads
+
+Can either upload a file in
+- body of the request
+or
+- as part of a multipart
+
+## Multipart
+
+Each multipart-part can potentially contain a file
+Normally the rule is that 
+
+Parsing sequence is as follows (when the 'Content-Type' header is 'multipart/form-data'):
+
+- check for boundary : if not found at start of body, return error (as body is invalid)
+- parse headers
+    - must have 'Content-Disposition: form-data' (i.e. value=form-data)
+        - must have 'name' parameter
+        - if name=file, 'filename' parameter must be present
+        - filename must be 
+        -      sanitised
+        -      decoded if UTF-8
+
+    - may have Content-Type
+- validate headers
+- parse body
+- validate body
+
+part.isFile is set to true whenever a file is to be uploaded
+
+### Content-Disposition 
+
+Value : must be 'form-data'
+
+Parameters : 
+- 'name' : must be 'file'
+if 'name=file'
+- 'filename' : must be present and follow filename rules
+-            : must not already exist
+             : normalised/sanitised/decoded
+
+### File handling/parsing
+
+If a filename is provided, and the method is POST, then the following steps are taken to handle the file upload :
+
+Body is read into tempfile (boundaries and headers are not, but these are included in content-length calculations (only those appearing in body!))
+If no errors, and the file does not already exist, the tempfile is renamed using the upload path and filename 
+<!-- (We probably need to have separate folders for each server?) -->
+
+- tempfile      : created during parsing
+                : each time buffer is read, the new buffer is appended to tempfile
+                : body is read until content-length has been reached
+                : name is stored in the multipart-part as 'part.tempfile'
+
+- upload_base   : created in 'Request::_re.paths.upload_base' 
+                : created when matching server/location (after parsing headers, and before parsing body)
+   
+- filename      :  
+                : filename from content-disposition will be normalised and appended to base upload path (at time of mp_header validation)
+                : this will be a fileInfo_s which contains info on file type/permissions/accessibility
+                : if 'fileInfo_s.not_found' == 'false', then the file already exists : return error (or overwritten?)
+                : magic number compared with filetype (taken from ending) : if not matching, return error
+                : The only HTTP limitations on filename are that they must follow header-field parameter rules : 
+                    
+                    So the filename is allowed to consist of : 
+                                            
+                                token = 1*tchar
+                            or
+                                quoted-string = DQUOTE *( qdtext / quoted-pair ) DQUOTE
+
+- filename*   : if filename* is present, then this indicates an encoded filename
+
+                e.g.       : filename*=UTF-8''%E2%82%ACrates.pdf
+                
+                format     : charset'language'percent-encoded-value
+                            
+                            charset                 : 
+                                                        UTF-8
+                                                        ISO-8859-1
+                                                        ascii
+
+                            language                : ignored by us
+                            percent-encoded-value   : must be valid hex range ^%[0-9A-Fa-f]{1}[0-9A-Fa-f]{1}
+
+#### FILENAME VALIDATION
+
+HTTP does not define:
+
+    Allowed filesystem characters (/ \ : * ? etc.)
+    Maximum filename length
+    Path vs filename (e.g. ../../etc/passwd)
+    OS-specific restrictions
+
+👉 These are application/security concerns, not protocol rules.
+
+When validating filenames from HTTP:
+You should:
+-Strip directory paths (../, /, \)
+-Normalize encoding
+-Reject control characters
+-Enforce your own whitelist (e.g. [a-zA-Z0-9._-])
+-Limit length

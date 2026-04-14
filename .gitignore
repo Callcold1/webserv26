@@ -3,5 +3,8 @@
 .DS_Store?
 
 #ignore vscode
-.vscode
-.vscode?
+#.vscode
+#.vscode?
+
+#ignore logfiles
+webserv/logs/*

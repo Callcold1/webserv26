@@ -58,7 +58,7 @@ public:
 
 		static Log& 	instance(void);
 
-		void			log(LogLevel level, const LogType type,  const std::string msg);
+		void			log(LogLevel level, const LogType type,  const std::string msg, bool print);
 		void			log(LogLevel level, const LogType type, int fd, const std::string msg);
 
 private:

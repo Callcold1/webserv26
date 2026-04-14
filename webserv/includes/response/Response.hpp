@@ -4,10 +4,16 @@
 #include <string>
 #include <iterator>
 #include <sstream>
+#include <Request.hpp>
 #include "helpers.hpp"
 
 #define HTTP_VERSION "HTTP/1.1"
+#define CGI_PATH "www/cgi-bin/"
+#define HTML_PATH "www/html"
+#define PHOTO_PATH "www/photos"
 #define NOT_FOUND_ERROR 404
+#define BAD_REQUEST_ERROR 400
+#define FILE_UPLOAD_REDIREC 303
 
 typedef std::map<std::string, std::string> HeaderMap_t;
 
@@ -15,10 +21,11 @@ class Response
 {
 public:
 	Response();
-	Response(int status);
+	Response(Request &request);
+	Response(int status, Request &request);
 	Response(const Response &other);
 	Response &operator=(const Response &other);
-	~Response();
+	virtual ~Response();
 
 	virtual int		generate() = 0;
 	std::string		status_text();
@@ -33,10 +40,11 @@ public:
 
 	//debug:
 	void print_response();
+	int			_status;
+	Request&	_request;
 
 protected:
-	int			_status;
 	HeaderMap_t _headers;
 	std::string _body;
-	//Request	_request;
+	fileInfo_s _path_km;
 };

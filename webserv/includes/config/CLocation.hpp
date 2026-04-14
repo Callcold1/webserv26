@@ -46,6 +46,8 @@ class CLocation {
 	bool									_upload_path_set;
 	bool									_uri_set;
 
+	std::string								_no_uri;
+
 	public:
 											/* CONSTRUCTORS */
 											CLocation( void );
@@ -72,6 +74,10 @@ class CLocation {
 		bool								isTryFilesSet(void) const;
 		bool								isUploadPathSet(void) const;
 		bool								isURISet(void) const;
+											/* CHECK IF VARIABLE SET*/
+
+											/* OTHER CHECKS*/
+		bool								isMethodSupported(const std::string& method) const;
 
 											/* GETTERS */
 		std::string							getAlias(void) const;
@@ -79,6 +85,7 @@ class CLocation {
 		bool								getCGIEnabled(void) const;
 		std::map<std::string, std::string>	getCGIMap(void) const;
 		std::vector<std::string>			getCharset(void) const;
+		std::string							getErrorPage(int errNum) const;
 		std::map<int, std::string>			getErrorPages(void) const;
 		std::vector<std::string>			getIndex(void) const;
 		long long							getMaxBodySize(void) const;
@@ -90,7 +97,7 @@ class CLocation {
 		std::string							getRootDir(void) const;
 		tryFiles_s							getTryFiles(void) const;
 		std::string							getUploadPath(void) const;
-		std::string							getURI(void) const;
+		const std::string&					getURI(void) const;
 
 											/* SETTERS */
 		void								setAlias(const std::string& alias, bool set_from_config_file);

@@ -2,6 +2,7 @@ PROJECT_ROOT := $(realpath ./)
 
 NAME        := webserv
 
+# CXX         := c++
 CXX         := g++
 #CXXFLAGS    := -Wall -Werror -Wextra -std=c++98 -g
 CXXFLAGS    := -Wall -Werror -Wextra -std=c++98 -fsanitize=address -g
@@ -19,7 +20,7 @@ SRCS        := main.cpp \
 				response/Response.cpp \
 				response/ErrorResponse.cpp \
 				response/RediResponse.cpp \
-				response/StaticResponse.cpp \
+				response/SuccessResponse.cpp \
 				response/CgiResponse.cpp \
 				utilityFunctions.cpp \
 				Log.cpp \

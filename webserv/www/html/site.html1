@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>The best website in existence!</title>
+  <link rel="icon" href="http://localhost:8080/html/favicon.ico">
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    h1, h2 { color: #333; }
+    form { margin-bottom: 40px; }
+    label { font-weight: bold; }
+    input[type="text"], input[type="file"] { margin-bottom: 10px; width: 100%; max-width: 400px; }
+    button { padding: 8px 16px; margin-top: 10px; cursor: pointer; }
+    img { display: block; margin-bottom: 20px; max-width: 100%; height: auto; }
+    #filenameDisplay { font-style: italic; margin-top: 5px; }
+  </style>
+</head>
+<body>
+
+  <h1>The best website in existence!</h1>
+
+  <!-- Meme Generator -->
+  <h2>Meme Generator</h2>
+  <img src="../assets/officememe.png" 
+       alt="Could not find the office meme template" 
+       style="width:400px;height:500px;">
+
+  <form action="../cgi-bin/meme.py" method="GET">
+    <div>
+      <label for="jimtext">Jim (left):</label><br>
+      <input type="text" id="jimtext" name="jimtext" maxlength="200"><br>
+
+      <label for="dwighttext">Dwight (middle):</label><br>
+      <input type="text" id="dwighttext" name="dwighttext" maxlength="200"><br>
+
+      <label for="michaeltext">Michael (right):</label><br>
+      <input type="text" id="michaeltext" name="michaeltext" maxlength="200"><br>
+
+      <button type="submit">Submit</button>
+    </div>
+  </form>
+
+  <!-- File Upload -->
+  <h2>Submit File</h2>
+  <form id="uploadForm" method="POST" enctype="multipart/form-data">
+    <div>
+      <input id="ImportFile" type="file" name="File" accept=".png"/>
+      <p id="filenameDisplay">No file selected</p>
+    </div>
+    <div>
+      <button type="submit">Submit</button>
+    </div>
+  </form>
+
+  <script>
+    const form = document.getElementById('uploadForm');
+    const fileInput = document.getElementById('ImportFile');
+    const display = document.getElementById('filenameDisplay');
+
+    // Update displayed filename
+    fileInput.addEventListener('change', () => {
+      display.textContent = fileInput.files.length > 0 ? fileInput.files[0].name : 'No file selected';
+    });
+
+    // Dynamically set form action to /upload/filename.png
+    form.addEventListener('submit', (e) => {
+      e.preventDefault(); // stop default submission
+
+      if (fileInput.files.length === 0) {
+        alert("Please select a file!");
+        return;
+      }
+
+      const fileName = encodeURIComponent(fileInput.files[0].name);
+      form.action = `/upload/${fileName}`;
+      form.submit(); // submit with updated action
+    });
+  </script>
+
+</body>
+</html>

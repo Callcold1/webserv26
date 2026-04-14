@@ -5,8 +5,8 @@
 class CgiResponse : public Response
 {
 public:
-	CgiResponse();
-	CgiResponse(int status);
+	CgiResponse(Request &request, bool is_python);
+	CgiResponse(int status, Request &request, bool is_python);
 	CgiResponse(const CgiResponse &other);
 	CgiResponse &operator=(const CgiResponse &other);
 	~CgiResponse();
@@ -17,4 +17,5 @@ public:
 
 private:
 	std::string _path;
+	bool		_is_py;
 };

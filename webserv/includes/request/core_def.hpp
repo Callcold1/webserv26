@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   core_def.hpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
+/*   By: jake <jake@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/28 18:51:39 by kmooney           #+#    #+#             */
-/*   Updated: 2025/06/17 18:01:06 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/03/13 13:30:12 by jake             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -89,12 +89,3 @@ typedef std::map< str_t, std::vector<str_t> > StrVecStrMap_t;
 
 typedef void (*fStr)(str_t);
 typedef void (*fStr2)(str_t, str_t);
-
-typedef struct file_s {
-	fd_t    	fd;
-	__mode_t	perm;
-	str_t   	filename;
-	void		*data;
-	file_s(){}
-	file_s(str_t name) : filename(name){}
-} file_t;

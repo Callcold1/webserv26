@@ -1,0 +1,12 @@
+CONTENT-TYPE HEADER
+====================
+👉 Sent by  :   whoever sends a body (client or server)
+👉 Means    :   this is the format of the body I'm sending.
+
+RELATED HEADERS
+===============
+
+ACCEPT      :   they are connected through content negotiation:
+
+The server tries to pick a Content-Type that matches the client's Accept.
+

@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/14 09:52:13 by kmooney           #+#    #+#             */
-/*   Updated: 2026/03/05 12:41:17 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/04/14 08:51:54 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,7 @@ Config::Config() : _max_body(DEFAULT_MAX_BODY), _max_connections(DEFAULT_MAX_CON
 					_max_header_size(DEFAULT_MAX_HEAD), _timeout_ka(DEFAULT_TM_KA),
 					_timeout_rw(DEFAULT_TM_RW), _autoindex_set(false), _charset_set(false),
 					_error_page_set(false), _index_set(false), _max_body_set(false),
-					_max_connections_set(false), _max_header_set(false), _method_set(false),
+					_max_connections_set(false), _max_header_set(false), _method_set(false), _mime_set(false),
 					 _root_set(false), _servers_set(false), _timeout_ka_set(false), _timeout_rw_set(false){}
 
 Config::Config(const Config &other) { (void)other;}
@@ -66,6 +66,10 @@ bool	Config::isMaxHeaderSet(void) const{
 
 bool	Config::isMethodSet(void) const{
 	return _method_set;
+}
+
+bool	Config::isMimeSet(void) const{
+	return _mime_set;
 }
 
 bool	Config::isRootDirSet(void) const{
@@ -121,6 +125,10 @@ long long	Config::getMaxHeaderSize(void) const{
 
 std::vector<std::string>	Config::getMethod(void) const{
 	return _method;
+}
+
+std::map<std::string, std::vector<std::string> >	Config::getMime(void) const{
+	return _mime;
 }
 
 std::string	Config::getRootDir(void) const{
@@ -217,6 +225,11 @@ void 	Config::setMethod(const std::vector<std::string>& method, bool set_from_co
 	_method = method;
 }
 
+void 	Config::setMime(const std::map<std::string, std::vector<std::string> >& mime, bool set_from_config_file) {
+	_mime_set = set_from_config_file;
+	_mime = mime;
+}
+
 void	Config::setRootDir(std::string& root_dir, bool set_from_config_file) {
 	_root_set = set_from_config_file;
 	_root_dir = root_dir;
@@ -262,6 +275,7 @@ void    Config::propagateVarsToChildren(){
 			_servers[i].setMaxHeaderSize(_max_header_size, false);
 		if (_servers[i].isMethodSet() == false)
 			_servers[i].setMethod(_method, false);
+		_servers[i].setMime(_mime, false);
 		if (_servers[i].isRootDirSet() == false)
 			_servers[i].setRootDir(_root_dir, false);
 		if (_servers[i].isTimeoutKASet() == false)

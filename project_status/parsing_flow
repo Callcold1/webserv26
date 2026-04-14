@@ -1,0 +1,68 @@
+┌─────────────────────────────┐
+│ _r_state = P_REQLINE        │
+│ Parse request line          │
+│ _p_state = P_PARSE          │
+└───────────────┬─────────────┘
+                │ parseNextLine(_p_it)
+                │ advance _p_it past request line
+                ▼
+┌─────────────────────────────┐
+│ _r_state = P_HEADERS        │
+│ Parse headers               │
+│ _p_state = P_PARSE          │
+└───────────────┬─────────────┘
+                │ parseNextLine(_p_it)
+                │ advance _p_it per header line
+                │ Empty line detected?
+                │ ├─ Yes → _p_state = P_DONE, _r_state → P_BODY or P_TRAILERS
+                │ └─ No  → continue parsing headers
+                ▼
+┌─────────────────────────────┐
+│ _r_state = P_BODY           │
+│ Check content type          │
+│ _p_state = P_PARSE          │
+└───────────────┬─────────────┘
+                │
+                │ Body type: plain, chunked, or multipart?
+                ├───────────────┐
+                │               │
+                ▼               ▼
+       Plain Body           Chunked Body
+       parsePlain()         parseChunked()
+       _p_it += copied       ┌─────────────────────────┐
+       bytes                 │ _chunk_parser_status    │
+       Check length          │ PARSE_CHUNK_SIZE        │
+       _p_state → P_DONE     │ PARSE_CHUNK_BODY        │
+                             └─ ────────┬───────────────┘
+                                       │ parseNextLine(_p_it) for size
+                                       │ parseChunkData(_p_it)
+                                       │ advance _p_it after chunk
+                                       ▼
+                             ┌──────────────────────────────┐
+                             │ _chunk_size == 0?            │
+                             │ ├─ Yes → parseFinalChecks    │
+                             │ │      _r_state = P_TRAILERS │
+                             │ └─ No  → parseChunkData      │
+                             │         _p_it advanced       │
+                             └──────────────────────────────┘
+                                        │
+                                        ▼
+                             Multipart Body (Content-Type: multipart)
+                             parseMultiPart(_p_it)
+                             ┌────────────────────────────────────────┐
+                             │ _mp_p.state = MP_NONE                  │
+                             │ MP_BOUNDARY → parseBoundaryMP(_p_it)   │
+                             │ advance _p_it past boundary            │
+                             │ MP_HEADERS → parseField(_p_it)         │
+                             │ advance _p_it past headers             │
+                             │ MP_BODY → parseBodyMP(_p_it)           │
+                             │ advance _p_it until next boundary      │
+                             │ MP_FINAL → parseFinalMP(_p_it)         │
+                             └────────────────────────────────────────┘
+                                        │
+                                        ▼
+┌─────────────────────────────┐
+│ _r_state = V_BODY / V_MPBODY│
+│ _p_state = P_DONE           │
+│ Request fully parsed        │
+└─────────────────────────────┘
