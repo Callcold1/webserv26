@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   RequestTypes.hpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: junruh <junruh@student.42.fr>              +#+  +:+       +#+        */
+/*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 16:24:23 by kmooney           #+#    #+#             */
-/*   Updated: 2026/03/05 14:44:48 by junruh           ###   ########.fr       */
+/*   Updated: 2026/04/14 10:25:32 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,29 +24,17 @@
 #define IS_CHUNKED true
 #define NOT_CHUNKED false
 
+class	CLocation; 
+class	CServer;
+
 enum	eParse 			{ P_PARSE, P_AWAIT, P_DONE, P_ERROR };
-enum	eReqState		{ P_REQLINE, P_REQLINE_PARAMS, V_REQLINE, P_HEADERS, V_HEADERS, P_BODY, V_BODY, P_TRAILERS, V_TRAILERS, P_MULTI, V_MULTI, REQ_DONE };
+enum	eReqState		{ P_REQLINE, P_REQLINE_PARAMS, V_REQLINE, P_HEADERS, V_HEADERS, P_BODY, V_BODY, P_TRAILERS, V_TRAILERS, P_MULTI, V_MPHEADERS, V_MPBODY, REQ_DONE };
 enum	eURIstates		{ SCHEME, AUTH, USER, HOST, PORT, PATH, QUERY, FRAG, URI_ERROR, URI_END };
 enum	uri_types		{ ABSOLUTE_FORM, ASTERISK, AUTH_FORM, ORIGIN_FORM };
 enum	eBodyStates		{ BODY_CHUNKED, BODY_MULTIPART };
-enum	mpState			{ MP_NONE, MP_BOUNDARY, MP_HEADERS, MP_BODY, MP_CHUNKED, MP_COMPLETE, MP_ERROR };
+enum	mpState			{ MP_NONE, MP_BOUNDARY, MP_HEADERS, MP_BODY, MP_CHUNKED, MP_FINAL, MP_COMPLETE, MP_ERROR };
 enum	eParseContext	{ ABSOLUTE_URI, ORIGIN_URI, USER_NAME, USER_PASS, QUERY_KEY, QUERY_VAL, FIELD_NAME, FIELD_VAL, PARAM_KEY, PARAM_VAL, CHUNKSIZE, BOUNDARY };
-enum	eResponseType	{ RESPOND_NOT_SET, RESPOND_CGI, RESPOND_ERROR, RESPOND_FILE, RESPOND_INDEX, RESPOND_REDIR };
-
-
-struct respond_t{
-	eResponseType	type;
-	std::string		request_path;		// URI FROM REQUEST request->uri.path - TMP
-	std::string		normalised_path;	// NORMALISED URI FROM REQUEST request->uri.path - TMP
-	std::string		leftover_path;		// PATH REMAINING AFTER LOCATION MATCHING - TMP
-	std::string		location_path;		// THE MATCHING LOCATION URI - TMP
-	std::string		location_root;		// ROOT FOR MATCHING LOCATION - TMP
-	std::string		appended_root;		// LEFTOVER APPENDED TO ROOT - KEEP
-	fileInfo_s		target;				// FILEINFO ON APPENDED ROOT
-
-	respond_t():type(RESPOND_NOT_SET){}
-};
-
+enum	eResponseType	{ RESPOND_NOT_SET, RESPOND_CGI, RESPOND_ERROR, RESPOND_FILE, RESPOND_INDEX, RESPOND_MP_UP, RESPOND_REDIR, RESPOND_STATIC, RESPOND_UPLOAD };
 
 /*
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -57,11 +45,11 @@ struct respond_t{
 /* TOKEN : CONTAINS THE */
 struct token_s {
 
-	std::deque<char>::const_iterator	begin;
-	std::deque<char>::const_iterator	end;
+	size_t	begin;
+	size_t	end;
 
-	token_s() {}
-	token_s(std::deque<char>::const_iterator b, std::deque<char>::const_iterator e)
+	token_s():begin(0), end(0) {}
+	token_s(size_t b, size_t e)
 		: begin(b), end(e) {}
 
 };
@@ -122,26 +110,26 @@ typedef struct parseContext{
 struct mpMessage_t;
 
 struct mpPart_t {
-	fieldMap_t*											headers; // headers are parsed into here before being validated and moved to the relevant field
-	std::string											name;
-	std::string											filename;
-	std::string											disposition_type;
-	std::vector<std::pair <std::string, std::string> >	disposition_parameters;
+	fieldMap_t*											headers; 				// headers are parsed into here before being validated and moved to the relevant field
+	std::string											name;	 				// must be present
+	std::string											filename; 				// if name=file, filename or filename* must be present
+	std::string											disposition_type;		// header must be present (this stores value)
+	std::vector<std::pair <std::string, std::string> >	disposition_parameters; // parameters from header
 	std::vector<field_t*>								supported_content;
-	std::vector<char>									body;
+	std::vector<char>									body;					// used if no file upload
 
-	bool												isFile;
-	std::string											tempFilePath;
-	int													fd;
-	mpState												parse_status;
-
-	mpPart_t(): headers(new fieldMap_t){}
+	bool												isFile;					// set to true if filename is present
+	std::string											tempFilePath;			// created if filename is present and body is appended here each read cycle
+	fileInfo_s											upload_dest;			// populated when validating content-disposition header
+	int													fd; 					// might not be required as fstream is used to append data 
+	mpPart_t(): headers(new fieldMap_t), isFile(0), fd(-1){}
 };
 
 struct mpMessage_t {
 	std::vector<mpPart_t>	parts;
-	std::string 			boundary;
 	std::string				default_charset;
+	size_t					filecount;
+	mpMessage_t(): filecount(0){}
 };
 
 struct mpParser_t {
@@ -149,89 +137,132 @@ struct mpParser_t {
 
 	std::string			boundary;
 	std::string			boundary_marker;
-
 	size_t				current_index;
-
-	token_s				header_buffer;
-	std::vector<char>	body_buffer;
-
 	size_t				boundary_match_index;
+
+	mpParser_t(): state(MP_NONE), current_index(0), boundary_match_index(0) {}
 };
+
+struct reqPaths_s {
+	fileInfo_s											 error_path;
+	std::string											 redirect_url;
+    fileInfo_s											 resource_path;
+	std::string											 upload_base;
+    std::vector< std::pair < fileInfo_s, std::string > > upload_paths; //tmpfile path, upload path - can move from tmp to upload path
+};
+
+struct respond_t {
+	eResponseType				type;			// Response Type
+	int							status;			// Response Code
+	std::string					message;		// Response Message
+	const CLocation*			location;		// Matched Location
+	CServer*					server;			// Matched Server
+	reqPaths_s					paths;			// Response Paths
+	std::string					uri_path;		// URI path (parsed from request URI and normalised)
+	std::string					leftover_path;	// URI path leftover after location matching
+	bool						keep_alive;		// Connection Preference
+	std::vector<std::string> 	accept_type; 	// Accept types (content-type) in order of preference (Matched with config mime_types)
+	query_t						query_pairs;	// Query string KV pairs
+	respond_t():type(RESPOND_NOT_SET), status(0), keep_alive(0){}
+
+	void reset(void){
+		type = RESPOND_NOT_SET;
+		status = 0;
+		message.clear();
+		location = NULL;
+		server = NULL;
+		paths.error_path.reset();
+		accept_type.clear();
+		leftover_path.clear();
+		paths.error_path.reset();
+		paths.redirect_url.clear();
+		paths.resource_path.reset();
+		paths.upload_base.clear();
+		paths.upload_paths.clear();
+		query_pairs.clear();
+		uri_path.clear();
+		leftover_path.clear();
+		keep_alive = false;
+		accept_type.clear();
+		query_pairs.clear();
+	}
+};
+
+
 /*
->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
->>>>>>					ITERATORS FUNCTORS								   <<<<<<
->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<
+>>>>>		HEADER VALIDATION		<<<<<<
+>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<
 */
 
-// struct HeaderValueContains {
+enum valueType {
+  VT_AUTHORITY,
+  VT_COOKIE,
+  VT_COOKIE_PAIR,
+  VT_CREDENTIALS,
+  VT_DATE,
+  VT_DIRECTIVE,
+  VT_ETAG,
+  VT_ETAG_OR_DATE,
+  VT_FIELD_NAME,
+  VT_LANGUAGE_TAG,
+  VT_MEDIA_RANGE,
+  VT_MEDIA_TYPE,
+  VT_NUMBER,
+  VT_PRODUCT,
+  VT_PROTOCOL,
+  VT_RANGE,
+  VT_TOKEN,
+  VT_URI
+};
 
-// 	std::string str;
+enum supportedHDR {
+  HDR_ACCEPT,
+  HDR_ACCEPT_CHARSET,
+  HDR_ACCEPT_ENCODING,
+  HDR_ACCEPT_LANGUAGE,
+  HDR_AUTHORIZATION,
+  HDR_CONNECTION,
+  HDR_CACHE_CONTROL,
+  HDR_CONTENT_ENCODING,
+  HDR_CONTENT_LANGUAGE,
+  HDR_CONTENT_LENGTH,
+  HDR_CONTENT_TYPE,
+  HDR_COOKIE,
+  HDR_DATE,
+  HDR_EMPTY,
+  HDR_EXPECT,
+  HDR_HOST,
+  HDR_IF_MATCH,
+  HDR_IF_MODIFIED_SINCE,
+  HDR_IF_NONE_MATCH,
+  HDR_IF_RANGE,
+  HDR_IF_UNMODIFIED_SINCE,
+  HDR_MAX_FORWARDS,
+  HDR_ORIGIN,
+  HDR_PRAGMA,
+  HDR_RANGE,
+  HDR_REFERER,
+  HDR_SET_COOKIE,
+  HDR_TRAILER,
+  HDR_TRANSFER_ENCODING,
+  HDR_TE,
+  HDR_UPGRADE,
+  HDR_UPGRADE_INSECURE,
+  HDR_USER_AGENT
+};
 
-//     HeaderValueContains(const std::string& target) : str(target) {}
+struct	headerContext_s {
+	std::string		name;
+	supportedHDR	hdr_name;
+	bool			is_list;
+	bool			is_repeatable;
+	bool			is_mergeable;
+	valueType		type;
+	bool			has_parameters;
+	bool			supports_q_val;
+	bool			is_commentable;
 
-//     bool operator()(const std::string& key, std::string target) {
-//         return field && field->val.compare(str);
-//     }
-// };
-
-
-// /*
-// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-// >>>>>>					ITERATORS TEMPLATE 								   <<<<<<
-// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-// */
-
-// template <typename Func>
-// bool iterateHeaderKeys(headerMap_t& headers, Func func) {
-// 	for (headerMap_t::iterator it = headers.begin(); it != headers.end(); it++) {
-// 		if (!func)
-// 			return true;
-// 		else if func(it->first)
-// 			return true;
-// 	}
-// 	return false;
-// }
-
-// template <typename Func>
-// bool iterateHeaderFields(headerMap_t& headers, Func func) {
-
-// 	for (headerMap_t::iterator it = headers.begin(); it != headers.end(); it++) {
-// 		std::vector<field_t*>& vec = it->second;
-// 		for (std::vector<field_t*>::iterator vec_it = vec.begin(); vec_it != vec.end(); vec_it++) {
-// 			if (func(it->first, *vec_it)) // func(key, field_t*)
-// 				return true;
-// 		}
-// 	}
-// 	return false;
-// }
-
-// template <typename Func>
-// bool iterateHeaderParams(headerMap_t& headers, Func func) {
-// 	for (headerMap_t::iterator it = headers.begin(); it != headers.end(); it++) {
-// 		std::vector<field_t*>& vec = it->second;
-// 		for (std::vector<field_t*>::iterator vec_it = vec.begin(); vec_it != vec.end(); vec_it++) {
-// 			if (!*vec_it) continue;
-// 			std::map<std::string, std::string>& params = (*vec_it)->params;
-// 			for (std::map<std::string, std::string>::iterator p_it = params.begin(); p_it != params.end(); p_it++) {
-// 				if (func(it->first, (*vec_it), p_it->first, p_it->second)) // (key, field, paramKey, paramVal)
-// 					return true;
-// 			}
-// 		}
-// 	}
-// 	return false;
-// }
-
-// /*	 headerMap_t iterator ( return type void )	*/
-// template <typename Func>
-// void	forEachHeader(headerMap_t& headers, Func func) {
-
-// 	for (headerMap_t::iterator it = headers.begin(); it != headers.end(); it++) {
-
-// 		std::vector<field_t*>& vec = it->second;
-
-// 		for (std::vector<field_t*>::iterator vec_it = vec.begin(); vec_it != vec.end(); vec_it++) {
-// 			func(it->first, *vec_it);
-// 		}
-// 	}
-// }
-
+	headerContext_s(std::string n, supportedHDR hdr_n, bool list, bool repeatable, bool mergeable, valueType val_type, bool has_params, bool qval, bool comments)
+	: name(n), hdr_name(hdr_n), is_list(list), is_repeatable(repeatable), is_mergeable(mergeable), type(val_type), has_parameters(has_params), supports_q_val(qval), is_commentable(comments){}
+};

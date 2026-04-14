@@ -85,6 +85,7 @@ class CLocation {
 		bool								getCGIEnabled(void) const;
 		std::map<std::string, std::string>	getCGIMap(void) const;
 		std::vector<std::string>			getCharset(void) const;
+		std::string							getErrorPage(int errNum) const;
 		std::map<int, std::string>			getErrorPages(void) const;
 		std::vector<std::string>			getIndex(void) const;
 		long long							getMaxBodySize(void) const;

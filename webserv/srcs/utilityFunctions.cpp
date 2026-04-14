@@ -11,7 +11,7 @@
 /* ************************************************************************** */
 
 #include "utilityFunctions.hpp"
-
+#include <fstream>
 /*
 >>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<
 >>>>>>		STRING CASE CONVERSION		<<<<<<
@@ -370,30 +370,17 @@ bool isExecutable(const std::string &path)
 	return access(path.c_str(), R_OK) == 0;
 }
 
-/*
-	struct fileInfo_s
-	{
-		bool inaccessible;		// set to true if path can"t be accessed
-		bool is_dir;			// set to true if path is a dir
-		bool is_file;			// set to true if path is a file
-		bool not_found;			// set to true if file not found
-		__mode_t permissions;	// the file permissions
-		std::string path;		// the path (root + '/' endpoint )
-
-		fileInfo_s() : inaccessible(false), is_dir(false), is_file(false), not_found(false), permissions(0), path("") {}
-	};
-*/
-
 void	getFilePermissions(fileInfo_s& fileinfo){
-	struct stat fileStat;
+	struct stat fs;
 
-	if (stat(fileinfo.path.c_str(), &fileStat) == 0)
+	if (stat(fileinfo.path.c_str(), &fs) == 0)
 	{
-		fileinfo.is_dir = S_ISDIR(fileStat.st_mode);
-		fileinfo.is_file = S_ISREG(fileStat.st_mode);
-		fileinfo.is_symlink = S_ISLNK(fileStat.st_mode);
-		fileinfo.is_exec = fileStat.st_mode & S_IXUSR;
-		//fileinfo.permissions = fileStat.st_mode;
+		fileinfo.is_dir = S_ISDIR(fs.st_mode);
+		fileinfo.is_file = S_ISREG(fs.st_mode);
+		fileinfo.is_symlink = S_ISLNK(fs.st_mode);
+		fileinfo.is_exec = fs.st_mode & S_IXUSR;
+		fileinfo.permissions = fs.st_mode;
+		fileinfo.size = fs.st_size;
 	}
 	else if(errno == ENOENT)
 		fileinfo.not_found = true;
@@ -403,15 +390,16 @@ void	getFilePermissions(fileInfo_s& fileinfo){
 }
 
 void	getFilePermissions(fileInfo_s* fileinfo){
-	struct stat fileStat;
+	struct stat fs;
 
-	if (stat(fileinfo->path.c_str(), &fileStat) == 0)
+	if (stat(fileinfo->path.c_str(), &fs) == 0)
 	{
-		fileinfo->is_dir = S_ISDIR(fileStat.st_mode);
-		fileinfo->is_file = S_ISREG(fileStat.st_mode);
-		fileinfo->is_symlink = S_ISLNK(fileStat.st_mode);
-		fileinfo->is_exec = fileStat.st_mode & S_IXUSR;
-//		fileinfo->permissions = fileStat.st_mode;
+		fileinfo->is_dir = S_ISDIR(fs.st_mode);
+		fileinfo->is_file = S_ISREG(fs.st_mode);
+		fileinfo->is_symlink = S_ISLNK(fs.st_mode);
+		fileinfo->is_exec = fs.st_mode & S_IXUSR;
+		fileinfo->permissions = fs.st_mode;
+		fileinfo->size = fs.st_size;
 	}
 	else if(errno == ENOENT)
 		fileinfo->not_found = true;
@@ -447,30 +435,33 @@ fileInfo_s* getFileInfo(std::string& path, std::string& root_dir){
 
 bool file_exists(const char* filename)
 {
-    struct stat buffer;
-    return (stat(filename, &buffer) == 0);
+	struct stat buffer;
+	return (stat(filename, &buffer) == 0);
+}
+
+std::string	createTimestamp(void){
+	time_t	t = time(NULL);
+	tm		tm_now;
+	char	timestamp[32];
+
+	localtime_r(&t, &tm_now);
+
+	strftime(timestamp, sizeof(timestamp), "%Y%m%d_%H%M%S", &tm_now);
+	return timestamp;
 }
 
 bool	assignTempfile(std::string& target_path, int& target_fd, const std::string& prefix){
 
-	time_t	t = time(NULL);
-	tm	tm_now;
-	localtime_r(&t, &tm_now);
+	std::string 		timestamp = createTimestamp();
+	std::string			tmpTemplate = "/tmp/" + prefix + timestamp + "_XXXXXX";
+	std::vector<char>	tmpFilename(tmpTemplate.begin(), tmpTemplate.end());
 
-    char timestamp[32];
-    strftime(timestamp, sizeof(timestamp), "%Y%m%d_%H%M%S", &tm_now);
-    
-	// Template for mkstemp (must end with XXXXXX.extension)
-	// mkstemp requires a writable char array
-	std::string			tmpTemplate = "/tmp/" + prefix + timestamp + "_XXXXXX" + ".tmp";
-    std::vector<char>	tmpFilename(tmpTemplate.begin(), tmpTemplate.end());
-    
 	tmpFilename.push_back('\0');
 
-    target_fd = mkstemp(tmpFilename.data());
+	target_fd = mkstemp(tmpFilename.data());
 	target_path = tmpTemplate;
 	if (target_fd == -1)
-    	return false;
+		return false;
 	return true;
 }
 
@@ -493,42 +484,58 @@ void	appendPathToRoot(fileInfo_s* fileinfo, std::string path, std::string root_d
 	}
 }
 
+std::string	appendPathToRoot(std::string path, std::string root_dir){
+
+	std::string new_path;
+
+	if (path.length() == 0)
+		new_path = root_dir;
+	else {
+		if (root_dir[root_dir.size() - 1] == '/')
+			trimEndChar(root_dir, '/');
+		if (path[0] == '/')
+			trimLeadingChar(path, '/');
+		new_path = root_dir + '/' + path;
+	}
+	return new_path;
+}
+
 std::string normalisePath(const std::string& path) {
 
 	std::string result;
-    size_t i = 0;
+	size_t i = 0;
 
-    while (i < path.size()) {
+	while (i < path.size()) {
 
 		if (path[i] == '/') {
 			result += '/';
 
 			while (i < path.size() && path[i] == '/')
-                i++;
-            continue;
-        }
+				i++;
+			continue;
+		}
 
-        size_t start = i;
-        while (i < path.size() && path[i] != '/')
-            i++;
+		size_t start = i;
+		while (i < path.size() && path[i] != '/')
+			i++;
 
-        std::string segment = path.substr(start, i - start);
+		std::string segment = path.substr(start, i - start);
 
-        if (segment == ".") {
-            continue;
-        }
+		if (segment == ".") {
+			continue;
+		}
 		else if (segment == "..") {
-            if (result.size() > 1)
-                result.erase(result.find_last_of('/', result.size() - 2) + 1);
-        }
+			if (result.size() > 1)
+				result.erase(result.find_last_of('/', result.size() - 2) + 1);
+		}
 		else
-            result += segment;
-    }
-    if (result.empty())
-        result = "/";
-    if (path.size() > 1 && path[path.size() - 1] == '/' && result[result.size() - 1] != '/')
-        result += '/';
-    return result;
+			result += segment;
+	}
+	if (result.empty())
+		result = "/";
+	if (path.size() > 1 && path[path.size() - 1] == '/' && result[result.size() - 1] != '/')
+		result += '/';
+	return result;
 }
 
 std::string get_absolute_path(const std::string server_path)
@@ -717,122 +724,122 @@ std::ostream&	printFileInfo(std::ostream &os, fileInfo_s* fileinfo)
 	return os;
 }
 
-void printStrMap(const std::map<std::string, std::string> &data)
-{
+// void printStrMap(const std::map<std::string, std::string> &data)
+// {
 
-	std::cout << "PARSED HEADER MAP \n===================" << std::endl;
-	for (std::map<std::string, std::string>::const_iterator it = data.begin(); it != data.end(); it++)
-	{
-		int i = 0;
-		std::cout << "Key : " + it->first << std::endl;
-		if (it->second == "\r")
-		{
-			std::cout << "[CR]" << std::endl
-					  << std::endl;
-		}
-		else
-		{
-			std::cout << "Val " << i << " : " + it->second << std::endl;
-			i++;
-		}
-		std::cout << std::endl;
-	}
-	std::cout << "END OF HEADER MAP \n===================" << std::endl
-			  << std::endl;
-}
+// 	std::cout << "PARSED HEADER MAP \n===================" << std::endl;
+// 	for (std::map<std::string, std::string>::const_iterator it = data.begin(); it != data.end(); it++)
+// 	{
+// 		int i = 0;
+// 		std::cout << "Key : " + it->first << std::endl;
+// 		if (it->second == "\r")
+// 		{
+// 			std::cout << "[CR]" << std::endl
+// 					  << std::endl;
+// 		}
+// 		else
+// 		{
+// 			std::cout << "Val " << i << " : " + it->second << std::endl;
+// 			i++;
+// 		}
+// 		std::cout << std::endl;
+// 	}
+// 	std::cout << "END OF HEADER MAP \n===================" << std::endl
+// 			  << std::endl;
+// }
 
-void printStrVecStrMap(const std::map<std::string, std::vector<std::string> > &data) // NEED TO CONSIDER HOW VECTOR FIELDS ARE POPULATED
-{
-	std::cout << "PARSED HEADER MAP VECTOR \n==========================" << std::endl;
-	for (std::map<std::string, std::vector<std::string> >::const_iterator it = data.begin(); it != data.end(); it++)
-	{
-		int i = 0;
-		std::cout << "Key : " + it->first << std::endl;
-		for (std::vector<std::string>::const_iterator itVec = it->second.begin(); itVec != it->second.end(); itVec++){
-			if (*itVec == "\r")
-			{
-				std::cout << "[CR]" << std::endl
-						  << std::endl;
-			}
-			else
-			{
-				std::cout << "Val " << i << " : " + *itVec << std::endl;
-			}
-			i++;
-		}
-		std::cout << std::endl;
-	}
-}
+// void printStrVecStrMap(const std::map<std::string, std::vector<std::string> > &data) // NEED TO CONSIDER HOW VECTOR FIELDS ARE POPULATED
+// {
+// 	std::cout << "PARSED HEADER MAP VECTOR \n==========================" << std::endl;
+// 	for (std::map<std::string, std::vector<std::string> >::const_iterator it = data.begin(); it != data.end(); it++)
+// 	{
+// 		int i = 0;
+// 		std::cout << "Key : " + it->first << std::endl;
+// 		for (std::vector<std::string>::const_iterator itVec = it->second.begin(); itVec != it->second.end(); itVec++){
+// 			if (*itVec == "\r")
+// 			{
+// 				std::cout << "[CR]" << std::endl
+// 						  << std::endl;
+// 			}
+// 			else
+// 			{
+// 				std::cout << "Val " << i << " : " + *itVec << std::endl;
+// 			}
+// 			i++;
+// 		}
+// 		std::cout << std::endl;
+// 	}
+// }
 
-/*
->>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<
->>>>>>		PARSING OPERATIONS			<<<<<<
->>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<
-*/
+// /*
+// >>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<
+// >>>>>>		PARSING OPERATIONS			<<<<<<
+// >>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<
+// */
 
-void parseStreamToStrVecStrMap(std::istringstream &iss, std::map<std::string, std::vector<std::string> > &result, char pair_delim, char kv_delim, char vec_delim)
-{
-	std::string line;
-	std::string key;
-	std::string value;
+// void parseStreamToStrVecStrMap(std::istringstream &iss, std::map<std::string, std::vector<std::string> > &result, char pair_delim, char kv_delim, char vec_delim)
+// {
+// 	std::string line;
+// 	std::string key;
+// 	std::string value;
 
-	while (std::getline(iss, line, pair_delim))
-	{
-		std::size_t pos = line.find(kv_delim);
+// 	while (std::getline(iss, line, pair_delim))
+// 	{
+// 		std::size_t pos = line.find(kv_delim);
 
-		if (pos == std::string::npos)
-			break;
-		key = to_lower(line.substr(0, pos));
-		value = line.substr(pos + 1);
+// 		if (pos == std::string::npos)
+// 			break;
+// 		key = to_lower(line.substr(0, pos));
+// 		value = line.substr(pos + 1);
 
-		std::istringstream vec_stream(value);
+// 		std::istringstream vec_stream(value);
 
-		while (std::getline(vec_stream, line, vec_delim)){
-			result[key].push_back(line);
-		}
-	}
-	result["mapLastLine"].push_back(line);
-}
+// 		while (std::getline(vec_stream, line, vec_delim)){
+// 			result[key].push_back(line);
+// 		}
+// 	}
+// 	result["mapLastLine"].push_back(line);
+// }
 
-void parseStreamToStrStrMap(std::istringstream &iss, std::map<std::string, std::string> &result, char pair_delim, char kv_delim)
-{
-	std::string line;
-	std::string key;
-	std::string value;
+// void parseStreamToStrStrMap(std::istringstream &iss, std::map<std::string, std::string> &result, char pair_delim, char kv_delim)
+// {
+// 	std::string line;
+// 	std::string key;
+// 	std::string value;
 
-	while (std::getline(iss, line, pair_delim))
-	{
-		std::size_t pos = line.find(kv_delim);
-		if (pos == std::string::npos)
-			break;
-		key = line.substr(0, pos);
-		value = line.substr(pos + 1);
-		result[key] = value;
-	}
-	result["mapLastLine"] = line;
-	printStrMap(result);
-}
+// 	while (std::getline(iss, line, pair_delim))
+// 	{
+// 		std::size_t pos = line.find(kv_delim);
+// 		if (pos == std::string::npos)
+// 			break;
+// 		key = line.substr(0, pos);
+// 		value = line.substr(pos + 1);
+// 		result[key] = value;
+// 	}
+// 	result["mapLastLine"] = line;
+// 	printStrMap(result);
+// }
 
-const std::set<std::string> &getHeaderTransferEncodings()
-{
+// const std::set<std::string> &getHeaderTransferEncodings()
+// {
 
-	static std::set<std::string> supportedEndodings;
-	static int i;
+// 	static std::set<std::string> supportedEndodings;
+// 	static int i;
 
-	if (i == 0)
-	{
-		supportedEndodings.insert(std::string("chunked"));
-		// supportedEndodings.insert(std::string("compress"));
-		// supportedEndodings.insert(std::string("deflate"));
-		// supportedEndodings.insert(std::string("gzip"));
-		// supportedEndodings.insert(std::string("identity"));
-		// supportedEndodings.insert(std::string("trailers"));
-		// supportedEndodings.insert(std::string("x-compress"));
-		// supportedEndodings.insert(std::string("x-gzip"));
-		i++;
-	}
-	return supportedEndodings;
-}
+// 	if (i == 0)
+// 	{
+// 		supportedEndodings.insert(std::string("chunked"));
+// 		// supportedEndodings.insert(std::string("compress"));
+// 		// supportedEndodings.insert(std::string("deflate"));
+// 		// supportedEndodings.insert(std::string("gzip"));
+// 		// supportedEndodings.insert(std::string("identity"));
+// 		// supportedEndodings.insert(std::string("trailers"));
+// 		// supportedEndodings.insert(std::string("x-compress"));
+// 		// supportedEndodings.insert(std::string("x-gzip"));
+// 		i++;
+// 	}
+// 	return supportedEndodings;
+// }
 
 /*
 >>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<
@@ -941,4 +948,57 @@ void splitPortInfo(const std::string& port_info, uint32_t& ip, uint16_t& port)
 		port_str = port_info;
 	}
 	resolveAddress(ip_str, port_str, ip, port);
+}
+
+std::string	generate_batch_id(int counter) {
+	std::stringstream ss;
+	ss << createTimestamp() << "_" << getpid() << "_" << counter;
+	return ss.str();
+}
+
+/*
+>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<
+>>>>>>		MIME TYPE/MAGIC NUMBER	<<<<<<
+>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<
+*/
+
+const std::map<std::string, std::string>& mimeToMagicMap(void) {
+
+    static std::map<std::string, std::string> mime_to_magic;
+
+    if (mime_to_magic.empty()){
+        mime_to_magic.insert(std::make_pair("image/png", std::string("\x89PNG\r\n\x1A\n", 8)));
+        mime_to_magic.insert(std::make_pair("image/jpeg", std::string("\xFF\xD8\xFF", 3)));
+        mime_to_magic.insert(std::make_pair("image/gif", std::string("GIF87a", 6)));
+        mime_to_magic.insert(std::make_pair("image/gif", std::string("GIF89a", 6)));
+        mime_to_magic.insert(std::make_pair("image/x-icon",std::string("\x00\x00\x01\x00", 4)));
+        mime_to_magic.insert(std::make_pair("application/pdf", std::string("%PDF", 4)));
+		// Can add more as required
+    }
+	return mime_to_magic;
+}
+
+std::string	detectMimeFromFilename(const std::string& filename) {
+
+	std::ifstream file(filename.c_str(), std::ios::in | std::ios::binary);
+
+	if (!file)
+        return "application/octet-stream";
+
+    char buffer[16] = {0};
+    file.read(buffer, sizeof(buffer));
+    std::streamsize bytes = file.gcount();
+
+    std::map<std::string, std::string> mime_magic_map = mimeToMagicMap();
+	std::map<std::string, std::string>::const_iterator it = mime_magic_map.begin();
+
+    for (; it != mime_magic_map.end(); it++) {
+
+        const std::string& mime = it->first;
+        const std::string& magic  = it->second;
+
+        if (bytes >= (std::streamsize)magic.size() && std::string(buffer, magic.size()) == magic)
+            return mime;
+    }
+    return "application/octet-stream";
 }

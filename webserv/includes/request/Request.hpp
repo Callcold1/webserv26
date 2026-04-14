@@ -32,9 +32,9 @@ class Request {
 						Request(const Request &other);
 						Request& operator=(const Request &other);
 						~Request(void);
-	void	    		clear();
-	
+
 	eParse				parseRequest(const char* rawData, size_t length);
+	void	    		clear();
 
 						/* GETTERS */
 	const std::string&	getErrMsg(void) const;
@@ -65,13 +65,15 @@ class Request {
 	bool 				setState(eParse p_state, eReqState r_state, std::string err_mess, unsigned int err_num );
 
 	bool				matchServerToHostHeader(void);
-	void				matchLocationToURIPath(void);
+	bool				matchLocationToURIPath(void);
+	void				updateTargetPathInfo(std::string& leftover);
+	void				updateErrorPagePath(void);
+	void				updateRe(void);
 
 	std::vector<field_t* >		findRequestHeaderValue(const std::string& header_name);
 
 	RequestParser*		_parser;
 	RequestValidator*	_validator;
-	//RequestHandler*		_requestHandler;
 	listenInstance_s*	_listen_instance;
 	const CLocation*	_matched_location;
 	CServer*			_matched_server;
@@ -83,24 +85,26 @@ class Request {
 	fieldMap_t 			_headers;
 	fieldMap_t 			_trailers;
 	std::string 		_body;
+	std::string			_body_filename;
 	std::string 		_boundary;
 	std::string 		_default_mp_content_type;
-	mpMessage_t			_multipart;
+	mpMessage_t			_mp_m;
+	mpState*			_mp_state;
 
-	void                resetParser();
-	void                resetValidator();
 	unsigned int		_errNum;
 	std::string			_errMess;
 
 	eParse				_p_state;
 	eReqState			_r_state;
 	
-	uint64_t			_content_length, _body_length, _unparsed_length; //_content_length is used when content length is provided. body_length is used to track length parsed
-
-	bool 				_hasBody, _isChunked, _isMultiPart, _bodyUTF8;
-
+	uint64_t			_content_length, _body_length, _body_buffer, _unparsed_length;	//_content_length used when content length is provided. 
+																					    // body_length tracks length parsed
+																					    // body_buffer tracks size of _body string : used to decide if body -> file
+																						// When body_length > max_body_buffer, tmpfile is used.
+																						// When body_length > max_body_size, error is thrown.
+	bool 				_hasBody, _isCGI, _isChunked, _isMultiPart, _bodyUTF8, _isRedirect, _bodyInFile;
+	
 	respond_t			_re;
-
 	private : 
 };
 

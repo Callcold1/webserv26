@@ -209,9 +209,15 @@ std::vector<std::string>	CLocation::getCharset(void) const{
 	return _charset;
 }
 
+std::string	CLocation::getErrorPage(int errNum) const {
+	std::map<int, std::string>::const_iterator it = _error_pages.find(errNum);
+	if (it != _error_pages.end())
+		return it->second;
+	return (std::string)"";
+}
+
 std::map<int, std::string>	CLocation::getErrorPages(void) const{
 	return _error_pages;
-
 }
 
 std::vector<std::string>	CLocation::getIndex(void) const{

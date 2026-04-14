@@ -59,6 +59,7 @@ std::string Response::status_text()
 
 		case 301: return "Moved Permanently";
 		case 302: return "Moved Temporarily";
+		case 303: return "See Other";
 		case 304: return "Not Modified";
 
 		case 400: return "Bad Request";
@@ -81,9 +82,13 @@ std::string Response::status_text()
 void Response::defaultHeaders()
 {
 	_headers["Server"] = "WebServ";
-	_headers["Connection"] = "close"; //"keep-alive";
+	//added KM : previously "_headers["Connection"] = "keep-alive";" 
+	if (_request._re.keep_alive)
+		_headers["Connection"] = "keep-alive";
+	else
+		_headers["Connection"] = "close";
 	_headers["Date"] = get_date();
-	if (!_body.empty())
+	//if (!_body.empty()) // does this need to change for file uploads? Have changed to handle in get_content_len()
 		_headers["Content-Length"] = to_str(get_content_len());
 }
 
@@ -107,6 +112,14 @@ std::string Response::get_date()
 
 size_t Response::get_content_len()
 {
+	if (_body.empty()){
+		//if ()
+		if(_request._re.paths.upload_paths.size() == 0)
+			return 0;
+		else 
+			return 0;
+			//return file size? What if there are multiple files? (set to 0 and return Location: /upload_path/result/generated_file_with_list_of_uploads)	
+	}
 	return(_body.length());
 }
 

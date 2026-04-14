@@ -1,45 +1,109 @@
 WIP
 ===
-
-1) Finish multipart (in progress)
+1) Look at error page - should we treat as full path or redirect to error page (e.g. location /50x.html{} for error_page 501 502 /50x.html)
 
 2) Validate headers
 
-3) Validate config : e.g. root must start with '/'?
+3) Add DELETE (If DELETE allowed for location, use query string kv pair or multipart?
+    Location needs to allow uploads
+    Check upload folder for given filename.
+    If it exists, delete it.
+    Not sure how to handle across multiple servers. Single upload folder?
+    If filename match, delete.
+    
+    Could serve list of resources in upload folder, and allow selection of resource for deletion?
+) 
 
-4) Fully test config (write test config files and tests)
+3) Consolidate common config properties into a base class to remove duplicated code 
 
-5) Sort out config error handling (Partially done)
+4) Remove cwd? : Better to use absolute paths for everything? Or alter config to allow both absolute/relative or allow selection of path type in config
+    Could make all paths relative to a base path?
 
-6) Assign a default server when parsing config (Partially done - if one is present - need to assign one otherwise)
+5) Response for multiple files uploaded should be a redirect to a file containing the uploaded files. Not sure how to handle in terms of location matching?
+    Started but not finished
 
-7) Error handling for file opening  - e.g. run "./webserv ./webserv" or "./webserv ./" - both cause issues
+6) Validate config : e.g. root must start with '/'? 
 
-8) Make request private where necessary
+7) Fully test config (write test config files and tests)
+
+8) Sort out config error handling (Partially done)
+
+9) Error handling for file opening in program - e.g. run "./webserv ./webserv" or "./webserv ./" - both cause issues
+
+10) Make request private where necessary
+
+11) CGI environmental variables (from body/from headers)
+
+12) Use mime map to inform Content-Type in response? e.g. if file ext returned is .png, Content-Type should be image/png?
+
+13) Signals
 
 Problems
 ========			    
 
 Problem : Check for duplicate server names (should only relate to one socket)
-Problem : Removing /// from uri path
+Problem : Error pages : need to treat as redirect and search for matching location to find error files
+Problem : Counting length of request parsed
+Problem : Currently appending paths to cwd. Should switch to absolute paths? - Update - have switched to absolute paths
 
 Changes Made
 ============
 Changed 'Server::removeClientFromPoll(int fd)' : now erases client from poll vector (previously set fd to -1)
-Removed Config from Request RequestParser RequestValidator
+
+Removed Config from Request RequestParser RequestValidator (added to listeningInstance, so can be accessed in Client)
+
 Moved location matching function to server - uses find now instead of splitting to a vector of path segments
+
 Added path_t struct (not sure if we'll use this but it does help with indicating if path is absolute, or if trailing '/')
+
+Changed from iterators to indexing for accessing deque : altered tokens to use index instead of iterator, altered all relevant functions (due to iterators being invalidated - seems to work ok)
+
+If connection: keep-alive, then we treat any data at end of message as new message & request class is cleared (apart from unparsed data) and re-used
+
+Client/Response Classes Changes
+===============================
+Base response class variable changed from "Request _request" to "Request& _request" (Also made it public but it can probably go back to protected...)
+Data was disappearing, and it was because a new copy of Request was being created.
+
+I changed some of the response classes - mostly so they use the paths from _request._re
+
+added : std::string	RediResponse::getMPUploadLocation() to deal with multiple file uploads (suggest returning new page with list of files uploaded?)
+
+handle_request : changed to switch/case and added a log message for each
+                 switch is the _re.type which is RESPOND_XXXXXXXX enum
+                 the enum types aren't all required - some will follow same response logic (e.g. RESPOND_INDEX/RESPOND_STATIC look to follow same logic) 
+
+html.site -> copy save as html.site1 - I altered the file so that it sends a POST request as multipart message to the correct URI. The only issue is that it changes the page to the new URI (should stay on the upload page, and possibly refresh with info confirming successful upload). We could use the referrer
+
+_re
+===
+eResponseType				type;			// Response Type
+int							status;			// Response Code
+std::string					message;		// Response Message
+const CLocation*			location;		// Matched Location
+CServer*					server;			// Matched Server
+reqPaths_s					paths;			// Response Paths
+std::string					uri_path;		// URI path (parsed from request URI and normalised)
+bool						keep_alive;		// Connection Preference (true = keep-alive)
+std::vector<std::string> 	accept_type; 	// Accept types (content-type) in order of preference (to be used if encoding is required?)
+
+struct reqPaths_s {
+	fileInfo_s											 error_path;
+	std::string											 redirect_url;
+    fileInfo_s											 resource_path;
+	std::string											 upload_base;
+    std::vector< std::pair < fileInfo_s, std::string > > upload_paths; // pair contains < tempfile path, upload path > to allow rename from tmp path to upload path
+};
+
+The fileInfo_s type contains info on the path (fileInfo_s::path), including accessibility, permissions, isDir, isFile, isAccessible, notFound so that the
+info only has to be requested once during the request process.
 
 Still To Do
 ===========
 
-- Multipart
-
 - Header Validation
 
 - Request Handling
-    - Server Matching
-    - Location Matching
     - Static page
     - Error page
     - CGI
@@ -52,10 +116,6 @@ Still To Do
 
 Questions we need to consider
 =============================
-
-- Client class design
-
-- Pipelining, or error if more than 1 request before response?
 
 - If wildcard ip:port (i.e. just a port number in config, or explicit 0.0.0.0:port) and an overlapping ip:port (e.g. 192.168.0.1:80 and 0.0.0.0:80),  
 do we call that an error, or set up bind for 0.0.0.0 and resolve the ip that the client is bound to later?

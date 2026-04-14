@@ -27,7 +27,7 @@ CgiResponse::~CgiResponse()
 
 int	CgiResponse::generate()
 {
-	_path = _request.get_root_dir() + _request._uri.path;
+	_path = _request._re.paths.resource_path.path;
 	std::cout << "entered cgi repone: " << _path << std::endl;
 	int i = 0; //debug
 	if ((i = execute()) != 0)

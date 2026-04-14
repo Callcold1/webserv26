@@ -38,8 +38,6 @@ class Client {
 
 	public:
 								/* CONSTRUCTORS */
-								//Client(Config* config);
-								//Client(Config* config, int new_fd);
 								Client(listenInstance_s* listen_instance, int new_fd);
 								Client(const Client &other);
 								Client &operator=(const Client &other);
@@ -54,6 +52,7 @@ class Client {
 								/* GETTERS */
 			eConn				getConn(void);
 			std::string& 		get_msg();
+			int			 		getFD();
 
 								/* HANDLERS */
 			bool				handleClientRead(const char *buffer, size_t len);
@@ -66,7 +65,6 @@ class Client {
 
 	private:
 
-		//	Config*				_config;
 			listenInstance_s*	_listen_instance;
 			int					_fd;
 
@@ -75,7 +73,6 @@ class Client {
 
 			Request				_request;
 			Response*			_response;
-			//Response			_response;
 
 			enum eConn			_conn;
 			enum cState			_state;
@@ -90,3 +87,6 @@ class Client {
 
 std::ostream&	operator<<(std::ostream& os, const fieldMap_t headers);
 std::ostream&	operator<<(std::ostream& os, Request& request);
+std::ostream&	operator<<(std::ostream& os, const std::vector<std::pair <fileInfo_s, std::string> >& upload_paths);
+std::ostream&	operator<<(std::ostream& os, const reqPaths_s& paths);
+std::ostream&	operator<<(std::ostream& os, const respond_t& re);

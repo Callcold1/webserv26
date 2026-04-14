@@ -60,7 +60,7 @@ void	Server::setupListeningSockets(Config& config){
 
 void	Server::listenInstanceCreate(int fd, listen_s listen, std::vector<CServer*>& servers){
 
-	listenInstance_s instance(fd, listen, servers);
+	listenInstance_s instance(fd, listen, _config, servers);
 
 	for (size_t i = 0; i < servers.size(); i++){
 
@@ -181,7 +181,7 @@ void	Server::loop(){
 		int activity = poll(&_sockets[0], _port_count + _clients.size(), -1);
 		
 		if (activity < 0){
-			Log::instance().log(Log::INFO, Log::TYPE_CLASS, "poll() failed: " + std::string(strerror(errno)), true);
+			Log::instance().log(Log::INFO, Log::TYPE_CLASS, "poll() failed", true);
 			continue;
 		}
 		handleEvents();
@@ -211,11 +211,11 @@ void	Server::handleEvents(void){
 
 			int fd = _sockets[i].fd;
 
-			if (_sockets[i].revents & POLLIN)
-				handleClientRead(fd);
-
 			if (_sockets[i].revents & POLLOUT)
 				handleClientWrite(fd);
+				
+			if (_sockets[i].revents & POLLIN)
+				handleClientRead(fd);
 
 			if (_sockets[i].revents & (POLLERR | POLLHUP | POLLNVAL))
 			{
@@ -289,7 +289,6 @@ void	Server::handleClientRead(int fd){
 		Log::instance().log(Log::ERROR, Log::TYPE_ERROR, "handleClientRead: unknown fd [" + toString(fd) + "] : ", true);
 		return;
 	}
-	std::cout << "hasnt segfaulted" << std::endl;
 	Client&	client = it->second;
 
 	char buffer[BUF_SIZE];
@@ -300,71 +299,40 @@ void	Server::handleClientRead(int fd){
 		disconnectClient(fd, "Invalid read");
 	else if (bytes == 0)
 		disconnectClient(fd, "Read size of zero");
-	else if (client.handleClientRead(buffer, bytes))
+	else if (client.handleClientRead(buffer, bytes)){
 		_sockets[getSocketsPosition(fd)].events |= POLLOUT;
+	}
 }
 
 /* >>>>>>	WRITE TO CLIENT	<<<<<<*/
 
-void	Server::handleClientWrite(int fd)
+void    Server::handleClientWrite(int fd)
 {
-	std::map<int, Client>::iterator it = _clients.find(fd);
-
+    std::map<int, Client>::iterator it = _clients.find(fd);
 	if (it == _clients.end()){
 		Log::instance().log(Log::ERROR, Log::TYPE_ERROR, "handleClientWrite: unknown fd [" + toString(fd) + "]", true);
 		return;
 	}
-	Client& client = it->second;
-	std::string &response = client.get_msg();
 
-	ssize_t sent = send(fd, response.c_str(), response.size(), 0);
+    Client& client = it->second;
+    std::string &response = client.get_msg();
 
-	if (sent < 0){
-		disconnectClient(fd, "handleClientWrite: sent is less than or equal to zero");
-		return;
-	}
-	if (client.getConn() == CONN_CLOSE){
-		disconnectClient(fd, "Connection set to type 'close'");
-		return;
-	}
+    ssize_t sent = send(fd, response.c_str(), response.size(), 0);
+
+    if (sent < 0) {
+        disconnectClient(fd, "send error");
+        return;
+    }
 	response.erase(0, sent);
 
-	if (response.empty())
-		_sockets[getSocketsPosition(fd)].events &= ~POLLOUT;
+    if (response.empty()) {
+        _sockets[getSocketsPosition(fd)].events &= ~POLLOUT;
+
+		if (client.getConn() == CONN_CLOSE) {
+            disconnectClient(fd, "Finished sending: Connection set to type 'close'");
+        }
+    }
 }
-
-// void    Server::handleClientWrite(int fd)
-// {
-//     std::map<int, Client>::iterator it = _clients.find(fd);
-//     if (it == _clients.end()) return;
-
-//     Client& client = it->second;
-//     std::string &response = client.get_msg();
-
-//     // 1. Attempt to send as much as the OS buffer will take
-//     ssize_t sent = send(fd, response.c_str(), response.size(), 0);
-
-//     if (sent < 0) {
-//         disconnectClient(fd, "send error");
-//         return;
-//     }
-
-//     // 2. Remove only the bytes that were actually sent
-//     response.erase(0, sent);
-
-//     // 3. CRITICAL: Only consider disconnecting if the buffer is now empty
-//     if (response.empty()) {
-//         // We are done sending the current message
-//         _sockets[getSocketsPosition(fd)].events &= ~POLLOUT;
-
-//         // NOW check if we should close the connection
-//         if (client.getConn() == CONN_CLOSE) {
-//             disconnectClient(fd, "Finished sending: Connection set to type 'close'");
-//         }
-//     }
-//     // If response is NOT empty, we don't disconnect. 
-//     // We leave POLLOUT active and wait for the next event to send the rest.
-// }
 
 /*
 >>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<
