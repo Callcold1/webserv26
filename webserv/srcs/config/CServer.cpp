@@ -312,7 +312,7 @@ const	CLocation* CServer::getLocationForPath(const std::string& uri_path, std::s
 			leftover = uri_path.substr(loc_path.size());		
 			return &_locations[i];
 		}
-		if (uri_path.compare(0, loc_path.size(), loc_path) == 0 && (uri_path.size() == loc_path.size() || uri_path[loc_path.size()] == '/')){
+		if (uri_path.compare(0, loc_path.size(), loc_path) == 0 && (uri_path.size() == loc_path.size() || uri_path[loc_path.size() - 1] == '/')){
 			if (loc_path.size() > best_length){
 				best_length = loc_path.size();
 				best_match = &_locations[i];

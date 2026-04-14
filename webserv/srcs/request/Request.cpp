@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: junruh <junruh@student.42.fr>              +#+  +:+       +#+        */
+/*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/30 11:28:22 by kmooney           #+#    #+#             */
-/*   Updated: 2026/04/14 14:06:34 by junruh           ###   ########.fr       */
+/*   Updated: 2026/04/14 14:52:19 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -394,7 +394,7 @@ bool	Request::matchLocationToURIPath(void){
 
 void	Request::updateTargetPathInfo(std::string& leftover){
 
-	char	cwd[2048];
+	char	cwd[2048] = {0};
 	cwd[0] = '\0';
 	//getcwd(cwd, sizeof(cwd));
 
