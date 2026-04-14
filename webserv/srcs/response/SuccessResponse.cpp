@@ -29,10 +29,10 @@ SuccessResponse::~SuccessResponse()
 
 int SuccessResponse::generate()
 {
-	int re_status;
+	int re_status = 0;
 
-	_path = _request.get_root_dir() + _request._uri.path;
-	//_path = _request._re.target.path;
+	//_path = _request.get_root_dir() + _request._uri.path;
+	_path = _request._re.paths.resource_path.path;
 	if ((re_status = if_delete()) != 1)
 		return (re_status);
 	if ((re_status = get_file()) != 0)

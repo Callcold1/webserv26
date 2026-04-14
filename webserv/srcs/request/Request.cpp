@@ -6,7 +6,7 @@
 /*   By: junruh <junruh@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/30 11:28:22 by kmooney           #+#    #+#             */
-/*   Updated: 2026/04/14 14:00:51 by junruh           ###   ########.fr       */
+/*   Updated: 2026/04/14 14:06:34 by junruh           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -316,7 +316,6 @@ bool	Request::setState(eParse p_state, eReqState r_state, std::string err_mess, 
 	return false;
 }
 
-
 std::vector<field_t* >	 Request::findHeader(const std::string& header_name){
 	fieldMap_t::iterator header = _headers.find(header_name);
 	
@@ -325,16 +324,6 @@ std::vector<field_t* >	 Request::findHeader(const std::string& header_name){
 	
 	return header->second;
 }
-
-// void	 Request::iterateOverFieldT(std::vector<field_t*>& vec ){
-
-// 	size_t size = vec.size();
-
-// 	for (size_t i = 0; i < size; i++){
-// 	const std::string&	 val	 = vec[i]->val;
-// 	const std::vector< std::pair<std::string, std::string> >&	 options = vec[i]->params;
-// 	}
-// }
 
 std::string Request::findQuery(const std::string id)  //function to get specific query value 
 {
