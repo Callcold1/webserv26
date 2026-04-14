@@ -9,7 +9,7 @@
 			"type": "cppdbg",
 			"request": "launch",
 			"program": "${workspaceFolder}/webserv/webserv",
-			"args": ["${workspaceFolder}/webserv/testConfigs/locationMatch.conf"],
+			"args": ["/home/junruh/projects/ring5/webserv/webserv/webserv/testConfigs/default.conf"],
 			"stopAtEntry": true,
 			"cwd": "${fileDirname}",
 			"environment": [],
