@@ -94,7 +94,7 @@ int CgiResponse::execute() //TODO maybe remove one of the pipes
 		char* system_path = getenv("PATH"); // current system PATH so we dont have to hardcode it
 		std::string path_env = "PATH=" + std::string(system_path ? system_path : "/usr/bin:/bin");
 		std::string q = "QUERY_STRING=" + _request._uri.query;
-		std::string len = "CONTENT_LENGTH=" + std::to_string(_request._body.length());
+		std::string len = "CONTENT_LENGTH=" + toString(_request._body.length());
 		std::string type = "CONTENT_TYPE=application/x-www-form-urlencoded"; // or from headers
 		std::string m = "REQUEST_METHOD=" + _request._method;
 		std::string script = "SCRIPT_FILENAME=" + abs_path; // system path to file
