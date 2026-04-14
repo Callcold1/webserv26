@@ -19,6 +19,7 @@
 
 #define PARSE_CHUNK_SIZE false
 #define PARSE_CHUNK_BODY true
+#define MAX_LOCAL_BODY 64000
 
 class Request;
 
@@ -56,6 +57,8 @@ class RequestParser {
 	bool			parseFieldParamValue(token_s& token_val, std::string& value);
 
 	void			parseBody(token_s& it);
+	bool			checkBodySize(void);
+	bool			appendToTempFile(std::string& filename, std::string& data);
 	void			parsePlain(token_s& it);
 	bool			parseChunkData(token_s& it, std::string& data);
 	bool			parseChunkSize(token_s& it);

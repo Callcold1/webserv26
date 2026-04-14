@@ -89,23 +89,3 @@ typedef std::map< str_t, std::vector<str_t> > StrVecStrMap_t;
 
 typedef void (*fStr)(str_t);
 typedef void (*fStr2)(str_t, str_t);
-
-// typedef struct file_s {
-// 	fd_t    	fd;
-// 	__mode_t	perm;
-// 	str_t   	filename;
-// 	void		*data;
-// 	file_s(){}
-// 	file_s(str_t name) : filename(name){}
-// } file_t;
-
-// typedef struct file_s {
-// 	fd_t    	fd;
-// 	__mode_t	perm;
-// 	str_t   	filename;
-// 	void		*data;
-// 	file_s(){}
-// 	file_s(str_t name) : filename(name){}
-// } file_t;
-
-

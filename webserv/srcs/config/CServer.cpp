@@ -18,7 +18,7 @@ CServer::CServer( void ) :
 	_autoindex(false), _max_body(DEFAULT_MAX_BODY),	_max_header_size(DEFAULT_MAX_HEAD),
 	_timeout_ka(DEFAULT_TM_KA),	_timeout_rw(DEFAULT_TM_RW), _autoindex_set(false),
 		_charset_set(false), _error_page_set(false), _index_set(false), _listen_set(false),
-		_max_body_set(false),_max_header_set(false),_method_set(false), _root_set(false),
+		_max_body_set(false),_max_header_set(false),_method_set(false), _mime_set(false), _root_set(false),
 		_server_name_set(false), _timeout_ka_set(false), _timeout_rw_set(false){}
 
 CServer::~CServer( void ){}
@@ -32,6 +32,7 @@ CServer::CServer(const CServer &other){
 	_max_body = other._max_body;
 	_max_header_size = other._max_header_size;
 	_method = other._method;
+	_mime = other._mime;
 	_listen = other._listen;
 	_root_dir = other._root_dir;
 	_server_name = other._server_name;
@@ -46,6 +47,7 @@ CServer::CServer(const CServer &other){
 	_max_body_set = other._max_body_set;
 	_max_header_set = other._max_header_set;
 	_method_set = other._method_set;
+	_mime_set = other._mime_set;
 	_root_set = other._root_set;
 	_server_name_set = other._server_name_set;
 	_timeout_ka_set = other._timeout_ka_set;
@@ -199,6 +201,10 @@ const std::vector<std::string>	CServer::getMethod(void) const{
 	return _method;
 }
 
+std::map<std::string, std::string>	CServer::getMime(void) const{
+	return _mime;
+}
+
 std::vector<std::string>	CServer::getServerName(void) const{
 	return _server_name;
 }
@@ -266,6 +272,11 @@ void	CServer::setMaxHeaderSize(long long max_header_size, bool set_from_config_f
 void	CServer::setMethod(const std::vector<std::string>& method, bool set_from_config_file){
 	_method_set = set_from_config_file;
 	_method = method;
+}
+
+void 	CServer::setMime(const std::map<std::string, std::string>& mime, bool set_from_config_file) {
+	_mime_set = set_from_config_file;
+	_mime = mime;
 }
 
 void	CServer::setRootDir(std::string& root_dir, bool set_from_config_file){

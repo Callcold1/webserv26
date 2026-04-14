@@ -34,12 +34,16 @@ RediResponse::~RediResponse()
 std::string	RediResponse::getMPUploadLocation(){
 	
 	size_t	size = _request._re.paths.upload_paths.size();
-	if (size == 1)
-		return _request._re.paths.upload_paths[0].first.path.substr(_request._re.paths.resource_path.path.length()); // return upload path - cwd
+	if (size == 1){
+		std::string path = _request._re.paths.upload_paths[0].first.path.substr(_request._re.paths.upload_paths[0].first.path.find(_request._re.uri_path));
+		//return _request._re.paths.upload_paths[0].first.path.substr(_request._re.paths.upload_base.length()); // return upload path - cwd
+		//std::string path = pathAppendToRoot(_request._re.paths.upload_paths[0].second, _request._re.uri_path);
+		return path;
+	}
 	else {
 		std::string base = _request._re.paths.upload_base;
 		std::string result_path = base + "/results/" + generate_batch_id(1); //next_folder - int that tracks filename 
-		
+
 		if (mkdir(result_path.c_str(), 0755) == 0){
 			std::string filepath = result_path + "/" + "results.txt";
 			std::ofstream results (filepath.c_str());

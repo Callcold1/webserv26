@@ -33,6 +33,8 @@ Request::Request(void) :
 	_p_state (P_PARSE), 
 	_r_state (P_REQLINE), 
 	_content_length(0),
+	_body_length(0),
+	_body_buffer(0),
 	_unparsed_length(0), 
 	_hasBody(false), 
 	_isCGI(false), 
@@ -168,6 +170,7 @@ void	Request::clear() {
 	_uri = uri_t();
 	_headers.clear();
 	_body.clear();
+	_body_filename.clear();
 	_boundary.clear();
 	_default_mp_content_type.clear();
 
@@ -177,6 +180,8 @@ void	Request::clear() {
 	_p_state = P_PARSE;
 	_r_state = P_REQLINE;
 
+	_body_buffer = 0;
+	_body_length = 0;
 	_content_length = 0;
 	_unparsed_length = _unparsed.end - _unparsed.begin;
 
@@ -185,6 +190,25 @@ void	Request::clear() {
 	_isChunked = false;
 	_isMultiPart = false;
 	_bodyUTF8 = false;
+	_re.accept_type.clear();
+	_re.keep_alive = false;
+	_re.leftover_path.clear();
+	_re.location = NULL;
+	_re.message.clear();
+	_re.paths.error_path.path.clear();
+	_re.paths.error_path.mime_type.clear();
+	_re.paths.error_path.permissions = 0; //allocated memory? need to delete?
+	_re.paths.redirect_url.clear();
+	_re.paths.resource_path.path.clear();
+	_re.paths.resource_path.permissions = 0;
+	_re.paths.upload_base.clear();
+	_re.paths.upload_paths.clear();
+	_re.query_pairs.clear();
+	_re.server = NULL;
+	_re.status = 200;
+	_re.type = RESPOND_NOT_SET;
+	_re.uri_path.clear();
+	
     if (_parser)
         _parser->clear();
 }
@@ -317,7 +341,7 @@ std::vector<field_t* >	 Request::findHeader(const std::string& header_name){
 	fieldMap_t::iterator header = _headers.find(header_name);
 	
 	if (header == _headers.end())
-        return std::vector<field_t*>(); 
+        return std::vector<field_t*>();
 	
 	return header->second;
 }
@@ -406,6 +430,7 @@ void	Request::updateTargetPathInfo(std::string& leftover){
 	cwd[0] = '\0';
 	//getcwd(cwd, sizeof(cwd));
 
+	_re.leftover_path = leftover;
 	std::string fs_root = appendPathToRoot(_matched_location->getRootDir(), cwd); 			// base path : i.e. cwd + location_root
 	appendPathToRoot(&_re.paths.resource_path, leftover, fs_root); 				  			// base path + leftover uri (i.e. target resource)
 	getFilePermissions(_re.paths.resource_path);
@@ -418,49 +443,61 @@ void	Request::updateTargetPathInfo(std::string& leftover){
 	_re.paths.upload_base = appendPathToRoot(_matched_location->getUploadPath(), cwd);		//  upload path is not appended to location root
 }
 
-void	Request::updateErrorPagePath(std::string& target, std::string& root){
+void	Request::updateErrorPagePath(void){
 	
 	char	cwd[2048];
 	//getcwd(cwd, sizeof(cwd));
 	cwd[0] = '\0';
 	
-	std::string	fs_root = appendPathToRoot(root, cwd);
-	std::string	error_page = appendPathToRoot(target, fs_root);
-	getFileInfo(error_page, _re.paths.error_path);
+	std::string target;
+	std::string root;
+	
+	if (_matched_location){
+		target = _matched_location->getErrorPage(_errNum);
+		root = _matched_location->getRootDir();
+	}
+	else if (_matched_server){
+		target = _matched_server->getErrorPage(_errNum);
+		root = _matched_server->getRootDir();
+	}
+	if (target.length() > 0 && root.length() > 0){
+		std::string	fs_root = appendPathToRoot(root, cwd);
+		std::string	error_page = appendPathToRoot(target, fs_root);
+		getFileInfo(error_page, _re.paths.error_path);
+	}
+	else
+		Log::instance().log(Log::ERROR, Log::TYPE_CLASS, "No default error page found", true);
 }
 
 void	Request::updateRe(void){
 
 	_re.status = this->_errNum;
 	_re.message = this->_errMess;
+	_re.query_pairs = this->_uri.queries;
 	
 	if (_p_state == P_ERROR){
 		_re.type = RESPOND_ERROR;
-
-		if (_matched_location){
-			std::string target = _matched_location->getErrorPage(_errNum);
-			std::string root = _matched_location->getRootDir();
-			if (target.length() > 0 && root.length() > 0)
-				updateErrorPagePath(target, root);
-			else
-				Log::instance().log(Log::ERROR, Log::TYPE_CLASS, "No default error page found", true);
-		}
-		else if (_matched_server){
-			std::string target = _matched_server->getErrorPage(_errNum);
-			std::string root = _matched_server->getRootDir();
-			if (target.length() > 0 && root.length() > 0)
-				updateErrorPagePath(target, root);
-			else
-				Log::instance().log(Log::ERROR, Log::TYPE_CLASS, "No default error page found", true);
-		}
-		else
-			Log::instance().log(Log::ERROR, Log::TYPE_CLASS, "No default error page found", true);
+		updateErrorPagePath();
 	}
 	else if (_p_state == P_DONE){
 
 		if (_isMultiPart && _re.paths.upload_paths.size() > 0){
 			_re.type = RESPOND_MP_UP;
 			//update upload pages if file uploaded
+			//i.e. need to include URL of upload path/filename in response
+		}
+		else if (!_isMultiPart && _method == "POST"){
+			for (size_t i = 0; i < _re.query_pairs.size(); i++){
+				if (_re.query_pairs[i].first == "importfile"){
+					if (_matched_location->isUploadPathSet()){
+						std::string tmp_path = appendPathToRoot(_re.leftover_path, _re.paths.upload_base);
+						std::string upload_path = appendPathToRoot(_re.query_pairs[i].second, tmp_path); //possibly need to normalise/decode if URL encoded?
+						fileInfo_s upload_finfo;
+						getFileInfo(upload_path, upload_finfo);
+						_re.paths.upload_paths.push_back(std::pair<fileInfo_s, std::string>(upload_finfo, _body));
+					}
+				}
+			}
 		}
 		else if (_isRedirect){
 			_re.type = RESPOND_REDIR;

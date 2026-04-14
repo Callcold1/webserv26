@@ -39,6 +39,7 @@ struct tempConfig_s {
 	int									max_connections;	/*	GLOBAL/SERVER/LOCATION	*/
 	long long							max_header_size;	/*	GLOBAL/SERVER/LOCATION	*/
 	std::vector<std::string>			method;				/*	GLOBAL/SERVER/LOCATION	*/
+	std::map<std::string, std::string>	mime;				/*	GLOBAL */
 	LocationMatchType_e					modifier;			/*	LOCATION	*/
 	redirect_s							redirect;			/*	LOCATION	*/
 	bool								redirect_status;	/*	LOCATION	*/	
@@ -64,6 +65,7 @@ struct tempConfig_s {
 	bool	max_connections_set;
 	bool	max_header_set;
 	bool	method_set;
+	bool	mime_set;
 	bool	modifier_set;
 	bool	redirect_set;
 	bool	redirect_status_set;
@@ -97,6 +99,7 @@ struct tempConfig_s {
 		  max_connections_set(false),
 		  max_header_set(false),
 		  method_set(false),
+		  mime_set(false),
 		  modifier_set(false),
 		  redirect_set(false),
 		  redirect_status_set(false),
@@ -141,8 +144,9 @@ class CParser : public Parser
 		void			populateHandlers(void);
 		bool			checkKeywords(const std::string& context, const std::string& value);
 		bool			isValidMethod(const std::string& str);
+		bool			isValidMime(const std::string& str);
 		bool			isValidCharset(const std::string& str);
-
+	
 	private:
 
 		std::ifstream	_stream;
@@ -167,6 +171,8 @@ class CParser : public Parser
 		bool			setIndex(node_t* node, std::vector<std::string>& index);
 		bool			setLocation(node_t* node, std::vector<CLocation>& locations);
 		bool			setMethod(node_t* node, std::vector<std::string>& method);
+		bool			setMime(node_t* node, std::map<std::string, std::string>& mime);
+		bool			setMimeBlock(node_t* mime_node, std::map<std::string, std::string>& mime);
 		bool			setModifier(std::string& str, LocationMatchType_e& modifier);
 		bool			setPath(node_t* node, std::string& path);
 		bool			setPorts(node_t* node, std::vector<listen_s>& ports);
@@ -195,6 +201,8 @@ class CParser : public Parser
 		void			handleMaxConnections(node_t* node, tempConfig_s& tmp, HandlerContext_e context);
 		void			handleMaxHeader(node_t* node, tempConfig_s& tmp, HandlerContext_e context);
 		void			handleMethod(node_t* node, tempConfig_s& tmp);
+		//void			handleMime(node_t*, tempConfig_s& tmp, HandlerContext_e context);
+		void			handleMimeBlock(node_t* node, tempConfig_s& tmp, HandlerContext_e context);
 		void			handlePorts(node_t* node, tempConfig_s& tmp, HandlerContext_e context);
 		void			handleRedirectStatus(node_t* node, tempConfig_s& tmp, HandlerContext_e context); 
 		void			handleRedirectURL(node_t* node, tempConfig_s& tmp, HandlerContext_e context);
@@ -210,6 +218,7 @@ class CParser : public Parser
 		std::vector<std::string>	_global_keywords;
 		std::vector<std::string>	_server_keywords;
 		std::vector<std::string>	_location_keywords;
+		std::vector<std::string>	_mime_keywords;
 
 		bool			checkDuplicatePorts(const std::vector<listen_s>& ports);
 		bool			checkAliasRoot(const std::string& alias, const std::string& root); //Check that only one of the two is present

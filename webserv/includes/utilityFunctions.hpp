@@ -220,3 +220,11 @@ std::string	printstream(T& src){
 	return str;
 }
 
+/*
+>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<
+>>>>>>		MIME TYPE/MAGIC NUMBER	<<<<<<
+>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<
+*/
+
+const std::map<std::string, std::string>&	mimeToMagicMap(void);
+std::string									detectMimeFromFilename(const std::string& filename);

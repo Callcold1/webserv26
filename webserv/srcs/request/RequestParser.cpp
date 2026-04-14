@@ -780,14 +780,16 @@ bool	RequestParser::parseFieldLine(token_s& line) {
 		to_lower_ref(field_name);
 
 		std::vector<token_s> values;
-		if (field_name == "user-agent"){
-			std::vector< std::pair <char, char > > delim_pairs;
-			delim_pairs.push_back(std::pair<char,char> ('(', ')'));
-			parseDelimiterPairs(line, values, delim_pairs, ' ');
-		}
+		// if (field_name == "user-agent"){
+			// std::vector< std::pair <char, char > > delim_pairs;
+			// delim_pairs.push_back(std::pair<char,char> ('(', ')'));
+			// parseDelimiterPairs(line, values, delim_pairs, ' ');
+		// }
+		// else
+		if (field_name == "user-agent")
+			splitToToken(line, true, values, "\r\n");
 		else
 			splitToToken(line, true, values, ",");
-
 		for (size_t i = 0; i < values.size(); i++) {
 			token_s& currentToken = values[i];
 			field_t* new_field = new field_t();
@@ -797,8 +799,7 @@ bool	RequestParser::parseFieldLine(token_s& line) {
 				splitFieldLine(currentToken, new_field);
 			field_vector.push_back(new_field);
 		}
-		(*fieldMap)[field_name] = field_vector; // multipart fails on 2nd
-
+		(*fieldMap)[field_name] = field_vector;
 		return true;
 	}
 	else
@@ -864,6 +865,8 @@ void	RequestParser::parseField(token_s& it) {
 /* FUNCTION TO PARSE THE BODY */
 void	RequestParser::parseBody(token_s& it) {
 
+	if (!checkBodySize())// Need to move buffer if parsing is complete and tmpfile
+		return;
 	while (it.begin != it.end){
 		if (_req->_isChunked){
 			parseChunked(it);
@@ -883,9 +886,54 @@ void	RequestParser::parseBody(token_s& it) {
 }
 
 /*
->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
->>>>>>						 PARSING PLAIN BODY	  						   <<<<<<
->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<
+>>>>>>		CHECK BODY SIZE		<<<<<<
+>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<
+*/
+
+bool	RequestParser::checkBodySize(void){ // Need to move buffer if parsing is complete and tmpfile
+
+	if ((long long)_req->_body_length > _req->_matched_location->getMaxBodySize())
+		_req->setState(P_ERROR, P_REQLINE, "Bad Request : Malformed Body : maximum size exceeded", 400);
+	
+	if (_req->_body_buffer > MAX_LOCAL_BODY){
+		
+		int fd = -1;
+
+		if (!_req->_bodyInFile){
+			if (!_req->_isMultiPart && _req->_isChunked){
+				if (!assignTempfile(_req->_body_filename, fd, "Chunked_"))
+					_req->setState(P_ERROR, P_REQLINE, "Server Error : Problem creating tempfile", 500);
+			}
+			else if (!_req->_bodyInFile && !_req->_isMultiPart && !_req->_isChunked){
+				if (!assignTempfile(_req->_body_filename, fd, "Plain_"))
+					_req->setState(P_ERROR, P_REQLINE, "Server Error : Problem creating tempfile", 500);
+			}
+			//_req->_re.paths.upload_paths.push_back(std::pair< fileInfo_s, std::string>(_req->, _req->_body_filename)); Need to check where file destination is (fileInfo_s) - when upload folder, that's ok but what about cgi?
+		}
+		if(!appendToTempFile(_req->_body_filename, _req->_body))
+			_req->setState(P_ERROR, P_REQLINE, "Server Error : Problem creating tempfile", 500);
+		_req->_body_buffer = 0;
+	}
+	return true;
+}
+
+bool	RequestParser::appendToTempFile(std::string& filename, std::string& data){
+
+	std::ofstream ofs(filename.c_str(), std::ios::out | std::ios::binary | std::ios::app);
+
+	if (!ofs)
+		return false;
+
+	ofs.write(data.c_str(), data.size());
+	ofs.close();
+    return true;
+}
+
+/*
+>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<
+>>>>>>		PARSING PLAIN BODY		<<<<<<
+>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<
 */
 void	RequestParser::parsePlain(token_s& it) {
 
@@ -1273,7 +1321,6 @@ void	RequestParser::createContextMap(){
 		_map[PARAM_KEY] = parseContext		(true , DELIM_REQUIRED, "=", "Malformed header : Field Parameter Key", 400, isTokenChar);
 		_map[PARAM_VAL] = parseContext		(false, DELIM_OPTIONAL, ";", "Malformed header : Field Parameter Value", 400, isQuotedParamKeyChar);
 		_map[CHUNKSIZE] = parseContext		(true , DELIM_OPTIONAL, ";", "Malformed Body : Invalid Chunk Size", 400, 0);
-		//_map[BOUNDARY] = parseContext		(true , DELIM_OPTIONAL, "--", "Malformed Body : Invalid Chunk Size", 400, 0);
 	}
 	_contextMap = _map;
 }

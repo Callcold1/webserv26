@@ -113,6 +113,7 @@ std::string Response::get_date()
 size_t Response::get_content_len()
 {
 	if (_body.empty()){
+		//if ()
 		if(_request._re.paths.upload_paths.size() == 0)
 			return 0;
 		else 

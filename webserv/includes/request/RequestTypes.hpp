@@ -36,27 +36,6 @@ enum	mpState			{ MP_NONE, MP_BOUNDARY, MP_HEADERS, MP_BODY, MP_CHUNKED, MP_FINAL
 enum	eParseContext	{ ABSOLUTE_URI, ORIGIN_URI, USER_NAME, USER_PASS, QUERY_KEY, QUERY_VAL, FIELD_NAME, FIELD_VAL, PARAM_KEY, PARAM_VAL, CHUNKSIZE, BOUNDARY };
 enum	eResponseType	{ RESPOND_NOT_SET, RESPOND_CGI, RESPOND_ERROR, RESPOND_FILE, RESPOND_INDEX, RESPOND_MP_UP, RESPOND_REDIR, RESPOND_STATIC, RESPOND_UPLOAD };
 
-struct reqPaths_s {
-	fileInfo_s											 error_path;
-	std::string											 redirect_url;
-    fileInfo_s											 resource_path;
-	std::string											 upload_base;
-    std::vector< std::pair < fileInfo_s, std::string > > upload_paths; //tmpfile path, upload path - can move from tmp to upload path
-};
-
-struct respond_t {
-	eResponseType				type;			// Response Type
-	int							status;			// Response Code
-	std::string					message;		// Response Message
-	const CLocation*			location;		// Matched Location
-	CServer*					server;			// Matched Server
-	reqPaths_s					paths;			// Response Paths
-	std::string					uri_path;		// URI path (parsed from request URI and normalised)
-	bool						keep_alive;		// Connection Preference
-	std::vector<std::string> 	accept_type; 	// Accept types (content-type) in order of preference
-	respond_t():type(RESPOND_NOT_SET), status(0), keep_alive(0){}
-};
-
 /*
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 >>>>>>			 				STRUCTS		 					  		   <<<<<<
@@ -148,7 +127,6 @@ struct mpPart_t {
 
 struct mpMessage_t {
 	std::vector<mpPart_t>	parts;
-	//std::string 			boundary;
 	std::string				default_charset;
 	size_t					filecount;
 	mpMessage_t(): filecount(0){}
@@ -164,81 +142,105 @@ struct mpParser_t {
 
 	mpParser_t(): state(MP_NONE), current_index(0), boundary_match_index(0) {}
 };
+
+struct reqPaths_s {
+	fileInfo_s											 error_path;
+	std::string											 redirect_url;
+    fileInfo_s											 resource_path;
+	std::string											 upload_base;
+    std::vector< std::pair < fileInfo_s, std::string > > upload_paths; //tmpfile path, upload path - can move from tmp to upload path
+};
+
+struct respond_t {
+	eResponseType				type;			// Response Type
+	int							status;			// Response Code
+	std::string					message;		// Response Message
+	const CLocation*			location;		// Matched Location
+	CServer*					server;			// Matched Server
+	reqPaths_s					paths;			// Response Paths
+	std::string					uri_path;		// URI path (parsed from request URI and normalised)
+	std::string					leftover_path;	// URI path leftover after location matching
+	bool						keep_alive;		// Connection Preference
+	std::vector<std::string> 	accept_type; 	// Accept types (content-type) in order of preference (Matched with config mime_types)
+	query_t						query_pairs;	// Query string KV pairs
+	respond_t():type(RESPOND_NOT_SET), status(0), keep_alive(0){}
+};
+
+
 /*
->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
->>>>>>					ITERATORS FUNCTORS								   <<<<<<
->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<
+>>>>>		HEADER VALIDATION		<<<<<<
+>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<
 */
 
-// struct HeaderValueContains {
+enum valueType {
+  VT_AUTHORITY,
+  VT_COOKIE,
+  VT_COOKIE_PAIR,
+  VT_CREDENTIALS,
+  VT_DATE,
+  VT_DIRECTIVE,
+  VT_ETAG,
+  VT_ETAG_OR_DATE,
+  VT_FIELD_NAME,
+  VT_LANGUAGE_TAG,
+  VT_MEDIA_RANGE,
+  VT_MEDIA_TYPE,
+  VT_NUMBER,
+  VT_PRODUCT,
+  VT_PROTOCOL,
+  VT_RANGE,
+  VT_TOKEN,
+  VT_URI
+};
 
-// 	std::string str;
+enum supportedHDR {
+  HDR_ACCEPT,
+  HDR_ACCEPT_CHARSET,
+  HDR_ACCEPT_ENCODING,
+  HDR_ACCEPT_LANGUAGE,
+  HDR_AUTHORIZATION,
+  HDR_CONNECTION,
+  HDR_CACHE_CONTROL,
+  HDR_CONTENT_ENCODING,
+  HDR_CONTENT_LANGUAGE,
+  HDR_CONTENT_LENGTH,
+  HDR_CONTENT_TYPE,
+  HDR_COOKIE,
+  HDR_DATE,
+  HDR_EMPTY,
+  HDR_EXPECT,
+  HDR_HOST,
+  HDR_IF_MATCH,
+  HDR_IF_MODIFIED_SINCE,
+  HDR_IF_NONE_MATCH,
+  HDR_IF_RANGE,
+  HDR_IF_UNMODIFIED_SINCE,
+  HDR_MAX_FORWARDS,
+  HDR_ORIGIN,
+  HDR_PRAGMA,
+  HDR_RANGE,
+  HDR_REFERER,
+  HDR_SET_COOKIE,
+  HDR_TRAILER,
+  HDR_TRANSFER_ENCODING,
+  HDR_TE,
+  HDR_UPGRADE,
+  HDR_UPGRADE_INSECURE,
+  HDR_USER_AGENT
+};
 
-//     HeaderValueContains(const std::string& target) : str(target) {}
+struct	headerContext_s {
+	std::string		name;
+	supportedHDR	hdr_name;
+	bool			is_list;
+	bool			is_repeatable;
+	bool			is_mergeable;
+	valueType		type;
+	bool			has_parameters;
+	bool			supports_q_val;
+	bool			is_commentable;
 
-//     bool operator()(const std::string& key, std::string target) {
-//         return field && field->val.compare(str);
-//     }
-// };
-
-
-// /*
-// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-// >>>>>>					ITERATORS TEMPLATE 								   <<<<<<
-// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-// */
-
-// template <typename Func>
-// bool iterateHeaderKeys(headerMap_t& headers, Func func) {
-// 	for (headerMap_t::iterator it = headers.begin(); it != headers.end(); it++) {
-// 		if (!func)
-// 			return true;
-// 		else if func(it->first)
-// 			return true;
-// 	}
-// 	return false;
-// }
-
-// template <typename Func>
-// bool iterateHeaderFields(headerMap_t& headers, Func func) {
-
-// 	for (headerMap_t::iterator it = headers.begin(); it != headers.end(); it++) {
-// 		std::vector<field_t*>& vec = it->second;
-// 		for (std::vector<field_t*>::iterator vec_it = vec.begin(); vec_it != vec.end(); vec_it++) {
-// 			if (func(it->first, *vec_it)) // func(key, field_t*)
-// 				return true;
-// 		}
-// 	}
-// 	return false;
-// }
-
-// template <typename Func>
-// bool iterateHeaderParams(headerMap_t& headers, Func func) {
-// 	for (headerMap_t::iterator it = headers.begin(); it != headers.end(); it++) {
-// 		std::vector<field_t*>& vec = it->second;
-// 		for (std::vector<field_t*>::iterator vec_it = vec.begin(); vec_it != vec.end(); vec_it++) {
-// 			if (!*vec_it) continue;
-// 			std::map<std::string, std::string>& params = (*vec_it)->params;
-// 			for (std::map<std::string, std::string>::iterator p_it = params.begin(); p_it != params.end(); p_it++) {
-// 				if (func(it->first, (*vec_it), p_it->first, p_it->second)) // (key, field, paramKey, paramVal)
-// 					return true;
-// 			}
-// 		}
-// 	}
-// 	return false;
-// }
-
-// /*	 headerMap_t iterator ( return type void )	*/
-// template <typename Func>
-// void	forEachHeader(headerMap_t& headers, Func func) {
-
-// 	for (headerMap_t::iterator it = headers.begin(); it != headers.end(); it++) {
-
-// 		std::vector<field_t*>& vec = it->second;
-
-// 		for (std::vector<field_t*>::iterator vec_it = vec.begin(); vec_it != vec.end(); vec_it++) {
-// 			func(it->first, *vec_it);
-// 		}
-// 	}
-// }
-
+	headerContext_s(std::string n, supportedHDR hdr_n, bool list, bool repeatable, bool mergeable, valueType val_type, bool has_params, bool qval, bool comments)
+	: name(n), hdr_name(hdr_n), is_list(list), is_repeatable(repeatable), is_mergeable(mergeable), type(val_type), has_parameters(has_params), supports_q_val(qval), is_commentable(comments){}
+};

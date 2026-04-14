@@ -4,6 +4,16 @@ WIP
 
 2) Validate headers
 
+3) Add DELETE (If DELETE allowed for location, use query string kv pair or multipart?
+    Location needs to allow uploads
+    Check upload folder for given filename.
+    If it exists, delete it.
+    Not sure how to handle across multiple servers. Single upload folder?
+    If filename match, delete.
+    
+    Could serve list of resources in upload folder, and allow selection of resource for deletion?
+) 
+
 3) Consolidate common config properties into a base class to remove duplicated code 
 
 4) Remove cwd? : Better to use absolute paths for everything? Or alter config to allow both absolute/relative or allow selection of path type in config
@@ -22,15 +32,19 @@ WIP
 
 10) Make request private where necessary
 
+11) CGI environmental variables (from body/from headers)
+
+12) Use mime map to inform Content-Type in response? e.g. if file ext returned is .png, Content-Type should be image/png?
+
+13) Signals
+
 Problems
 ========			    
 
 Problem : Check for duplicate server names (should only relate to one socket)
-Problem : Removing /// from uri path
-Problem : Fix parsing of header field parameters (look at user_agent)
 Problem : Error pages : need to treat as redirect and search for matching location to find error files
 Problem : Counting length of request parsed
-Problem : Currently appending paths to cwd. Should switch to absolute paths?
+Problem : Currently appending paths to cwd. Should switch to absolute paths? - Update - have switched to absolute paths
 
 Changes Made
 ============

@@ -29,6 +29,11 @@ int	CgiResponse::generate()
 {
 	//_path = _request._uri.path;
 	_path = _request._re.paths.resource_path.path;
+	/* 
+		Do we need an env here?
+		Should it include the query string?
+		If so, use _re.query_pairs
+	*/
 	if (execute() != 0)
 	{
 		return(500);

@@ -69,7 +69,7 @@ class Request {
 	bool				matchServerToHostHeader(void);
 	bool				matchLocationToURIPath(void);
 	void				updateTargetPathInfo(std::string& leftover);
-	void				updateErrorPagePath(std::string& target, std::string& root);
+	void				updateErrorPagePath(void);
 	void				updateRe(void);
 
 	std::vector<field_t* >		findRequestHeaderValue(const std::string& header_name);
@@ -87,6 +87,7 @@ class Request {
 	fieldMap_t 			_headers;
 	fieldMap_t 			_trailers;
 	std::string 		_body;
+	std::string			_body_filename;
 	std::string 		_boundary;
 	std::string 		_default_mp_content_type;
 	mpMessage_t			_mp_m;
@@ -100,12 +101,14 @@ class Request {
 	eParse				_p_state;
 	eReqState			_r_state;
 	
-	uint64_t			_content_length, _body_length, _unparsed_length; //_content_length is used when content length is provided. body_length is used to track length parsed
+	uint64_t			_content_length, _body_length, _body_buffer, _unparsed_length;	//_content_length used when content length is provided. 
+																					    // body_length tracks length parsed
+																					    // body_buffer tracks size of _body string : used to decide if body -> file
+																						// When body_length > max_body_buffer, tmpfile is used.
+																						// When body_length > max_body_size, error is thrown.
+	bool 				_hasBody, _isCGI, _isChunked, _isMultiPart, _bodyUTF8, _isRedirect, _bodyInFile;
 	
-	bool 				_hasBody, _isCGI, _isChunked, _isMultiPart, _bodyUTF8, _isRedirect;
-
 	respond_t			_re;
-
 	private : 
 };
 

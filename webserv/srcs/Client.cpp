@@ -166,51 +166,26 @@ int Client::if_file_upload(Request &request)
 
 void Client::handle_request()
 {
-	int error_catch = 0;
-
-	//std::string path = _request._uri.path; // NOT NEEDED HERE - PATH CAN BE ACCESSED THROUGH _request->_re->paths
-	//std::cout << path << std::endl;
-	
-	respond_t& re = _request._re;
+	int			error_catch = 0;
+	respond_t&	re = _request._re;
 
 	switch(_request._re.type) {
-		// case(RESPOND_AUTOIND):{ _response = new StaticResponse(_request);
-								// Log::instance().log(Log::INFO, Log::TYPE_RESPONSE, "Static Response initiated (AutoIndex)", true);
-								// break;}
-		case(RESPOND_CGI)    :{	_response = new CgiResponse(_request);
-								Log::instance().log(Log::INFO, Log::TYPE_RESPONSE, "CGI Response initiated", true);
-								break;}
-		//case(RESPOND_DELETE) :{ _response = new DeleteResponse(_request);
-								//Log::instance().log(Log::INFO, Log::TYPE_RESPONSE, "Delete Response initiated", true);
-								//break;}
-		case(RESPOND_ERROR)  :{ _response = new ErrorResponse(re.status, _request);
-								Log::instance().log(Log::INFO, Log::TYPE_RESPONSE, "Error Response initiated", true);
-								break;}
-		case(RESPOND_INDEX)  :{ _response = new StaticResponse(_request);
-								Log::instance().log(Log::INFO, Log::TYPE_RESPONSE, "Static Response initiated (Index)", true);
-								break;}
-		case(RESPOND_NOT_SET):{ _response = new ErrorResponse(NOT_FOUND_ERROR, _request);
-								Log::instance().log(Log::INFO, Log::TYPE_RESPONSE, "Error Response initiated", true);
-								break;}
-		case(RESPOND_MP_UP)	 :{ _response = new RediResponse(FILE_UPLOAD_REDIREC, _request, true);
-								Log::instance().log(Log::INFO, Log::TYPE_RESPONSE, "Redirect Response initiated (Multipart upload)", true);
-								break;}
-		case(RESPOND_REDIR)  :{ _response = new RediResponse(_request, re.paths.redirect_url);
-								Log::instance().log(Log::INFO, Log::TYPE_RESPONSE, "Redirect Response initiated (alt URI)", true);
-								break;}
-		case(RESPOND_STATIC) :{ _response = new StaticResponse(_request);
-								Log::instance().log(Log::INFO, Log::TYPE_RESPONSE, "Static Response initiated", true);
-								break;}
-		case(RESPOND_UPLOAD) :{ _response = new RediResponse(FILE_UPLOAD_REDIREC, _request, false);
-								Log::instance().log(Log::INFO, Log::TYPE_RESPONSE, "Redirect Response initiated (File upload: non-multipart)", true);
-								break;}
-		default				 :{ _response = new ErrorResponse(NOT_FOUND_ERROR, _request);
-								Log::instance().log(Log::INFO, Log::TYPE_RESPONSE, "Error Response initiated", true);
-								break;}
+		// case(RESPOND_AUTOIND):{ _response = new StaticResponse(_request); break;}
+		case(RESPOND_CGI)    :{	_response = new CgiResponse(_request); break;}
+		//case(RESPOND_DELETE) :{ _response = new DeleteResponse(_request); break;}
+		case(RESPOND_ERROR)  :{ _response = new ErrorResponse(re.status, _request);	break;}
+		case(RESPOND_INDEX)  :{ _response = new StaticResponse(_request); break;}
+		case(RESPOND_NOT_SET):{ _response = new ErrorResponse(NOT_FOUND_ERROR, _request); break;}
+		case(RESPOND_MP_UP)	 :{ _response = new RediResponse(FILE_UPLOAD_REDIREC, _request, true); break;}
+		case(RESPOND_REDIR)  :{ _response = new RediResponse(_request, re.paths.redirect_url); break;}
+		case(RESPOND_STATIC) :{ _response = new StaticResponse(_request); break;}
+		case(RESPOND_UPLOAD) :{ _response = new RediResponse(FILE_UPLOAD_REDIREC, _request, false);	break;}
+		default				 :{ _response = new ErrorResponse(NOT_FOUND_ERROR, _request); break;}
 	}
 	if (re.type != RESPOND_ERROR)
 		error_catch = _response->generate();
 	if (error_catch > 0){
+		re.status = error_catch;
 		delete _response;
 		_response = new ErrorResponse(re.status, _request);
 	}

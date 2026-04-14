@@ -29,12 +29,28 @@ StaticResponse::~StaticResponse()
 
 int StaticResponse::generate()
 {
-	int re_status;
-
+	int re_status = 0;
+	
 	//_path = _request.get_root_dir() + _request._uri.path;
-	_path = _request._re.paths.resource_path.path; //note that _request._re.paths.resource_path contains info on file (from stat) 
-	if ((re_status = get_file()) != 0)
-		return (re_status);
+	_path = _request._re.paths.resource_path.path;
+	_path_km = _request._re.paths.resource_path; //note that _request._re.paths.resource_path contains info on file (from stat) 
+	if (_path_km.not_found || _path_km.inaccessible)
+		return re_status = 404;
+	if (_path_km.not_found || _path_km.inaccessible)
+		return re_status = 404;
+	else if (_path_km.is_dir){
+		gen_index_page();
+		_is_dir = true;
+	}
+	else if (_path_km.is_file){
+		std::cout << "file found" << std::endl;
+		std::ifstream in(_path.c_str(), std::ios::binary);
+		std::string s((std::istreambuf_iterator<char>(in)), \
+        	std::istreambuf_iterator<char>());
+		_body = s;
+	}
+	// if ((re_status = get_file()) != 0)
+	// 	return (re_status);
 	defaultHeaders();
 	if (!_body.empty())
 		static_headers();

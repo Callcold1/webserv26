@@ -67,42 +67,6 @@ class RequestParser;
 #define	ERR_MP_CONTENT_DISPOSITION_FILENAME_DUP "Malformed Body: Invalid Content-Disposition: Duplicate filename is forbidden"
 #define ERR_MP_CONTENT_TYPE_NOT_SUPPORTED "Malformed Body: Content-Type(s): not supported" //415 Unsupported Media Type
 
-enum HeaderFlag
-{
-	HDR_MANDATORY        = 1 << 1, // TRUE IF HEADER MUST BE PRESENT IN MESSAGE
-	HDR_ONLY_ONCE	 	 = 1 << 2, // TRUE IF HEADER MUST ONLY APPEAR ONCE IN HEADERS
-	HDR_ONLY_ONE_VAL_	 = 1 << 3, // TRUE IF HEADER MUST ONLY CONTAIN A SINGLE VALUE
-	HDR_CASE_SENS_VALUE  = 1 << 4, // TRUE IF HEADER IS CASE SENSITIVE (i.e must)
-	HDR_MUST_BE_UPPER	 = 1 << 5, // TRUE IF HEADER IS CASE SENSITIVE & MUST BE UPPERCASE
-	HDR_MUST_BE_LOWER    = 1 << 6, // TRUE IF HEADER IS CASE SENSITIVE & MUST BE LOWERCASE
-	HDR_VALUE_IS_FORMAT  = 1 << 7, // TRUE IF VALUE MUST BELONG TO A KNOWN GROUP OF VALUES
-	HDR_PARAM_IS_FORMAT  = 1 << 8, // TRUE IF PARAMETERS MUST BELONG TO A KNOWN GROUP OF PARAMETERS
-	HDR_SERVER_CAPABLE   = 1 << 9, // TRUE IF SERVER IS CAPABLE OF HANDLING THIS HEADER
-	HDR_ONE_OR_OTHER	 = 1 << 10 // TRUE IF THE HEADER IF THIS HEADER AND OTHERS ARE MUTUALLY EXCLUSIVE (ONLY ONE OF THE TWO CAN BE PRESENT)
-};
-
-// struct header_context {
-// 	std::string					name;
-// 	std::vector<std::string> 	accepted_values;
-// 	uint64_t					flags;
-
-// 	header_context(std::string n, std::vector<std::string> av, uint64_t flags):
-// 	name(n), accepted_values(), flags(){}
-// };
-
-#define TRANSFER_ENCODING 1111000000 //ORDER IS FROM RIGHT TO LEFT (LEFTMOST VALUE IS BOTTOM OF LIST)
-// HDR_MANDATORY       	0
-// HDR_ONE_INST_ONLY 	0
-// HDR_ONE_VAL_ONLY		0
-// HDR_VALUE_CASE_SENS 	0
-// HDR_MUST_BE_UPPER	0
-// HDR_MUST_BE_LOWER   	0
-// HDR_VALUE_CHECK     	1
-// HDR_OPTION_CHECK    	1
-// HDR_SERVER_CAPABLE  	1
-// HDR_ONE_OR_OTHER		1
-// HDR_
-
 class RequestValidator {
 
 	public:
@@ -114,8 +78,6 @@ class RequestValidator {
 	private:
 
 		Request*						_req;
-		//std::map<std::string, 		int>	hdr_seen;
-		//const HeaderFlags*					_hdr_flags;
 
 		void							validateReqLine();
 
@@ -153,18 +115,10 @@ class RequestValidator {
 		bool							duplicateOptionCheck(const std::vector< std::pair<std::string, std::string> >& options);
 		bool							duplicateValueCheck(const std::vector<field_t*>& values);
 
-		bool							validateAllHeaders(const fieldMap_t& headers);
-		//bool							validate_header(const std::string& name, const std::vector<HeaderField_t*>& fields, const HeaderFlags* meta);
-		void							headerDefinitions();
-
-	//	const HeaderFlags*				findHeaderFlags(const std::string& name);
-		int								compute_received_flags(const std::string& name, std::vector<field_t*> values);
-
 		bool							validateMethodHeaders(void);
 
 		void							validateBody(void);
 
-		
 		bool							validateMPheaders(void);
 		bool							validateMPContentDisposition(mpPart_t& part, const std::vector<field_t*>& header);
 		bool							validateMPContentType(mpPart_t& part, const std::vector<field_t*>& header);
@@ -183,6 +137,25 @@ class RequestValidator {
 		const std::vector<field_t*>*	getHeader(const fieldMap_t& headers, const str_t& name);
 		const std::vector<field_t*>*	getHeader(const fieldMap_t* headers, const str_t& name);
 
-	};
+		bool							validateAllHeaders(const fieldMap_t& headers);
+		bool							validateHeader(const std::vector<field_t*>& values, const headerContext_s& context);
+		headerContext_s					getHeaderContext(const std::string& header_name);
 
-bool	temporaryIsValidContentType(const std::string& name);
+										// Header ABNF definition validation
+		bool							isValidCodings(std::string& value);				// Accept-Encoding (gzip, zip etc)
+		bool							isValidContentCodingType(std::string& value);	// Accept-Encoding (called by isValidCodings) && Content-Encoding (gzip, zip etc)
+		bool							isValidMediaRange(std::string& value);
+		bool							isValidMediaType(std::string& value, bool is_range);
+		bool							isValidMediaTypeVal(std::string& value);
+		bool							isValidMediaSubTypeVal(std::string& value);
+		bool							isValidCharset(std::string& value);
+		bool							isValidToken(std::string& value);
+
+										/* CHECK IF SUPPORTED ON MATCHED SERVER / LOCATION */
+		bool							isSupportedCharset(const std::string& value);
+
+		bool							validateFileFormat(std::string& path);
+
+};
+
+bool	isValidContentType(const std::string& name);

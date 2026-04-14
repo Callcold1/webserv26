@@ -46,4 +46,5 @@ public:
 protected:
 	HeaderMap_t _headers;
 	std::string _body;
+	fileInfo_s _path_km;
 };

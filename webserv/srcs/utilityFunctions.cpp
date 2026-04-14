@@ -11,7 +11,7 @@
 /* ************************************************************************** */
 
 #include "utilityFunctions.hpp"
-
+#include <fstream>
 /*
 >>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<
 >>>>>>		STRING CASE CONVERSION		<<<<<<
@@ -443,7 +443,7 @@ std::string	createTimestamp(void){
 	time_t	t = time(NULL);
 	tm		tm_now;
 	char	timestamp[32];
-	
+
 	localtime_r(&t, &tm_now);
 
 	strftime(timestamp, sizeof(timestamp), "%Y%m%d_%H%M%S", &tm_now);
@@ -944,4 +944,51 @@ std::string	generate_batch_id(int counter) {
 	std::stringstream ss;
 	ss << createTimestamp() << "_" << getpid() << "_" << counter;
 	return ss.str();
+}
+
+/*
+>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<
+>>>>>>		MIME TYPE/MAGIC NUMBER	<<<<<<
+>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<
+*/
+
+const std::map<std::string, std::string>& mimeToMagicMap(void) {
+
+    static std::map<std::string, std::string> mime_to_magic;
+
+    if (mime_to_magic.empty()){
+        mime_to_magic.insert(std::make_pair("image/png", std::string("\x89PNG\r\n\x1A\n", 8)));
+        mime_to_magic.insert(std::make_pair("image/jpeg", std::string("\xFF\xD8\xFF", 3)));
+        mime_to_magic.insert(std::make_pair("image/gif", std::string("GIF87a", 6)));
+        mime_to_magic.insert(std::make_pair("image/gif", std::string("GIF89a", 6)));
+        mime_to_magic.insert(std::make_pair("image/x-icon",std::string("\x00\x00\x01\x00", 4)));
+        mime_to_magic.insert(std::make_pair("application/pdf", std::string("%PDF", 4)));
+		// Can add more as required
+    }
+	return mime_to_magic;
+}
+
+std::string	detectMimeFromFilename(const std::string& filename) {
+
+	std::ifstream file(filename.c_str(), std::ios::in | std::ios::binary);
+
+	if (!file)
+        return "application/octet-stream";
+
+    char buffer[16] = {0};
+    file.read(buffer, sizeof(buffer));
+    std::streamsize bytes = file.gcount();
+
+    std::map<std::string, std::string> mime_magic_map = mimeToMagicMap();
+	std::map<std::string, std::string>::const_iterator it = mime_magic_map.begin();
+
+    for (; it != mime_magic_map.end(); it++) {
+
+        const std::string& mime = it->first;
+        const std::string& magic  = it->second;
+
+        if (bytes >= (std::streamsize)magic.size() && std::string(buffer, magic.size()) == magic)
+            return mime;
+    }
+    return "application/octet-stream";
 }
