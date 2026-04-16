@@ -403,6 +403,8 @@ bool	RequestValidator::validateContentType(){ // CHECK SERVER SUPPORTS TYPE
 	const std::vector< std::pair<std::string, std::string> >&	options 		= header->second[0]->params;
 	//int 														options_size 	= options.size();
 
+	if (!_req->_matched_server)
+		return _req->setState(P_ERROR, V_HEADERS, "Trying to validate content type but no matching server", 404);
 	std::map<std::string, std::vector<std::string> > server_content_types = _req->_matched_server->getMime();
 	if (!isValidContentType(val))
 		return _req->setState(P_ERROR, V_HEADERS, "Content-Type not supported", 415);

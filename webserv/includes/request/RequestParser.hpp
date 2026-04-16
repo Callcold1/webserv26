@@ -19,7 +19,7 @@
 
 #define PARSE_CHUNK_SIZE false
 #define PARSE_CHUNK_BODY true
-#define MAX_LOCAL_BODY 64000
+#define MAX_LOCAL_BODY 16000
 
 class Request;
 

@@ -450,6 +450,7 @@ void	Request::updateRe(void){
 	_re.status = this->_errNum;
 	_re.message = this->_errMess;
 	_re.query_pairs = this->_uri.queries;
+	_re.body_in_file = this->_bodyInFile;
 	
 	if (_p_state == P_ERROR){
 		_re.type = RESPOND_ERROR;
@@ -464,13 +465,13 @@ void	Request::updateRe(void){
 		}
 		else if (!_isMultiPart && _method == "POST"){
 			for (size_t i = 0; i < _re.query_pairs.size(); i++){
-				if (_re.query_pairs[i].first == "importfile"){
+				if (_re.query_pairs[i].first == "importfile" || _bodyInFile ){ 			// ADD || _isCGI?, or what if no filename?, or what if no importfile?  
 					if (_matched_location->isUploadPathSet()){
 						std::string tmp_path = appendPathToRoot(_re.leftover_path, _re.paths.upload_base);
 						std::string upload_path = appendPathToRoot(_re.query_pairs[i].second, tmp_path); //possibly need to normalise/decode if URL encoded?
 						fileInfo_s upload_finfo;
 						getFileInfo(upload_path, upload_finfo);
-						_re.paths.upload_paths.push_back(std::pair<fileInfo_s, std::string>(upload_finfo, _body));
+						_re.paths.upload_paths.push_back(std::pair<fileInfo_s, std::string>(upload_finfo, _body_filename));
 					}
 				}
 			}

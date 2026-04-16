@@ -218,7 +218,7 @@ void Client::handle_request()
 			_response = new ErrorResponse(error_catch, _request);
 	}
 
-	else if (path.find(CGI_PATH) != std::string::npos)
+	else if (path.find(CGI_PATH) != std::string::npos)//_request.isCGI
 	{
 		std::cout << "cgi found" << std::endl;
 		struct stat st;

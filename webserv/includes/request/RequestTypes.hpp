@@ -164,7 +164,8 @@ struct respond_t {
 	std::vector<std::string> 	accept_type; 	// Accept types (content-type) in order of preference (Matched with config mime_types)
 	query_t						query_pairs;	// Query string KV pairs
 	std::string					cgi_type;		// If CGI, then the file ending ".type" appears here
-	respond_t():type(RESPOND_NOT_SET), status(0), keep_alive(0){}
+	bool						body_in_file;	// Set to true if body is saved in a file (will appear in _re.paths.upload_paths)
+	respond_t():type(RESPOND_NOT_SET), status(0), keep_alive(0), body_in_file(0){}
 
 	void reset(void){
 		type = RESPOND_NOT_SET;
@@ -186,5 +187,6 @@ struct respond_t {
 		keep_alive = false;
 		accept_type.clear();
 		query_pairs.clear();
+		body_in_file = 0;
 	}
 };

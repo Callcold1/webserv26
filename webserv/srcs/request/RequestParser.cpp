@@ -909,8 +909,8 @@ bool	RequestParser::checkBodySize(void){ // Need to move buffer if parsing is co
 				if (!assignTempfile(_req->_body_filename, fd, "Plain_"))
 					_req->setState(P_ERROR, P_REQLINE, "Server Error : Problem creating tempfile", 500);
 			}
-			//_req->_re.paths.upload_paths.push_back(std::pair< fileInfo_s, std::string>(_req->, _req->_body_filename)); Need to check where file destination is (fileInfo_s) - when upload folder, that's ok but what about cgi?
-		}
+			//_req->_re.paths.upload_paths.push_back(std::pair< fileInfo_s, std::string>(_req->, _req->_body_filename)); //Need to check where file destination is (fileInfo_s) - when upload folder, that's ok but what about cgi?
+		}	// Is this handled in updateRe?
 		if(!appendToTempFile(_req->_body_filename, _req->_body))
 			_req->setState(P_ERROR, P_REQLINE, "Server Error : Problem creating tempfile", 500);
 		_req->_body_buffer = 0;
@@ -1251,7 +1251,8 @@ void	RequestParser::appendToTempfileMP(mpPart_t& part, size_t begin, size_t size
 }
 
 void	RequestParser::appendToBodyMP(mpPart_t& part, size_t begin, size_t size) {
-	part.body.insert(part.body.end(), _req->_buffer[begin], _req->_buffer[begin + size]);
+	part.body.insert(part.body.end(), _req->_buffer.begin() + begin, _req->_buffer.begin() + begin + size);
+	//part.body.insert(part.body.end(), _req->_buffer[begin], _req->_buffer[begin + size]);
 }
 
 mpPart_t& RequestParser::currentPart() {

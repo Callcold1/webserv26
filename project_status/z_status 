@@ -1,3 +1,8 @@
+CheckBodySize (Request Parser)
+UpdateRe (Request)
+
+Look at file saving and updating paths.
+Also what to do when body is saved in memory
 WIP
 ===
 1) Look at error page - should we treat as full path or redirect to error page (e.g. location /50x.html{} for error_page 501 502 /50x.html)
@@ -321,4 +326,27 @@ location /images/icons
 
 and why sorting locations by URI length is absolutely critical for correct routing.
 
+multipart
+=========
+Each part MUST contain a Content-Disposition header field
+The Content-Disposition header field MUST also contain an additional parameter of "name"
+	(possibly encoded)
+The file name isn't mandatory for cases where the file name isn't available or is meaningless or
+private (e.g. file drag and dropped)
 
+Filenames can be percent-encoded
+Each form-data field (or part) contains a 'name' parameter
+
+Content-Type
+============
+Each part MAY have an (optional) "Content-Type" header field, which
+defaults to "text/plain".  If the contents of a file are to be sent,
+the file data SHOULD be labeled with an appropriate media type, if
+known, or "application/octet-stream".
+
+Character Set
+=============
+If there is a Content-Disposition field with name: "__charset__", then the body of that part
+should contain the default charset for the form-data
+
+Form parts with identical field names MUST NOT be coalesced
