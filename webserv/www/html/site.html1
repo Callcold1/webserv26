@@ -21,7 +21,7 @@
 
   <!-- Meme Generator -->
   <h2>Meme Generator</h2>
-  <img src="../cgi-bin/assets/officememe.png" 
+  <img src="../assets/officememe.png" 
        alt="Could not find the office meme template" 
        style="width:400px;height:500px;">
 

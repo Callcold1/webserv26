@@ -163,6 +163,7 @@ struct respond_t {
 	bool						keep_alive;		// Connection Preference
 	std::vector<std::string> 	accept_type; 	// Accept types (content-type) in order of preference (Matched with config mime_types)
 	query_t						query_pairs;	// Query string KV pairs
+	std::string					cgi_type;		// If CGI, then the file ending ".type" appears here
 	respond_t():type(RESPOND_NOT_SET), status(0), keep_alive(0){}
 
 	void reset(void){
@@ -186,83 +187,4 @@ struct respond_t {
 		accept_type.clear();
 		query_pairs.clear();
 	}
-};
-
-
-/*
->>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<
->>>>>		HEADER VALIDATION		<<<<<<
->>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<
-*/
-
-enum valueType {
-  VT_AUTHORITY,
-  VT_COOKIE,
-  VT_COOKIE_PAIR,
-  VT_CREDENTIALS,
-  VT_DATE,
-  VT_DIRECTIVE,
-  VT_ETAG,
-  VT_ETAG_OR_DATE,
-  VT_FIELD_NAME,
-  VT_LANGUAGE_TAG,
-  VT_MEDIA_RANGE,
-  VT_MEDIA_TYPE,
-  VT_NUMBER,
-  VT_PRODUCT,
-  VT_PROTOCOL,
-  VT_RANGE,
-  VT_TOKEN,
-  VT_URI
-};
-
-enum supportedHDR {
-  HDR_ACCEPT,
-  HDR_ACCEPT_CHARSET,
-  HDR_ACCEPT_ENCODING,
-  HDR_ACCEPT_LANGUAGE,
-  HDR_AUTHORIZATION,
-  HDR_CONNECTION,
-  HDR_CACHE_CONTROL,
-  HDR_CONTENT_ENCODING,
-  HDR_CONTENT_LANGUAGE,
-  HDR_CONTENT_LENGTH,
-  HDR_CONTENT_TYPE,
-  HDR_COOKIE,
-  HDR_DATE,
-  HDR_EMPTY,
-  HDR_EXPECT,
-  HDR_HOST,
-  HDR_IF_MATCH,
-  HDR_IF_MODIFIED_SINCE,
-  HDR_IF_NONE_MATCH,
-  HDR_IF_RANGE,
-  HDR_IF_UNMODIFIED_SINCE,
-  HDR_MAX_FORWARDS,
-  HDR_ORIGIN,
-  HDR_PRAGMA,
-  HDR_RANGE,
-  HDR_REFERER,
-  HDR_SET_COOKIE,
-  HDR_TRAILER,
-  HDR_TRANSFER_ENCODING,
-  HDR_TE,
-  HDR_UPGRADE,
-  HDR_UPGRADE_INSECURE,
-  HDR_USER_AGENT
-};
-
-struct	headerContext_s {
-	std::string		name;
-	supportedHDR	hdr_name;
-	bool			is_list;
-	bool			is_repeatable;
-	bool			is_mergeable;
-	valueType		type;
-	bool			has_parameters;
-	bool			supports_q_val;
-	bool			is_commentable;
-
-	headerContext_s(std::string n, supportedHDR hdr_n, bool list, bool repeatable, bool mergeable, valueType val_type, bool has_params, bool qval, bool comments)
-	: name(n), hdr_name(hdr_n), is_list(list), is_repeatable(repeatable), is_mergeable(mergeable), type(val_type), has_parameters(has_params), supports_q_val(qval), is_commentable(comments){}
 };

@@ -201,7 +201,7 @@ std::vector<std::string>	CServer::getMethod(void) const{
 	return _method;
 }
 
-std::map<std::string, std::vector<std::string> >	CServer::getMime(void) const{
+std::map<std::string, std::vector<std::string> >	CServer::getMime(void) const {
 	return _mime;
 }
 

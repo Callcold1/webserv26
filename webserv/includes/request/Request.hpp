@@ -35,7 +35,8 @@ class Request {
 
 	eParse				parseRequest(const char* rawData, size_t length);
 	void	    		clear();
-
+	void				deleteHeaders(void);
+	
 						/* GETTERS */
 	const std::string&	getErrMsg(void) const;
 	const std::string&	getMethod()const;

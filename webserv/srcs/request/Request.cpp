@@ -134,21 +134,14 @@ Request& Request::operator=(const Request &other){
 */
 
 Request::~Request( void ){
-	if (_parser){
-		for (fieldMap_t::iterator it = _headers.begin(); it != _headers.end(); it++){
-			size_t size = it->second.size();
-			
-			for (size_t i = 0; i < size; i++){
-				delete it->second[i];
-			}
-		}
-		if (_parser)
-			delete _parser;
-		_parser = NULL;
-		if (_validator)
-			delete _validator;
-		_validator = NULL;
-	}
+	
+	deleteHeaders();
+	if (_parser)
+		delete _parser;
+	_parser = NULL;
+	if (_validator)
+		delete _validator;
+	_validator = NULL;
 }
 
 void	Request::clear() {
@@ -168,7 +161,7 @@ void	Request::clear() {
 	_req_line.clear();
 	_host_header.clear();
 	_uri = uri_t();
-	_headers.clear();
+	deleteHeaders();
 	_body.clear();
 	_body_filename.clear();
 	_boundary.clear();
@@ -190,11 +183,25 @@ void	Request::clear() {
 	_isChunked = false;
 	_isMultiPart = false;
 	_bodyUTF8 = false;
-	
+	deleteHeaders();	
 	_re.reset();
 
     if (_parser)
         _parser->clear();
+}
+
+void	Request::deleteHeaders(void){
+
+	for (fieldMap_t::iterator it = _headers.begin(); it != _headers.end(); it++){
+		
+		size_t size = it->second.size();
+		
+		for (size_t i = 0; i < size; i++){
+			delete it->second[i];
+			it->second[i] = NULL;
+		}
+	}
+	_headers.clear();
 }
 
 /*
@@ -393,6 +400,7 @@ bool	Request::matchLocationToURIPath(void){
 		return false;
 	if (_matched_location->isCGIMapSet())
 		_isCGI = true;
+	
 	_re.location = _matched_location;
 	updateTargetPathInfo(leftover);
 	return true;

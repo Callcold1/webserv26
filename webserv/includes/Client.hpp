@@ -13,8 +13,6 @@
 #include "RequestParser.hpp"
 #include "Response.hpp"
 
-// Could keep this simple (READ, WRITE, ERROR)
-// Alternatively, get very granular?
 enum cState {
 	CONNECTED,
 	READ,

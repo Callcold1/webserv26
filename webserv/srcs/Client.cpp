@@ -3,7 +3,7 @@
 #include "Client.hpp"
 #include "CgiResponse.hpp"
 #include "ErrorResponse.hpp"
-#include "StaticResponse.hpp"
+#include "SuccessResponse.hpp"
 #include "RediResponse.hpp"
 
 /*
@@ -68,7 +68,8 @@ Client&	Client::operator=(const Client& other){
 >>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<
 */
 
-Client::~Client(){}
+Client::~Client(){
+}
 
 void	Client::clear_out_buff(){
 	_out_buff = "";
@@ -127,6 +128,8 @@ bool	Client::handleClientRead(const char *buffer, size_t len){
 		throw std::runtime_error("handleClientRead() : " + err);
 	}
 
+	std::cout << "lala" << std::endl;
+
 	switch(p_state){
 		case P_PARSE	: 	{ _state = READ; generateLogMessage(); return false; }
 		case P_AWAIT	: 	{ _state = READ; generateLogMessage(); return false;}
@@ -166,7 +169,19 @@ int Client::if_file_upload(Request &request)
 
 void Client::handle_request()
 {
-	int			error_catch = 0;
+	int error_catch = 0;
+
+	std::cout << "handle_request: _uri.path : " << _request._uri.path << std::endl;
+	std::string path = _request._re.paths.resource_path.path; //_request.get_root_dir() + _request._uri.path;
+
+	std::cout << "path hr: " << path << std::endl;
+	std::cout << _matched_location->getRedirect().url << std::endl;
+
+	if (!_matched_location)
+	{
+		_response = new ErrorResponse(NOT_FOUND_ERROR, _request);
+	}
+	/* int			error_catch = 0;
 	respond_t&	re = _request._re;
 
 	switch(_request._re.type) {
@@ -188,55 +203,63 @@ void Client::handle_request()
 		re.status = error_catch;
 		delete _response;
 		_response = new ErrorResponse(re.status, _request);
-	}
+	} */
 	
-	//else if (!_matched_location->getRedirect().url.empty())
-	//{
-	//	std::cout << "redirect found" << std::endl;
-	//	_response = new RediResponse(_request, _matched_location->getRedirect().url); //TODO is this url validated??
-	//	_response->generate();
-	//}
+	else if (!_matched_location->getRedirect().url.empty())
+	{
+		std::cout << "redirect found" << std::endl;
+		_response = new RediResponse(_request, _matched_location->getRedirect().url); //TODO is this url validated??
+		_response->generate();
+	}
 
-	// else if ((error_catch = if_file_upload(_request)) != 1)
-	// {
-	// 	//std::cout << "file upload found" << std::endl;
-	// 	if (error_catch >= 400)
-	// 		_response = new ErrorResponse(error_catch, _request);
-	// }
+	else if ((error_catch = if_file_upload(_request)) != 1)
+	{
+		std::cout << "file upload found" << std::endl;
+		if (error_catch >= 400)
+			_response = new ErrorResponse(error_catch, _request);
+	}
 
-	// else if (path.find(CGI_PATH) != std::string::npos && path.find((CGI_PATH + std::string("assets"))) == std::string::npos)
-	// {
-	// 	//std::cout << "cgi found" << std::endl;
-	// 	struct stat st;
-	// 	if (stat(path.c_str(), &st) == 0 && S_ISREG(st.st_mode))
-	// 	{
-	// 		_response =  new CgiResponse(_request);
-	// 		error_catch = _response->generate();
-	// 		if (error_catch != 0)
-	// 		{
-	// 			delete _response;
-	// 			_response = new ErrorResponse(error_catch, _request);
-	// 		}
-	// 	}
-	// 	else
-	// 	{
-	// 		_response = new ErrorResponse(NOT_FOUND_ERROR, _request); //again, could be 403 for directories etc but this is for security
-	// 	}
-	// }
-	// else if (path.find(HTML_PATH) != std::string::npos || path.find(PHOTO_PATH) != std::string::npos)
-	// {
-	// 	//std::cout << "static page found" << std::endl;
-	// 	_response = new StaticResponse(_request);
-	// 	if ((error_catch = _response->generate()) != 0)
-	// 	{
-	// 		delete _response;
-	// 		_response = new ErrorResponse(error_catch, _request);
-	// 	}
-	// }
+	else if (path.find(CGI_PATH) != std::string::npos)
+	{
+		std::cout << "cgi found" << std::endl;
+		struct stat st;
+		if (stat(path.c_str(), &st) == 0 && S_ISREG(st.st_mode))
+		{
+			if (path.find("www/cgi-bin/python/") != std::string::npos)
+				_response =  new CgiResponse(_request, true);
+			else if (path.find("www/cgi-bin/php/") != std::string::npos)
+				_response =  new CgiResponse(_request, false);
+			error_catch = _response->generate();
+			if (error_catch != 0)
+			{
+				delete _response;
+				_response = new ErrorResponse(error_catch, _request);
+			}
+		}
+		else
+		{
+			_response = new ErrorResponse(NOT_FOUND_ERROR, _request); //again, could be 403 for directories etc but this is for security
+		}
+	}
+	else if (path.find(HTML_PATH) != std::string::npos || path.find(PHOTO_PATH) != std::string::npos || path.find("assets/") != std::string::npos)
+	{
+		std::cout << "static page found" << std::endl;
+		_response = new SuccessResponse(_request);
+		if ((error_catch = _response->generate()) != 0)
+		{
+			delete _response;
+			_response = new ErrorResponse(error_catch, _request);
+		}
+	}
+	else
+	{
+		std::cout << "nothing found" << std::endl;
+		_response =  new ErrorResponse(NOT_FOUND_ERROR, _request); //defaults to 404 not found
+	}
 	
 	append_write(_response->serialize());
 	delete _response;
-	if (re.keep_alive == true && _request._p_state == P_DONE){
+	if (_request._re.keep_alive == true && _request._p_state == P_DONE){
 		_request.clear();
 	}
 }

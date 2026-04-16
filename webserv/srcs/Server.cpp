@@ -2,6 +2,8 @@
 #include "Config.hpp"
 #include "Log.hpp"
 
+Server* Server::_instance = 0;
+
 /*
 >>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<
 >>>>>>		CONSTRUCTORS		<<<<<<
@@ -10,10 +12,19 @@
 
 Server::Server(Config &config) : _config(&config), _running(false), _max_conn(config.getMaxConnections()), _port_count(config.getServerPortCount()){
 
+	_instance = this;
+
+    if (pipe(_pipe_fd) == -1)
+        throw std::runtime_error("Signal: pipe() failed");
+
+    fcntl(_pipe_fd[0], F_SETFL, O_NONBLOCK);
+    fcntl(_pipe_fd[1], F_SETFL, O_NONBLOCK);
+
 	Log::instance().log(Log::INFO, Log::TYPE_CLASS, "Server starting....", true);
 	setupListeningSockets(config);
 
 	addListeningSocketsToPoll();
+	addSignalPipeToPoll();
 	Log::instance().log(Log::INFO, Log::TYPE_CLASS, "Server successfully started", true);
 }
 
@@ -21,14 +32,44 @@ Server::Server(Config &config) : _config(&config), _running(false), _max_conn(co
 
 Server::~Server(void){
 
-	_sockets.clear();
-	_clients.clear();
-	_listen_sockets.clear();
+	close(_pipe_fd[0]);
+	close(_pipe_fd[1]);
 
-	for(int i = 0; i < _port_count + _max_conn; i++){
+	for (size_t i = 0; i < _sockets.size(); i++){
 		if (_sockets[i].fd != -1)
 			close(_sockets[i].fd);
 	}
+	_sockets.clear();
+	_clients.clear();
+	_listen_sockets.clear();
+}
+
+/*
+>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<
+>>>>>>		SIGNAL HANDLING		<<<<<<
+>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<
+*/
+
+void	Server::setupSignals(void) {
+	std::signal(SIGINT, signalHandler);
+	std::signal(SIGTERM, signalHandler);
+}
+
+void	Server::signalHandler(int) {
+	if (_instance){
+		write(_instance->_pipe_fd[1], "x", 1);
+	}
+}
+
+void	Server::addSignalPipeToPoll(void){
+	
+	pollfd pfd;
+
+	pfd.fd = _pipe_fd[0];
+	pfd.events = POLLIN;
+	pfd.revents = 0;
+
+	_sockets.push_back(pfd);
 }
 
 /*
@@ -174,17 +215,16 @@ void	Server::loop(){
 
 	Log::instance().log(Log::INFO, Log::TYPE_CLASS, "Server listening....", false);
 
-	_running = true;
-
-	while (_running) {
+	while (true) {
 		
-		int activity = poll(&_sockets[0], _port_count + _clients.size(), -1);
+		int activity = poll(&_sockets[0], _sockets.size(), -1);
 		
 		if (activity < 0){
-			Log::instance().log(Log::INFO, Log::TYPE_CLASS, "poll() failed", true);
+			Log::instance().log(Log::INFO, Log::TYPE_CLASS, "Signal received : exiting server", true);
 			continue;
 		}
-		handleEvents();
+		if (!handleEvents())
+			break;
 	}
 }
 
@@ -194,22 +234,28 @@ void	Server::loop(){
 >>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<
 */
 
-void	Server::handleEvents(void){
+bool	Server::handleEvents(void){
+	
+	size_t size = _sockets.size();
 
-	for (int i = 0; i < (int)_sockets.size(); ) {
+	for (size_t i = 0; i < size; i++) {
 
 		if (_sockets[i].revents == 0)
-		{
-			i++;
 			continue;
-		}
 
-		if (i < _port_count)
-			handleAccept(i);
+		int fd = _sockets[i].fd;
 
+		if (fd == _pipe_fd[0]) {
+    	    char buf[64];
+    	    read(fd, buf, sizeof(buf));
+    	    return false;
+    	}
+		
+		if (i < (size_t)_port_count){
+			if (_sockets[i].revents & POLLIN)
+				handleAccept(i);
+		} 
 		else {
-
-			int fd = _sockets[i].fd;
 
 			if (_sockets[i].revents & POLLOUT)
 				handleClientWrite(fd);
@@ -218,14 +264,11 @@ void	Server::handleEvents(void){
 				handleClientRead(fd);
 
 			if (_sockets[i].revents & (POLLERR | POLLHUP | POLLNVAL))
-			{
 				disconnectClient(fd, "handleEvents: POLLERR | POLLHUP | POLLNVAL");
-				continue;
-			}
 		}
 		_sockets[i].revents = 0;
-		i++;
 	}
+	return true;
 }
 
 /*
