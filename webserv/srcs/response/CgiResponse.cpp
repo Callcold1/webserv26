@@ -31,11 +31,7 @@ int	CgiResponse::generate()
 	std::cout << "entered cgi repone: " << _path << std::endl;
 	int i = 0; //debug
 	if ((i = execute()) != 0)
-	std::cout << "entered cgi repone: " << _path << std::endl;
-	int i = 0; //debug
-	if ((i = execute()) != 0)
 	{
-		std::cout << i << std::endl;
 		std::cout << i << std::endl;
 		return(500);
 	}
@@ -44,7 +40,7 @@ int	CgiResponse::generate()
 	return(0);
 }
 
-int CgiResponse::execute() //TODO maybe remove one of the pipes 
+int CgiResponse::execute() //TODO maybe remove one of the pipes
 {
 	int toCgi[2];
 	int toServer[2];
@@ -61,8 +57,8 @@ int CgiResponse::execute() //TODO maybe remove one of the pipes
 	// std::string abs_path = get_absolute_path(_path);
 	// if (abs_path.empty())
 	// {
-	// 	std::cout << " no target path" << std::endl;
-	// 	return (500);
+	//		std::cout << " no target path" << std::endl;
+	//		return (500);
 	// }
 	// std::cout << "target path" << abs_path << std::endl;
 
@@ -79,8 +75,8 @@ int CgiResponse::execute() //TODO maybe remove one of the pipes
 	{
 		close(toServer[0]); close(toCgi[1]);
 
-		dup2(toCgi[0], STDIN_FILENO);    //POST request data 
-		dup2(toServer[1], STDOUT_FILENO); //PNG bytes 
+		dup2(toCgi[0], STDIN_FILENO);    //POST request data
+		dup2(toServer[1], STDOUT_FILENO); //PNG bytes
 		dup2(toServer[1], STDERR_FILENO);
 
 		close(toCgi[0]); close(toServer[1]);
@@ -90,9 +86,9 @@ int CgiResponse::execute() //TODO maybe remove one of the pipes
 			interpreter = "php-cgi";
 
 		char *args[] = {
-			const_cast<char*>("env"), 
-			const_cast<char*>(interpreter.c_str()),              
-			const_cast<char*>(_path.c_str()), 
+			const_cast<char*>("env"),
+			const_cast<char*>(interpreter.c_str()),
+			const_cast<char*>(_path.c_str()),
 			NULL
 		};
 
@@ -126,7 +122,7 @@ int CgiResponse::execute() //TODO maybe remove one of the pipes
 		if (!_is_py)
 			interpreter_path = "/usr/bin/php-cgi";
 			//interpreter_path = "/usr/local/bin/php-cgi";
-		//execve(interpreter_path.c_str(), args, const_cast<char * const *>(envp)); 
+		//execve(interpreter_path.c_str(), args, const_cast<char * const *>(envp));
 		execve("/usr/bin/env", args, envp);
 		_exit(1);
 	}
@@ -141,18 +137,17 @@ int CgiResponse::execute() //TODO maybe remove one of the pipes
 		close(toCgi[0]);
 
 		if ((!_request._body.empty())) {
-            if (write(toCgi[1], _request._body.c_str(), _request._body.length()) < 0)
+			if (write(toCgi[1], _request._body.c_str(), _request._body.length()) < 0)
 			{
 				close(toCgi[1]); close(toServer[0]);
 				waitpid(pid, NULL, 0);
 				return(3);
 			}
-        }
+		}
 		close(toCgi[1]);
-		
+
 		while ((bytes_read = read(toServer[0], buf, 2048)) > 0)
 		{
-			res.append(buf, bytes_read);
 			res.append(buf, bytes_read);
 			total_bytes += bytes_read;
 		}
@@ -174,11 +169,11 @@ int CgiResponse::execute() //TODO maybe remove one of the pipes
 			if ((pos = res.rfind("\r\n\r\n")) != std::string::npos)
 			{
 				_body = res.substr(pos + 4);
-			} 
+			}
 			else if ((pos = res.rfind("\n\n")) != std::string::npos)
 			{
 				_body = res.substr(pos + 2);
-			} 
+			}
 			else
 			{
 				_body = res;
@@ -186,46 +181,18 @@ int CgiResponse::execute() //TODO maybe remove one of the pipes
 		}
 		else
 			_body = res;
-		
-		int fd = open("outfile.html", O_CREAT| O_WRONLY | O_TRUNC, 0644);
-		write(fd, res.c_str(), total_bytes);
-			return(5);
-		}
-		if (!_is_py)
-		{
-			size_t pos;
-			if ((pos = res.rfind("\r\n\r\n")) != std::string::npos)
-			{
-				_body = res.substr(pos + 4);
-			} 
-			else if ((pos = res.rfind("\n\n")) != std::string::npos)
-			{
-				_body = res.substr(pos + 2);
-			} 
-			else
-			{
-				_body = res;
-			}
-		}
-		else
-			_body = res;
-		
+
 		int fd = open("outfile.html", O_CREAT| O_WRONLY | O_TRUNC, 0644);
 		write(fd, res.c_str(), total_bytes);
 		close(fd);
 		close(toServer[0]);
 		waitpid(pid, NULL, 0);
 		return (0);
-		return (0);
 	}
 }
 
 void CgiResponse::cgi_headers()
 {
-	if (_is_py)
-		_headers["Content-Type"] = "image/png";
-	if (!_is_py)
-		_headers["Content-Type"] = "text/html";
 	if (_is_py)
 		_headers["Content-Type"] = "image/png";
 	if (!_is_py)
