@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   utilityFunctions.hpp                               :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
+/*   By: junruh <junruh@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/11 16:04:15 by kmooney           #+#    #+#             */
-/*   Updated: 2026/04/14 10:52:34 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/04/14 13:52:26 by junruh           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -128,6 +128,7 @@ bool								assignTempfile(std::string& target_path, int& target_fd, const std::
 std::string							appendPathToRoot(std::string path, std::string root_dir);
 void								appendPathToRoot(fileInfo_s* target, std::string path, std::string root_dir);
 std::string							normalisePath(const std::string& path);
+std::string							get_absolute_path(const std::string server_path);
 
 /*  DUPLICATE CHECK */
 template<class T>

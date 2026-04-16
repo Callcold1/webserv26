@@ -31,7 +31,11 @@ int	CgiResponse::generate()
 	std::cout << "entered cgi repone: " << _path << std::endl;
 	int i = 0; //debug
 	if ((i = execute()) != 0)
+	std::cout << "entered cgi repone: " << _path << std::endl;
+	int i = 0; //debug
+	if ((i = execute()) != 0)
 	{
+		std::cout << i << std::endl;
 		std::cout << i << std::endl;
 		return(500);
 	}
@@ -117,8 +121,8 @@ int CgiResponse::execute() //TODO maybe remove one of the pipes
 			const_cast<char*>(protocol.c_str()),
 			NULL
 		};
-		std::string interpreter_path = "~/Desktop/projects/webserv26/webserv/venv/lib64/python3.12/site-packages";
-		//std::string interpreter_path = "~/.local/lib/python3.13/site-packages";
+		//std::string interpreter_path = "/usr/bin/python3";
+		std::string interpreter_path = "~/.local/lib/python3.13/site-packages";
 		if (!_is_py)
 			interpreter_path = "/usr/bin/php-cgi";
 			//interpreter_path = "/usr/local/bin/php-cgi";
@@ -148,6 +152,7 @@ int CgiResponse::execute() //TODO maybe remove one of the pipes
 		
 		while ((bytes_read = read(toServer[0], buf, 2048)) > 0)
 		{
+			res.append(buf, bytes_read);
 			res.append(buf, bytes_read);
 			total_bytes += bytes_read;
 		}
@@ -184,15 +189,43 @@ int CgiResponse::execute() //TODO maybe remove one of the pipes
 		
 		int fd = open("outfile.html", O_CREAT| O_WRONLY | O_TRUNC, 0644);
 		write(fd, res.c_str(), total_bytes);
+			return(5);
+		}
+		if (!_is_py)
+		{
+			size_t pos;
+			if ((pos = res.rfind("\r\n\r\n")) != std::string::npos)
+			{
+				_body = res.substr(pos + 4);
+			} 
+			else if ((pos = res.rfind("\n\n")) != std::string::npos)
+			{
+				_body = res.substr(pos + 2);
+			} 
+			else
+			{
+				_body = res;
+			}
+		}
+		else
+			_body = res;
+		
+		int fd = open("outfile.html", O_CREAT| O_WRONLY | O_TRUNC, 0644);
+		write(fd, res.c_str(), total_bytes);
 		close(fd);
 		close(toServer[0]);
 		waitpid(pid, NULL, 0);
+		return (0);
 		return (0);
 	}
 }
 
 void CgiResponse::cgi_headers()
 {
+	if (_is_py)
+		_headers["Content-Type"] = "image/png";
+	if (!_is_py)
+		_headers["Content-Type"] = "text/html";
 	if (_is_py)
 		_headers["Content-Type"] = "image/png";
 	if (!_is_py)

@@ -397,7 +397,7 @@ void	Server::disconnectClient(int fd, const std::string& reason){
 
 void Server::removeClientFromPoll(int fd) {
 
-	close(fd);
+	//close(fd);
 
 	for (size_t i = 0; i < _sockets.size(); i++){
 		if (_sockets[i].fd == fd){

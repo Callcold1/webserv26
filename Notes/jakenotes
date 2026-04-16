@@ -2,3 +2,11 @@
 - segfault!!
 - parse error for query string cgi
 - redirect test
+
+
+todo: 
+redirec test //probably parsing issue
+security for cgi //doesnt retrieve the file, just standard image, which is fine
+change response codes for 403 (ask about validation though)
+
+besprechen: segfault happening in generate log message

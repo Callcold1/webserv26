@@ -170,8 +170,7 @@ int Client::if_file_upload(Request &request)
 void Client::handle_request()
 {
 	int error_catch = 0;
-
-	std::cout << "handle_request: _uri.path : " << _request._uri.path << std::endl;
+	std::cout << _request._uri.path << std::endl;
 	std::string path = _request._re.paths.resource_path.path; //_request.get_root_dir() + _request._uri.path;
 
 	std::cout << "path hr: " << path << std::endl;
