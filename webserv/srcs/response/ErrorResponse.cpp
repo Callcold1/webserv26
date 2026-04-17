@@ -31,10 +31,28 @@ ErrorResponse::~ErrorResponse()
 
 int ErrorResponse::generate()
 {
-	gen_error_page();
+	_request.updateErrorPagePath(_status);
+	std::cout << _request._re.paths.error_path.is_file << std::endl;
+	std::cout << _request._re.paths.error_path.inaccessible << std::endl;
+	std::cout << _request._re.paths.error_path.path << std::endl;
+	if (_request._re.paths.error_path.is_file && !_request._re.paths.error_path.inaccessible)
+	{
+		std::cout << "error page found" << std::endl;
+		get_file(_request._re.paths.error_path.path);
+	}
+	else 
+		gen_error_page();
 	defaultHeaders();
 	error_headers();
 	return (0);
+}
+
+void ErrorResponse::get_file(std::string path)
+{
+	std::ifstream in(path.c_str(), std::ios::binary);
+	std::string s((std::istreambuf_iterator<char>(in)), \
+    	std::istreambuf_iterator<char>());
+	_body = s;
 }
 
 void ErrorResponse::gen_error_page()

@@ -13,6 +13,7 @@ public:
 	~ErrorResponse();
 
 	int		generate();
+	void	get_file(std::string path);
 	void	gen_error_page();
 
 	//headers:

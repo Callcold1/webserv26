@@ -122,6 +122,7 @@ int RediResponse::save_file(std::string filename, std::string file_body)
 	}
 
 	std::string file_path = "../photos/" + filename;
+	//std::string file_path = _request._re.paths.upload_paths[0];
 	base = "../photos/" + base;
 	int i = 2;
 
@@ -133,6 +134,7 @@ int RediResponse::save_file(std::string filename, std::string file_body)
 	int fd = open(file_path.c_str(), O_CREAT | O_WRONLY | O_EXCL, 0644);
 	if (fd < 0)
 		return (500);
+	std::cout << "aaaaaaaaaaaaaaa " << file_body.c_str() << std::endl;
 	if (write(fd, file_body.c_str(), file_body.length()) < 1)
 	{
 		close(fd);
@@ -161,7 +163,12 @@ int RediResponse::save_mp_file(std::vector<mpPart_t>& mp_vec)
 	{
 		if ((*it).isFile)
 		{
-			body = std::string((*it).body.begin(), (*it).body.end());
+			std::cout << "save dir : " <<  it->upload_dest.path.c_str() << std::endl;
+			if (!rename(it->tempFilePath.c_str(), it->upload_dest.path.c_str()))
+				std::cout << "Not renamed" << std::endl;
+			else
+				std::cout << "Renamed" << std::endl;
+			//body = std::string((*it).body.begin(), (*it).body.end());
 			return (save_file((*it).filename, body));
 		}
 	}
