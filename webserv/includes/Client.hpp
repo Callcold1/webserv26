@@ -54,6 +54,7 @@ class Client {
 
 								/* HANDLERS */
 			bool				handleClientRead(const char *buffer, size_t len);
+			bool				handleZeroRead(void);
 			int 				if_file_upload(Request &request);
 			void				handle_request();
 

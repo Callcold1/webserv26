@@ -260,7 +260,7 @@ bool	Server::handleEvents(void){
 			if (_sockets[i].revents & POLLOUT)
 				handleClientWrite(fd);
 				
-			if (_sockets[i].revents & POLLIN)
+			if (_sockets[i].revents & (POLLIN | POLLHUP)) // POLLHUP ADDED TO ENSURE FINAL READ IF POLLHUP
 				handleClientRead(fd);
 
 			if (_sockets[i].revents & (POLLERR | POLLHUP | POLLNVAL))
@@ -340,8 +340,10 @@ void	Server::handleClientRead(int fd){
 
 	if (bytes < 0)
 		disconnectClient(fd, "Invalid read");
-	else if (bytes == 0)
+	else if (bytes == 0){
+		client.handleZeroRead();
 		disconnectClient(fd, "Read size of zero");
+	}
 	else if (client.handleClientRead(buffer, bytes)){
 		_sockets[getSocketsPosition(fd)].events |= POLLOUT;
 	}

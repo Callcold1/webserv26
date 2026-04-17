@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   RequestParser.cpp                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: junruh <junruh@student.42.fr>              +#+  +:+       +#+        */
+/*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/23 01:37:52 by kmooney           #+#    #+#             */
-/*   Updated: 2026/03/24 13:59:25 by junruh           ###   ########.fr       */
+/*   Updated: 2026/04/17 13:32:01 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,7 +51,7 @@ void	RequestParser::clear() {
  *
  * This function feeds raw HTTP data into the parser, initializes internal iterators,
  * and triggers the parsing process. It processes as much of the request as possible
- * given the available data. Any remaining unparsed data length is recorded in `_req->_unparsed_len`.
+ * given the available data. Any remaining bytes_unread data length is recorded in `_req->_unparsed_len`.
  *
  * @param data A pointer to the raw HTTP request data buffer.
  * @param length The size of the data buffer in bytes.
@@ -381,7 +381,7 @@ void	RequestParser::parseRequest(){
 	_req->_unparsed.begin = _p_it.begin;
 	_req->_unparsed.end = _p_it.end;
 	if (_p_it.end >= _p_it.begin)
-		_req->_unparsed_length = _p_it.end - _p_it.begin;
+		_req->_sizes.bytes_unread = _p_it.end - _p_it.begin;
 	else
 		_req->setState(P_ERROR, "Error Parsing : Index invalidated", 500);
 	return ;
@@ -862,6 +862,26 @@ void	RequestParser::parseField(token_s& it) {
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 */
 
+/* 
+	The body is either parsed to a string, or to a file.
+	
+	It is initially parsed into a local string. Once the string reaches the size MAX_LOCAL_BODY,
+	a tempfile is created. The buffer is transferred to the tempfile, and the buffer is cleared.
+	The process is repeated until the full body is parsed.
+
+	Multipart	: 
+	Chunked		:
+	Other		:
+	
+	Params					Local Variable				Local Var Size					Tempfile							Overall Body Size
+	======					==============				==============					========							=================
+
+	Chunked transfers 	:	
+	MP transfers		: 	_req->_mp_m.parts[0].body									_req->_mp_m.parts[0].tempFilePath	_req->_mp_m.parts[0].body
+	Any other			: 	_req->_body					_req->_sizes.body_local_size		
+
+*/
+
 /* FUNCTION TO PARSE THE BODY */
 void	RequestParser::parseBody(token_s& it) {
 
@@ -888,15 +908,15 @@ void	RequestParser::parseBody(token_s& it) {
 /*
 >>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<
 >>>>>>		CHECK BODY SIZE		<<<<<<
->>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<
+>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<		
 */
 
 bool	RequestParser::checkBodySize(void){ // Need to move buffer if parsing is complete and tmpfile
 
-	if ((long long)_req->_body_length > _req->_matched_location->getMaxBodySize())
+	if ((long long)_req->_sizes.body_bytes_read > _req->_matched_location->getMaxBodySize())
 		_req->setState(P_ERROR, P_REQLINE, "Bad Request : Malformed Body : maximum size exceeded", 400);
 	
-	if (_req->_body_buffer > MAX_LOCAL_BODY){
+	if (_req->_sizes.body_local_size > MAX_LOCAL_BODY){
 		
 		int fd = -1;
 
@@ -913,7 +933,7 @@ bool	RequestParser::checkBodySize(void){ // Need to move buffer if parsing is co
 		}	// Is this handled in updateRe?
 		if(!appendToTempFile(_req->_body_filename, _req->_body))
 			_req->setState(P_ERROR, P_REQLINE, "Server Error : Problem creating tempfile", 500);
-		_req->_body_buffer = 0;
+		_req->_sizes.body_local_size = 0;
 	}
 	return true;
 }
@@ -937,7 +957,7 @@ bool	RequestParser::appendToTempFile(std::string& filename, std::string& data){
 */
 void	RequestParser::parsePlain(token_s& it) {
 
-	size_t remaining = _req->_content_length - _req->_body_length; //need to replace with _req->body_length (i.e. value not function);
+	size_t remaining = _req->_content_length - _req->_sizes.body_bytes_read;
 	if (it.end < it.begin)
 		_req->setState(P_ERROR, "Parsing Error : invalid index", 500);
 	size_t available = it.end - it.begin;
@@ -1034,13 +1054,15 @@ void	RequestParser::parseChunked( token_s& it ){
 		}
 		if (_chunk_parser_status == PARSE_CHUNK_BODY){
 			if (_chunk_size == 0){
+				_req->_body_complete;
 				finalChunkChecks(it);
 				return;
 			}
 			if (!parseChunkData(it, data))
 					return;
 			_req->_body +=data;
-			_req->_content_length +=_chunk_size;
+			//_req->_content_length +=_chunk_size;
+			_req->_sizes.body_size +=_chunk_size; // newly added (to replace _content_length)
 			_chunk_size = 0;
 		}
 	}

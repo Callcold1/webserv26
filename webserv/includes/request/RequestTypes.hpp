@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 16:24:23 by kmooney           #+#    #+#             */
-/*   Updated: 2026/04/14 10:25:32 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/04/17 13:28:51 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,7 +24,7 @@
 #define IS_CHUNKED true
 #define NOT_CHUNKED false
 
-class	CLocation; 
+class	CLocation;
 class	CServer;
 
 enum	eParse 			{ P_PARSE, P_AWAIT, P_DONE, P_ERROR };
@@ -54,25 +54,25 @@ struct token_s {
 
 };
 
-/* 
-
-	Used as part of fieldMap_t (below) 
+/*
+	Used as part of fieldMap_t (below)
 
 	fieldMap_t	< string (header_name), vector< field_t *> >
 	field_t 	< string (header_value), vector< pair<string (key), string (value)> > parameters
 
-	Each header is parsed into the headers object which is a fieldMap_t and accessed using 
-	the header_name. 
+	Each header is parsed into the headers object which is a fieldMap_t and accessed using
+	the header_name.
 
 	The name is mapped to a vector of field_t objects.
 
 	When a new instance of a header name is encountered, or if there are multiple
-	values in the parsed line, the value and any parameters are parsed 
+	values in the parsed line, the value and any parameters are parsed
 	into a field_t struct and pushed to the back of the vector mapped to the given header name.
 */
 typedef struct {
 	std::string val;
 	std::vector<std::pair<std::string, std::string> >params;
+	
 } field_t;
 
 typedef std::map<std::string, std::vector<field_t* > > fieldMap_t;
@@ -88,11 +88,20 @@ typedef struct uri_s {
 	uri_s()
 		: uri_type(ORIGIN_FORM), len(0), port_int(80), auth(""), frag(""), host(""),
 			pass(""), path(""), port(""), query(""), scheme(""), str(""), user(""){}
+
+	void reset(void) {
+		// uri_type;	Need a default state : URI_TYPE_NOT_SET?
+		len = 0; port_int = 80;
+		auth.clear(); frag.clear();	host.clear(); 
+		pass.clear(); path.clear(); port.clear();
+		query.clear(); scheme.clear(); str.clear();
+		target.clear();	user.clear(); queries.clear();
+	}
 } uri_t;
 
 typedef bool (*charValFUnc)(unsigned char);
 
-typedef struct parseContext{
+typedef struct parseContext {
 	bool					last_val;
 	bool					delim_req;
 	std::string				delim;
@@ -121,7 +130,7 @@ struct mpPart_t {
 	bool												isFile;					// set to true if filename is present
 	std::string											tempFilePath;			// created if filename is present and body is appended here each read cycle
 	fileInfo_s											upload_dest;			// populated when validating content-disposition header
-	int													fd; 					// might not be required as fstream is used to append data 
+	int													fd; 					// might not be required as fstream is used to append data
 	mpPart_t(): headers(new fieldMap_t), isFile(0), fd(-1){}
 };
 
@@ -141,6 +150,38 @@ struct mpParser_t {
 	size_t				boundary_match_index;
 
 	mpParser_t(): state(MP_NONE), current_index(0), boundary_match_index(0) {}
+};
+
+struct	parsedSizes_s{
+	size_t	bytes_received;			// Number of bytes read from server (should equal buffer size)
+	size_t	bytes_read;				// Number of bytes read from buffer (i.e. total raw message size that has been processed) - every char counted
+	size_t	bytes_unread;			// Number of unread bytes in buffer
+	size_t	body_bytes_read;		// Total length of body parsed 			- every char counted
+	size_t	body_bytes_expected;	// Content-Length value
+	size_t	body_size;				// Size of body							- size of body after parsing (doesn't include removed chars e.g. \r\n) - updated for all types (chunked, mp, other) and body saved to file
+	size_t	body_local_size;		// Size of body	string 					- used to determine if file required due to size
+	size_t	chunked_bytes;			// Size of chunked body					- only characters that appear in body // Maybe not needed (body size could cover this)
+
+	parsedSizes_s():
+		bytes_received(0),
+		bytes_read(0),
+		bytes_unread(0),
+		body_bytes_read(0),
+		body_bytes_expected(0),
+		body_size(0),
+		body_local_size(0),
+		chunked_bytes(0){}
+
+	void reset(size_t remainder) {
+		bytes_received = 0;
+		bytes_unread = remainder;
+		bytes_read = 0;
+		body_bytes_read = 0;
+		body_bytes_expected = 0;
+		body_size = 0;
+		body_local_size = 0;
+		chunked_bytes = 0;
+	}
 };
 
 struct reqPaths_s {

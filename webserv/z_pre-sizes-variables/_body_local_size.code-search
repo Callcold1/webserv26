@@ -1,0 +1,34 @@
+# Query: _body_local_size
+# ContextLines: 1
+
+_body_local_size
+=================
+
+6 results - 3 files
+
+webserv/includes/request/Request.hpp:
+  101  	parsedSizes_s		_sizes;
+  102: 	uint64_t			_content_length, _body_length, _body_local_size, _unparsed_length;	//_content_length used when content length is provided. 
+  103  																					    	// body_buffer tracks size of _body string : used to decide if body -> file
+
+webserv/srcs/request/Request.cpp:
+   36  	_body_length(0),
+   37: 	_body_local_size(0),
+   38  	_unparsed_length(0),
+
+  176  
+  177: 	_body_local_size = 0;
+  178  	_body_length = 0;
+
+webserv/srcs/request/RequestParser.cpp:
+  880  	MP transfers		: 	_req->_mp_m.parts[0].body								_req->_mp_m.parts[0].tempFilePath	_req->_mp_m.parts[0].body
+  881: 	Any other			: 	_req->_body					_req->_body_local_size		
+  882  
+
+  918  	
+  919: 	if (_req->_body_local_size > MAX_LOCAL_BODY){
+  920  		
+
+  935  			_req->setState(P_ERROR, P_REQLINE, "Server Error : Problem creating tempfile", 500);
+  936: 		_req->_body_local_size = 0;
+  937  	}

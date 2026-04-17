@@ -98,14 +98,16 @@ class Request {
 	eParse				_p_state;
 	eReqState			_r_state;
 	
-	uint64_t			_content_length, _body_length, _body_buffer, _unparsed_length;	//_content_length used when content length is provided. 
-																					    // body_length tracks length parsed
-																					    // body_buffer tracks size of _body string : used to decide if body -> file
-																						// When body_length > max_body_buffer, tmpfile is used.
-																						// When body_length > max_body_size, error is thrown.
-	bool 				_hasBody, _isCGI, _isChunked, _isMultiPart, _bodyUTF8, _isRedirect, _bodyInFile;
+	parsedSizes_s		_sizes;
+	
+	uint64_t			_content_length, _body_length, _body_local_size, _unparsed_length;	//_content_length used when content length is provided. 
+																					    	// body_buffer tracks size of _body string : used to decide if body -> file
+																							// When body_length > max_body_buffer, tmpfile is used.
+																							// When body_length > max_body_size, error is thrown.
+	bool 				_hasBody, _isCGI, _isChunked, _isMultiPart, _bodyUTF8, _isRedirect, _bodyInFile, _body_complete;
 	
 	respond_t			_re;
+	
 	private : 
 };
 

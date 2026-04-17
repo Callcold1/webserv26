@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/30 11:26:19 by kmooney           #+#    #+#             */
-/*   Updated: 2026/04/14 08:58:33 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/04/17 14:01:13 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -523,7 +523,7 @@ bool	RequestValidator::validateMPContentDisposition(mpPart_t& part, const std::v
 
 	if (part.name.length() == 0)
 		return _req->setState(P_ERROR, P_BODY, ERR_MP_CONTENT_DISPOSITION_NO_NAME, 400); // CODE CHECK REQUIRED
-	else if (part.name == "file" || part.name == "File"){
+	else if ((part.name.find("file") != std::string::npos) || (part.name.find("File") != std::string::npos)){
 		if (part.filename.length() == 0)
 			return _req->setState(P_ERROR, P_BODY, ERR_MP_CONTENT_DISPOSITION_FILENAME_MISSING, 415); // CODE CHECK REQUIRED
 		else {
@@ -844,7 +844,15 @@ const std::vector<field_t*>*	RequestValidator::getHeader(const fieldMap_t* heade
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 */
 
-void	RequestValidator::validateBody(){
+void	RequestValidator::validateBody() {
+	if (!_req->_isChunked && _req->_sizes.body_bytes_expected < _req->_sizes.body_bytes_read) { 
+		_req->setState(P_ERROR, V_BODY, "Incomplete Body after connection closed", 400);
+		return;
+	}
+	if (_req->_isChunked && !_req->_body_complete) {
+		_req->setState(P_ERROR, V_BODY, "Incomplete Body after connection closed (Chunked)", 400);
+		return;
+	}
 	if (_req->_r_state != P_TRAILERS)
 		_req->setRstate(REQ_DONE);
 }
@@ -856,8 +864,10 @@ void	RequestValidator::validateBody(){
 */
 
 void	RequestValidator::validateTrailers(){
-		_req->setRstate(REQ_DONE);
-		_req->setState(P_DONE, "Parsing Complete", 200);
+	
+	// TO_DO : Need to repeat header validation (but for trailers)
+	_req->setRstate(REQ_DONE);
+	_req->setState(P_DONE, "Parsing Complete", 200);
 }
 
 

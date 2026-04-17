@@ -1,0 +1,113 @@
+# Query: _content_length
+# ContextLines: 1
+
+_content_length
+================
+
+32 results - 6 files
+
+webserv/pre-merge-diff:
+  2948   	
+  2949: -	uint64_t			_content_length, _body_length, _body_buffer, _unparsed_length;	//_content_length used when content length is provided. 
+  2950  -																					    // body_length tracks length parsed
+
+  2955  -	
+  2956: +	uint64_t			_content_length, _body_length, _unparsed_length; //_content_length is used when content length is provided. body_length is used to track length parsed
+  2957  +
+
+  4987  -	_r_state (P_REQLINE), 
+  4988: -	_content_length(0),
+  4989  -	_body_length(0),
+
+  5010  -	_r_state (P_REQLINE), 
+  5011: -	_content_length(0),
+  5012  -	_unparsed_length(0), 
+
+  5038  -	_r_state(other._r_state), 
+  5039: -	_content_length(other._content_length), 
+  5040  -	_body_length(other._body_length), 
+
+  5050  +		 _matched_server(NULL), _method(""), _uri_str(""), _version(""),
+  5051: +		_errNum(200), _errMess(""), _p_state (P_PARSE), _r_state (P_REQLINE), _content_length(0),
+  5052  +		_unparsed_length(0), _hasBody(false), _isChunked(false), _isMultiPart(false), _bodyUTF8(false){}
+
+  5055  +		_matched_server(NULL),  _method(""), _uri_str(""), _version(""),
+  5056: +		_errNum(200), _errMess(""), _p_state (P_PARSE), _r_state (P_REQLINE), _content_length(0),
+  5057  +		_unparsed_length(0), _hasBody(false), _isChunked(false), _isMultiPart(false), _bodyUTF8(false){}
+
+  5063  +	_errNum(other._errNum), _errMess(other._errMess), _p_state(other._p_state), _r_state(other._r_state), 
+  5064: +	_content_length(other._content_length), _body_length(other._body_length), _unparsed_length(other._unparsed_length),
+  5065  +	_hasBody(other._hasBody), _isChunked(other._isChunked), _isMultiPart(other._isMultiPart), _bodyUTF8(other._bodyUTF8){}
+
+  5151  -	_body_length = 0;
+  5152:  	_content_length = 0;
+  5153  -	_unparsed_length = _unparsed.end - _unparsed.begin;
+
+  5698   
+  5699:  	size_t remaining = _req->_content_length - _req->_body_length; //need to replace with _req->body_length (i.e. value not function);
+  5700  -	if (it.end < it.begin)
+
+  6882  +		
+  6883:  	if (_req->_content_length == 0)
+  6884   		_req->setBodyType(NO_BODY, NOT_CHUNKED);
+
+webserv/includes/request/core_def.hpp:
+  44  #define MAX_URI_LENGTH 4096
+  45: #define MAX_CONTENT_LENGTH 30000000
+  46  #define CONNECTION_TIMEOUT 30 // Timeout time in seconds if client sends no data
+
+webserv/includes/request/Request.hpp:
+  101  	parsedSizes_s		_sizes;
+  102: 	uint64_t			_content_length, _body_length, _body_local_size, _unparsed_length;	//_content_length used when content length is provided. 
+  103  																					    	// body_buffer tracks size of _body string : used to decide if body -> file
+
+webserv/srcs/request/Request.cpp:
+   34  	_r_state (P_REQLINE), 
+   35: 	_content_length(0),
+   36  	_body_length(0),
+
+   57  	_r_state (P_REQLINE), 
+   58: 	_content_length(0),
+   59  	_unparsed_length(0), 
+
+   85  	_r_state(other._r_state), 
+   86: 	_content_length(other._content_length), 
+   87  	_body_length(other._body_length), 
+
+  115  		_r_state = other._r_state;
+  116: 		_content_length = other._content_length;
+  117  		_body_length = other._body_length;
+
+  178  	_body_length = 0;
+  179: 	_content_length = 0;
+  180  	_unparsed_length = _unparsed.end - _unparsed.begin;
+
+webserv/srcs/request/RequestParser.cpp:
+   959  
+   960: 	size_t remaining = _req->_content_length - _req->_body_length; //need to replace with _req->body_length (i.e. value not function);
+   961  	if (it.end < it.begin)
+
+   970  	}
+   971: 	if (_req->_body_length < _req->_content_length) {
+   972  		_req->setPstate(P_AWAIT); // RELYING ON SERVER TO TIME OUT IF FULL BODY IS NOT RECEIVED
+
+   974  	}
+   975: 	if (_req->_body_length != _req->_content_length)
+   976  		_req->setState(P_ERROR, P_REQLINE, "Bad Request : Malformed Body : body size does not match value in content-length header", 400);
+
+  1062  			_req->_body +=data;
+  1063: 			_req->_content_length +=_chunk_size;
+  1064  			_chunk_size = 0;
+
+webserv/srcs/request/RequestValidator.cpp:
+  687  		return _req->setState(P_ERROR, "Malformed Request : Headers : content-length or transfer-encoding required for request type", 400);
+  688: 	_req->_content_length = 0;
+  689  	_req->setBodyType(NO_BODY, NOT_CHUNKED);
+
+  703  
+  704: 	if (_req->_content_length == 0)
+  705  		_req->setBodyType(NO_BODY, NOT_CHUNKED);
+
+  715  
+  716: 	_req->_content_length = strtoull(val.c_str(), &endptr, 10);
+  717  	if (*endptr != '\0')

@@ -144,6 +144,22 @@ bool	Client::handleClientRead(const char *buffer, size_t len){
 	return false;
 }
 
+// return true if parsing is complete
+// return false if parsing incomplete (i.e. error)
+bool	Client::handleZeroRead(){
+		
+	enum eReqState state = _request.getReqStatus();
+
+	if (_request._body_complete)
+		return true;
+	switch (state){
+		case (P_REQLINE) :{}
+	}
+	if (_request.getReqStatus())
+	return ;
+}
+
+
 int Client::if_file_upload(Request &request)
 {
 	if (request._method == "POST")

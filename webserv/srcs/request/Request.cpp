@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/30 11:28:22 by kmooney           #+#    #+#             */
-/*   Updated: 2026/04/14 14:52:19 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/04/17 16:31:49 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,17 +31,18 @@ Request::Request(void) :
 	_errNum(200), 
 	_errMess(""), 
 	_p_state (P_PARSE), 
-	_r_state (P_REQLINE), 
-	_content_length(0),
-	_body_length(0),
-	_body_buffer(0),
-	_unparsed_length(0), 
+	_r_state (P_REQLINE),
+	// _content_length(0),
+	// _body_length(0),
+	// _body_local_size(0),
+	// _unparsed_length(0),
 	_hasBody(false), 
 	_isCGI(false), 
 	_isChunked(false), 
-	_isMultiPart(false), 
+	_isMultiPart(false),
 	_bodyUTF8(false),
-	_isRedirect(false){}
+	_isRedirect(false),
+	_body_complete(false){}
 
 Request::Request( listenInstance_s* listen_instance ) : 
 	_parser(NULL), 
@@ -55,14 +56,15 @@ Request::Request( listenInstance_s* listen_instance ) :
 	_errMess(""), 
 	_p_state (P_PARSE),
 	_r_state (P_REQLINE), 
-	_content_length(0),
-	_unparsed_length(0), 
+	// _content_length(0),
+	// _unparsed_length(0), 
 	_hasBody(false), 
 	_isCGI(false), 
 	_isChunked(false), 
 	_isMultiPart(false), 
 	_bodyUTF8(false),
-	_isRedirect(false){}
+	_isRedirect(false),
+	_body_complete(false){}
 
 Request::Request(const Request &other) : _parser(NULL), 
 	_validator(NULL), 
@@ -82,16 +84,18 @@ Request::Request(const Request &other) : _parser(NULL),
 	_errNum(other._errNum), 
 	_errMess(other._errMess), 
 	_p_state(other._p_state), 
-	_r_state(other._r_state), 
-	_content_length(other._content_length), 
-	_body_length(other._body_length), 
-	_unparsed_length(other._unparsed_length),
+	_r_state(other._r_state),
+	_sizes(other._sizes),
+	// _content_length(other._content_length), 
+	// _body_length(other._body_length), 
+	// _unparsed_length(other._unparsed_length),
 	_hasBody(other._hasBody), 
 	_isCGI(other._isCGI), 
 	_isChunked(other._isChunked), 
 	_isMultiPart(other._isMultiPart), 
 	_bodyUTF8(other._bodyUTF8),
 	_isRedirect(other._isRedirect),
+	_body_complete(other._body_complete),
 	_re(other._re){}
 				
 Request& Request::operator=(const Request &other){
@@ -113,15 +117,17 @@ Request& Request::operator=(const Request &other){
 		_errMess = other._errMess;
 		_p_state = other._p_state;
 		_r_state = other._r_state;
-		_content_length = other._content_length;
-		_body_length = other._body_length;
-		_unparsed_length = other._unparsed_length;
+		_sizes = other._sizes;
+		// _content_length = other._content_length;
+		// _body_length = other._body_length;
+		// _unparsed_length = other._unparsed_length;
 		_hasBody = other._hasBody;
 		_isCGI = other._isCGI;
 		_isChunked = other._isChunked;
 		_isMultiPart = other._isMultiPart;
 		_bodyUTF8 = other._bodyUTF8;
 		_isRedirect = other._isRedirect;
+		_body_complete = other._body_complete;
 		_re = other._re;
 	}
 	return *this;
@@ -146,26 +152,27 @@ Request::~Request( void ){
 
 void	Request::clear() {
 
-	size_t leftover = _unparsed.end - _unparsed.begin;
-	if (leftover){
-		_buffer.erase(_buffer.begin(), _buffer.begin() + leftover);
-	}
+	size_t remainder = _unparsed.end - _unparsed.begin;
+
+	if (remainder)
+		_buffer.erase(_buffer.begin(), _buffer.begin() + remainder);
 	else
 		_buffer.erase(_buffer.begin(), _buffer.end());
 	_unparsed.begin = 0;
-	_unparsed.end = leftover;
+	_unparsed.end = remainder;
 	_matched_location = NULL;
 	_method.clear();
 	_uri_str.clear();
 	_version.clear();
 	_req_line.clear();
 	_host_header.clear();
-	_uri = uri_t();
+	_uri.reset();
 	deleteHeaders();
 	_body.clear();
 	_body_filename.clear();
 	_boundary.clear();
 	_default_mp_content_type.clear();
+	_sizes.reset(remainder);
 
 	_errNum = 200;
 	_errMess.clear();
@@ -173,17 +180,18 @@ void	Request::clear() {
 	_p_state = P_PARSE;
 	_r_state = P_REQLINE;
 
-	_body_buffer = 0;
-	_body_length = 0;
-	_content_length = 0;
-	_unparsed_length = _unparsed.end - _unparsed.begin;
-
+	// _body_local_size = 0;
+	// _body_length = 0;
+	// _content_length = 0;
+	// _unparsed_length = _unparsed.end - _unparsed.begin;
+	
 	_hasBody = false;
 	_isCGI = false; 
 	_isChunked = false;
 	_isMultiPart = false;
 	_bodyUTF8 = false;
-	deleteHeaders();	
+	_body_complete = false;
+	deleteHeaders();
 	_re.reset();
 
     if (_parser)
