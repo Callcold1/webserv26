@@ -292,6 +292,16 @@ void	Request::setBodyType( bool hasBody, bool isChunked ){
 	
 	_hasBody = hasBody;
 	_isChunked = isChunked;
+// KM . finish writing
+	if (hasBody == false) // BODY IS NOT EXPECTED 
+		_body_type = BODY_NONE;
+	// BODY IS EXPECTED
+	else if (isChunked)	
+		_body_type = BODY_CHUNKED;			
+	else if (_sizes.body_bytes_expected > 0)
+		_body_type = BODY_CONTENT_LEN;
+	else if (_version == "HTTP/1.0")
+		_body_type = BODY_EOF;
 }
 
 void	Request::setBodyEncoding( const std::string& encoding ){ // CAN ALTER FUNCTION TO UPDATE ENUM IF WE SUPPORT MORE ENCODINGS

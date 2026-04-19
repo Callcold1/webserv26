@@ -31,10 +31,10 @@ enum	eParse 			{ P_PARSE, P_AWAIT, P_DONE, P_ERROR };
 enum	eReqState		{ P_REQLINE, P_REQLINE_PARAMS, V_REQLINE, P_HEADERS, V_HEADERS, P_BODY, V_BODY, P_TRAILERS, V_TRAILERS, P_MULTI, V_MPHEADERS, V_MPBODY, REQ_DONE };
 enum	eURIstates		{ SCHEME, AUTH, USER, HOST, PORT, PATH, QUERY, FRAG, URI_ERROR, URI_END };
 enum	uri_types		{ ABSOLUTE_FORM, ASTERISK, AUTH_FORM, ORIGIN_FORM };
-enum	eBodyStates		{ BODY_CHUNKED, BODY_MULTIPART };
 enum	mpState			{ MP_NONE, MP_BOUNDARY, MP_HEADERS, MP_BODY, MP_CHUNKED, MP_FINAL, MP_COMPLETE, MP_ERROR };
 enum	eParseContext	{ ABSOLUTE_URI, ORIGIN_URI, USER_NAME, USER_PASS, QUERY_KEY, QUERY_VAL, FIELD_NAME, FIELD_VAL, PARAM_KEY, PARAM_VAL, CHUNKSIZE, BOUNDARY };
 enum	eResponseType	{ RESPOND_NOT_SET, RESPOND_CGI, RESPOND_ERROR, RESPOND_FILE, RESPOND_INDEX, RESPOND_MP_UP, RESPOND_REDIR, RESPOND_STATIC, RESPOND_UPLOAD };
+enum	eBodyType 		{ BODY_NONE, BODY_CHUNKED, BODY_EOF, BODY_CONTENT_LEN };
 
 /*
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -157,7 +157,7 @@ struct	parsedSizes_s{
 	size_t	bytes_read;				// Number of bytes read from buffer (i.e. total raw message size that has been processed) - every char counted
 	size_t	bytes_unread;			// Number of unread bytes in buffer
 	size_t	body_bytes_read;		// Total length of body parsed 			- every char counted
-	size_t	body_bytes_expected;	// Content-Length value
+	size_t	body_bytes_expected;	// Set to Content-Length value once header has been validated 
 	size_t	body_size;				// Size of body							- size of body after parsing (doesn't include removed chars e.g. \r\n) - updated for all types (chunked, mp, other) and body saved to file
 	size_t	body_local_size;		// Size of body	string 					- used to determine if file required due to size
 	size_t	chunked_bytes;			// Size of chunked body					- only characters that appear in body // Maybe not needed (body size could cover this)

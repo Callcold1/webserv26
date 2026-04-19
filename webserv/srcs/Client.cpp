@@ -144,21 +144,97 @@ bool	Client::handleClientRead(const char *buffer, size_t len){
 	return false;
 }
 
-// return true if parsing is complete
-// return false if parsing incomplete (i.e. error)
+/*  Function is called if the read size is 0. 
+ 	- return true if parsing is complete
+	- return false if parsing incomplete (i.e. error)
+	
+	Zero read could mean :
+
+	1. Client disconnected early
+		- User closed browser/tab
+		- Script timeout on client side
+
+	2. Request body issues
+		- Upload interrupted (large file upload)
+		- Chunked transfer encoding broken or incomplete
+	
+	3. Timeouts
+		- client_body_timeout
+		- proxy_read_timeout
+		- keepalive_timeout
+	
+	4. Bad or buggy client
+		- Misbehaving crawler/bot
+		- Broken HTTP library
+		- Connection reuse bugs
+
+	Pertinent Questions
+	===================
+
+	1. Have headers been fully parsed?
+	2. Is the HTTP request line valid and complete?
+	3. Are you expecting a request body?
+
+	Error classification decision tree
+
+When read() == 0:
+
+	Step 1: headers complete?
+		No → 400
+	Step 2: body expected?
+		Yes → check completeness
+	Step 3: body complete?
+		No → 400 / 408
+	Step 4: everything complete?
+		Yes → clean close
+
+	Scenarios :
+
+	Request is fully parsed & :
+									remaining buffer is empty
+	Request is fully parsed & :
+									remaining buffer has data (possible pipelined request)
+	
+	Request is not fully parsed & :
+									headers fully parsed/validated
+										body fully parsed/validated
+											TE: chunked & trailers outstanding
+											TE: not chunked : not possible as this would qualify as fully parsed?
+									
+									headers not fully parsed : return error response
+
+	
+	Responsed has been sent in full & :
+									
+
+*/
 bool	Client::handleZeroRead(){
-		
-	enum eReqState state = _request.getReqStatus();
+	
+	eReqState request_state  = _request.getReqStatus();
+	eParse parse_state = _request.getParseStatus(); // P_PARSE, P_AWAIT, P_DONE, P_ERROR
+	eBodyType body_type = _request._body_type;
+	bool return_val = false;
 
-	if (_request._body_complete)
-		return true;
-	switch (state){
-		case (P_REQLINE) :{}
+	if (parse_state == P_AWAIT) {
+		// KM - Check if this could lead to segfault (e.g. no matched server, or no matched location, or other problems)
+		if (request_state < P_BODY){
+			_request.setState(P_ERROR, "Malformed Request : Client closed connection before full request received", 400);
+			handle_request(); // Send error response
+		}
+
+		else if (request_state == P_BODY) {
+			switch (body_type){
+				case (BODY_CHUNKED)		: {}
+				case (BODY_CONTENT_LEN)	:{}
+				case (BODY_NONE)		:{_request.setState(P_ERROR, "Malformed Request : Client closed connection before full request received", 400);}
+				case (BODY_EOF)			: {//end of body - set to P_DONE and send response}
+			}
+		}
+		return return_val;
 	}
-	if (_request.getReqStatus())
-	return ;
+	else if (parse_state == P_DONE){}
+	else if (parse_state == P_ERROR){}
 }
-
 
 int Client::if_file_upload(Request &request)
 {

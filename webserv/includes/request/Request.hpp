@@ -107,6 +107,7 @@ class Request {
 	bool 				_hasBody, _isCGI, _isChunked, _isMultiPart, _bodyUTF8, _isRedirect, _bodyInFile, _body_complete;
 	
 	respond_t			_re;
+	eBodyType			_body_type;
 	
 	private : 
 };

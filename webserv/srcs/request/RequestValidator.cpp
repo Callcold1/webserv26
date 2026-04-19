@@ -683,9 +683,10 @@ bool	RequestValidator::identifyLengthHeader(){
 	}
 	else if (_req->_headers.find("transfer-encoding") != _req->_headers.end())
 		return validateTransferEncoding();
-	else if (_req->_method == "POST" || _req->_method == "PUT")
+	else if ((_req->_method == "POST" || _req->_method == "PUT") && _req->_version == "HTTP/1.1") // FOR 1.0, EOF can be used to indicate end of body if no TE or content-length
 		return _req->setState(P_ERROR, "Malformed Request : Headers : content-length or transfer-encoding required for request type", 400);
-	_req->_content_length = 0;
+	_req->_content_length = 0; // KM - replaced with _sizes.body_bytes_expected
+	_req->_sizes.body_bytes_expected = 0;
 	_req->setBodyType(NO_BODY, NOT_CHUNKED);
 	return true;
 }
@@ -705,6 +706,7 @@ bool	RequestValidator::validateContentLength() {
 		_req->setBodyType(NO_BODY, NOT_CHUNKED);
 	else
 		_req->setBodyType(HAS_BODY, NOT_CHUNKED);
+	_req->_sizes.body_bytes_expected;
 	return true;
 }
 
@@ -713,7 +715,8 @@ bool	RequestValidator::convertContentLength( void ){
 	const std::string&	val = _req->_headers.find("content-length")->second[0]->val;
 	char*				endptr = NULL;
 
-	_req->_content_length = strtoull(val.c_str(), &endptr, 10);
+	_req->_content_length = strtoull(val.c_str(), &endptr, 10); // remove once body_bytes 
+	_req->_sizes.body_bytes_expected = strtoull(val.c_str(), &endptr, 10);
 	if (*endptr != '\0')
 		return false;
 	return true;

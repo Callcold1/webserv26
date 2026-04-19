@@ -211,6 +211,7 @@ void	Server::addListeningSocketsToPoll(void){
 >>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<
 */
 
+//KM - https://chatgpt.com/share/69e5331b-33c0-832b-a3ff-5db1e5cdb0dc - need to alter server code
 void	Server::loop(){
 
 	Log::instance().log(Log::INFO, Log::TYPE_CLASS, "Server listening....", false);
@@ -260,10 +261,10 @@ bool	Server::handleEvents(void){
 			if (_sockets[i].revents & POLLOUT)
 				handleClientWrite(fd);
 				
-			if (_sockets[i].revents & (POLLIN | POLLHUP)) // POLLHUP ADDED TO ENSURE FINAL READ IF POLLHUP
+			if (_sockets[i].revents & (POLLIN | POLLHUP)) // POLLHUP ADDED TO ENSURE FINAL READ IF PIPE CLOSED (CLIENT WRITE/SERVER READ)
 				handleClientRead(fd);
 
-			if (_sockets[i].revents & (POLLERR | POLLHUP | POLLNVAL))
+			if (_sockets[i].revents & (POLLERR | POLLNVAL)) // KM: POLLHUP REMOVED - ANY CONSEQUENCES?
 				disconnectClient(fd, "handleEvents: POLLERR | POLLHUP | POLLNVAL");
 		}
 		_sockets[i].revents = 0;
@@ -341,7 +342,9 @@ void	Server::handleClientRead(int fd){
 	if (bytes < 0)
 		disconnectClient(fd, "Invalid read");
 	else if (bytes == 0){
-		client.handleZeroRead();
+		client.handleZeroRead();	// KM - NOT STRAIGHT DISCONNECT - COULD SIGNAL END OF BODY IN HTTP 1.0
+								 	// 		COULD ALSO BE MID-RESPONSE (if response is bigger than kernel buffer)
+									//		COULD HAVE STARTED RESPONSE AND STILL HAVE PIPELINE REQUESTS TO HANDLE
 		disconnectClient(fd, "Read size of zero");
 	}
 	else if (client.handleClientRead(buffer, bytes)){

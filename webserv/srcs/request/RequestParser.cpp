@@ -1054,7 +1054,7 @@ void	RequestParser::parseChunked( token_s& it ){
 		}
 		if (_chunk_parser_status == PARSE_CHUNK_BODY){
 			if (_chunk_size == 0){
-				_req->_body_complete;
+				_req->_body_complete = true;
 				finalChunkChecks(it);
 				return;
 			}
