@@ -261,10 +261,11 @@ bool	Server::handleEvents(void){
 			if (_sockets[i].revents & POLLOUT)
 				handleClientWrite(fd);
 				
-			if (_sockets[i].revents & (POLLIN | POLLHUP)) // POLLHUP ADDED TO ENSURE FINAL READ IF PIPE CLOSED (CLIENT WRITE/SERVER READ)
-				handleClientRead(fd);
-
-			if (_sockets[i].revents & (POLLERR | POLLNVAL)) // KM: POLLHUP REMOVED - ANY CONSEQUENCES?
+			if (_sockets[i].revents & POLLIN) // 
+				handleClientRead(fd, true);
+			else if (_sockets[i].revents & POLLHUP) //POLLHUP ADDED TO ENSURE FINAL READ IF PIPE CLOSED (CLIENT WRITE/SERVER READ)
+				handleClientRead(fd, false);
+			else if (_sockets[i].revents & (POLLERR | POLLNVAL)) // KM: POLLHUP REMOVED - ANY CONSEQUENCES?
 				disconnectClient(fd, "handleEvents: POLLERR | POLLHUP | POLLNVAL");
 		}
 		_sockets[i].revents = 0;
@@ -325,7 +326,7 @@ void	Server::addClient(int client_fd, int listen_index){
 
 /* >>>>>>	READ FROM CLIENT	<<<<<<*/
 
-void	Server::handleClientRead(int fd){
+void	Server::handleClientRead(int fd, bool pipe_closed){
 
 	std::map<int, Client>::iterator it = _clients.find(fd);
 
@@ -341,8 +342,9 @@ void	Server::handleClientRead(int fd){
 
 	if (bytes < 0)
 		disconnectClient(fd, "Invalid read");
-	else if (bytes == 0){
-		client.handleZeroRead();	// KM - NOT STRAIGHT DISCONNECT - COULD SIGNAL END OF BODY IN HTTP 1.0
+	else if (bytes == 0) {
+		if (pipe_closed) // KM - haven't fully thought this through - added to differentiate between POLLIN and POLLHUP
+			client.handleZeroRead();	// KM - NOT STRAIGHT DISCONNECT - COULD SIGNAL END OF BODY IN HTTP 1.0
 								 	// 		COULD ALSO BE MID-RESPONSE (if response is bigger than kernel buffer)
 									//		COULD HAVE STARTED RESPONSE AND STILL HAVE PIPELINE REQUESTS TO HANDLE
 		disconnectClient(fd, "Read size of zero");

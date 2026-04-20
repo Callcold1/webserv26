@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/23 01:37:52 by kmooney           #+#    #+#             */
-/*   Updated: 2026/04/17 13:32:01 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/04/20 16:30:30 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,9 +23,6 @@ RequestParser::RequestParser(Request* request): _req(){
 	_req = request;
 	_req->setRstate(P_REQLINE);
 	_req->setPstate(P_PARSE);
-	_os_body_len = 0;
-	_expected_len = 0;
-	_parsed_body_len = 0;
 	_chunk_size = 0;
 	_chunk_parser_status = PARSE_CHUNK_SIZE;
 	_mp_p.state = MP_NONE;
@@ -38,9 +35,6 @@ void	RequestParser::clear() {
 	_tknLst.clear();
 
 	_p_it = token_s();
-	_os_body_len = 0;
-	_expected_len = 0;
-	_parsed_body_len = 0;
 	_chunk_size = 0;
 	_chunk_parser_status = PARSE_CHUNK_SIZE;
 	_mp_p.state = MP_NONE;
@@ -61,7 +55,7 @@ void	RequestParser::clear() {
  * @see parseRequest()
  */
 void	RequestParser::parse(const char* data, size_t length){
-	if (length == 0){
+	if (length == 0 && _req->_sizes.bytes_unread == 0){ // && _req->_sizes.bytes_unread == 0 added 20/4/26 - check for issues
 		_req->setState(P_ERROR, P_REQLINE, "Empty Request", 400);
 		return;
 	}
@@ -368,6 +362,8 @@ std::string	RequestParser::tokenToString(const token_s& token) {
  * and `parseBody` depending on the state of the request.
  */
 void	RequestParser::parseRequest(){
+	
+	size_t start = _p_it.begin;
 
 	_req->_p_state = P_PARSE;
 	switch (_req->_r_state){
@@ -378,6 +374,7 @@ void	RequestParser::parseRequest(){
 		case P_TRAILERS	: { parseField(_p_it); break; }
 		default			: { break; }
 	}
+	_req->_sizes.bytes_read += _p_it.begin - start;
 	_req->_unparsed.begin = _p_it.begin;
 	_req->_unparsed.end = _p_it.end;
 	if (_p_it.end >= _p_it.begin)
@@ -887,18 +884,24 @@ void	RequestParser::parseBody(token_s& it) {
 
 	if (!checkBodySize())// Need to move buffer if parsing is complete and tmpfile
 		return;
+
+	size_t start = it.begin;
+	
 	while (it.begin != it.end){
 		if (_req->_isChunked){
 			parseChunked(it);
+			_req->_sizes.body_bytes_read += it.begin - start;
 			return;
 		}
 		else if (_req->_isMultiPart){
 			_req->setRstate(P_MULTI);
 			parseMultiPart(it);
+			_req->_sizes.body_bytes_read += it.begin - start;
 			return;
 		}
 		else {
 			parsePlain(it);
+			_req->_sizes.body_bytes_read += it.begin - start;
 			return;
 		}
 	}
@@ -957,22 +960,25 @@ bool	RequestParser::appendToTempFile(std::string& filename, std::string& data){
 */
 void	RequestParser::parsePlain(token_s& it) {
 
-	size_t remaining = _req->_content_length - _req->_sizes.body_bytes_read;
+	size_t remaining = _req->_sizes.body_bytes_expected - _req->_sizes.body_bytes_read; 
+
 	if (it.end < it.begin)
 		_req->setState(P_ERROR, "Parsing Error : invalid index", 500);
+	
 	size_t available = it.end - it.begin;
 	size_t to_copy   = std::min(remaining, available);
 
 	if (to_copy > 0) {
 		_req->_body.append(it.begin, it.begin + to_copy);
-		_req->_body_length += to_copy;
+		_req->_sizes.body_bytes_read += to_copy;
 		it.begin += to_copy;
+		
+		if (_req->_sizes.body_bytes_read < _req->_sizes.body_bytes_expected) {
+			_req->setPstate(P_AWAIT); // RELYING ON SERVER TO TIME OUT IF FULL BODY IS NOT RECEIVED
+			return;
+		}
 	}
-	if (_req->_body_length < _req->_content_length) {
-		_req->setPstate(P_AWAIT); // RELYING ON SERVER TO TIME OUT IF FULL BODY IS NOT RECEIVED
-		return;
-	}
-	if (_req->_body_length != _req->_content_length)
+	if (_req->_sizes.body_bytes_read != _req->_sizes.body_bytes_expected)
 		_req->setState(P_ERROR, P_REQLINE, "Bad Request : Malformed Body : body size does not match value in content-length header", 400);
 	else
 		_req->setState(P_DONE, V_BODY, "Parsing Complete", 200);
@@ -1061,8 +1067,7 @@ void	RequestParser::parseChunked( token_s& it ){
 			if (!parseChunkData(it, data))
 					return;
 			_req->_body +=data;
-			//_req->_content_length +=_chunk_size;
-			_req->_sizes.body_size +=_chunk_size; // newly added (to replace _content_length)
+			_req->_sizes.body_size +=_chunk_size;
 			_chunk_size = 0;
 		}
 	}
@@ -1270,11 +1275,15 @@ void	RequestParser::appendToTempfileMP(mpPart_t& part, size_t begin, size_t size
 		ofs.put(_req->_buffer[begin]);
 	}
 	ofs.close();
+	_req->_sizes.body_size += size;
+	part.body_size += size;
 }
 
 void	RequestParser::appendToBodyMP(mpPart_t& part, size_t begin, size_t size) {
+
 	part.body.insert(part.body.end(), _req->_buffer.begin() + begin, _req->_buffer.begin() + begin + size);
-	//part.body.insert(part.body.end(), _req->_buffer[begin], _req->_buffer[begin + size]);
+	_req->_sizes.body_size += size;
+	part.body_size += size;
 }
 
 mpPart_t& RequestParser::currentPart() {

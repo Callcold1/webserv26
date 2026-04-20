@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   utilityFunctions.cpp                               :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jake <jake@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/16 15:33:48 by kmooney           #+#    #+#             */
-/*   Updated: 2026/03/27 14:26:50 by jake             ###   ########.fr       */
+/*   Updated: 2026/04/20 17:02:13 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -97,6 +97,15 @@ void trimWS(std::string &str)
 		start++;
 	}
 	str.erase(0, start);
+}
+
+void	replaceChar(std::string& name, char remove, char replace){
+	
+	std::string::size_type pos;
+
+	while ((pos = name.find(remove)) != std::string::npos){
+		name[pos] = replace;
+	}
 }
 
 /*
@@ -1001,4 +1010,52 @@ std::string	detectMimeFromFilename(const std::string& filename) {
             return mime;
     }
     return "application/octet-stream";
+}
+
+int	copyFile(const std::string& src, const std::string& dest)
+{
+    int in_fd = open(src.c_str(), O_RDONLY);
+    
+	if (in_fd < 0) {
+        std::cerr << "open src failed: " << strerror(errno) << std::endl;
+        return -1;
+    }
+
+    int out_fd = open(dest.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
+
+    if (out_fd < 0) {
+        std::cerr << "open dest failed: " << strerror(errno) << std::endl;
+        close(in_fd);
+        return -1;
+    }
+
+    char buffer[8192];
+    ssize_t bytes_read;
+
+    while ((bytes_read = read(in_fd, buffer, sizeof(buffer))) > 0) {
+        
+		ssize_t total_written = 0;
+
+        while (total_written < bytes_read) {
+            ssize_t bytes_written = write(out_fd, buffer + total_written, bytes_read - total_written);
+
+			if (bytes_written < 0) {
+                std::cerr << "write failed: " << strerror(errno) << std::endl;
+                close(in_fd);
+                close(out_fd);
+                return -1;
+            }
+            total_written += bytes_written;
+        }
+    }
+
+    if (bytes_read < 0)
+        std::cerr << "read failed: " << strerror(errno) << std::endl;
+
+    close(in_fd);
+    close(out_fd);
+
+	if (bytes_read < 0)
+    	return -1;
+	return 0;
 }

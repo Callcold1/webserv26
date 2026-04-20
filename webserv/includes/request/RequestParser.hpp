@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/01 22:01:11 by kmooney           #+#    #+#             */
-/*   Updated: 2026/02/23 12:42:37 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/04/20 16:30:59 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -104,9 +104,6 @@ private:
 	std::vector<token_s>	_tknLst;
 	token_s					_p_it;
 
-	size_t					_os_body_len;
-	size_t					_expected_len;
-	size_t					_parsed_body_len;
 	uint64_t				_chunk_size;
 	bool					_chunk_parser_status;
 	mpParser_t				_mp_p;

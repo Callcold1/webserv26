@@ -58,7 +58,7 @@ class Server {
 		void	setNonBlocking(int fd);
 		void 	addClient(int client_fd, int index);
 		
-		void	handleClientRead(int fd);
+		void	handleClientRead(int fd, bool pipe_closed);
 		void	handleClientWrite(int fd);
 		
 		void	disconnectClient(int fd, const std::string& reason);

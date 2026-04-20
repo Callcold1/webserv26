@@ -112,7 +112,7 @@ bool	Client::handleClientRead(const char *buffer, size_t len){
 
 	enum eParse	p_state;
 
-	if (!buffer)
+	if (!buffer && _request._sizes.bytes_unread == 0)
 		return false;
 	try {
 		if (_request.getParseStatus() == P_ERROR)
@@ -131,7 +131,7 @@ bool	Client::handleClientRead(const char *buffer, size_t len){
 	std::cout << "lala" << std::endl;
 
 	switch(p_state){
-		case P_PARSE	: 	{ _state = READ; generateLogMessage(); return false; }
+		case P_PARSE	: 	{ _state = READ; generateLogMessage(); return false;}
 		case P_AWAIT	: 	{ _state = READ; generateLogMessage(); return false;}
 		case P_DONE		:	{ _state = WRITE; generateLogMessage();	break;}
 		case P_ERROR	: 	{ _state = ERROR;_request._re.type = RESPOND_ERROR; _conn = CONN_CLOSE; generateLogMessage(); break;}
@@ -144,96 +144,54 @@ bool	Client::handleClientRead(const char *buffer, size_t len){
 	return false;
 }
 
-/*  Function is called if the read size is 0. 
- 	- return true if parsing is complete
-	- return false if parsing incomplete (i.e. error)
-	
-	Zero read could mean :
-
-	1. Client disconnected early
-		- User closed browser/tab
-		- Script timeout on client side
-
-	2. Request body issues
-		- Upload interrupted (large file upload)
-		- Chunked transfer encoding broken or incomplete
-	
-	3. Timeouts
-		- client_body_timeout
-		- proxy_read_timeout
-		- keepalive_timeout
-	
-	4. Bad or buggy client
-		- Misbehaving crawler/bot
-		- Broken HTTP library
-		- Connection reuse bugs
-
-	Pertinent Questions
-	===================
-
-	1. Have headers been fully parsed?
-	2. Is the HTTP request line valid and complete?
-	3. Are you expecting a request body?
-
-	Error classification decision tree
-
-When read() == 0:
-
-	Step 1: headers complete?
-		No → 400
-	Step 2: body expected?
-		Yes → check completeness
-	Step 3: body complete?
-		No → 400 / 408
-	Step 4: everything complete?
-		Yes → clean close
-
-	Scenarios :
-
-	Request is fully parsed & :
-									remaining buffer is empty
-	Request is fully parsed & :
-									remaining buffer has data (possible pipelined request)
-	
-	Request is not fully parsed & :
-									headers fully parsed/validated
-										body fully parsed/validated
-											TE: chunked & trailers outstanding
-											TE: not chunked : not possible as this would qualify as fully parsed?
-									
-									headers not fully parsed : return error response
-
-	
-	Responsed has been sent in full & :
-									
-
-*/
-bool	Client::handleZeroRead(){
+void	Client::handleZeroRead(){
 	
 	eReqState request_state  = _request.getReqStatus();
-	eParse parse_state = _request.getParseStatus(); // P_PARSE, P_AWAIT, P_DONE, P_ERROR
+	eParse parse_state = _request.getParseStatus();
 	eBodyType body_type = _request._body_type;
-	bool return_val = false;
 
-	if (parse_state == P_AWAIT) {
-		// KM - Check if this could lead to segfault (e.g. no matched server, or no matched location, or other problems)
+	if (parse_state == P_AWAIT) {		// KM - Check if this could lead to segfault (e.g. no matched server, or no matched location, or other problems)
 		if (request_state < P_BODY){
 			_request.setState(P_ERROR, "Malformed Request : Client closed connection before full request received", 400);
-			handle_request(); // Send error response
+			handle_request();
+			return;
 		}
-
 		else if (request_state == P_BODY) {
 			switch (body_type){
-				case (BODY_CHUNKED)		: {}
-				case (BODY_CONTENT_LEN)	:{}
-				case (BODY_NONE)		:{_request.setState(P_ERROR, "Malformed Request : Client closed connection before full request received", 400);}
-				case (BODY_EOF)			: {//end of body - set to P_DONE and send response}
+				case (BODY_EOF)			: { 
+											if (_request._version == "HTTP/1.0")
+											_request.setState(P_DONE, "Parsing Complete", _request._errNum);
+											handle_request();
+											return;
+										}
+				case (BODY_CHUNKED)		: {
+											_request.setState(P_ERROR, "Malformed Request : Client closed connection before full request received", 400);
+											handle_request();
+											return;
+										}
+				case (BODY_CONTENT_LEN)	: {
+											_request.setState(P_ERROR, "Malformed Request : Client closed connection before full request received", 400);
+											handle_request();
+											return;
+										}
+				default	: return;
 			}
+			return;
 		}
-		return return_val;
 	}
-	else if (parse_state == P_DONE){}
-	else if (parse_state == P_ERROR){}
+	else if (parse_state == P_DONE)
+		return;
+	else if (parse_state == P_PARSE){
+	
+		if (_request._sizes.bytes_unread > 0){ // Still unparsed data in _request._buffer
+			if (_request._re.keep_alive)	  // Connection is set to keep alive
+				handleClientRead(NULL, 0); 	  // Handle new request
+			else if (_request._version == "HTTP/1.0")
+				return;
+		}
+	}
+	else if (parse_state == P_ERROR)
+		return;
 }
 
 int Client::if_file_upload(Request &request)
@@ -332,7 +290,7 @@ void Client::handle_request()
 			_response = new ErrorResponse(NOT_FOUND_ERROR, _request); //again, could be 403 for directories etc but this is for security
 		}
 	}
-	else if (path.find(HTML_PATH) != std::string::npos || path.find(PHOTO_PATH) != std::string::npos || path.find("assets/") != std::string::npos)
+	else if (path.find(HTML_PATH) != std::string::npos || path.find(PHOTO_PATH) != std::string::npos || path.find("assets/") != std::string::npos || _request._re.type == RESPOND_STATIC) // KM - I think we should change this : hardcoded feels wrong - should be able to alter config
 	{
 		std::cout << "static page found" << std::endl;
 		_response = new SuccessResponse(_request);
@@ -370,7 +328,7 @@ void Client::append_write(std::string str){
 void	Client::generateLogMessage(void){
 
 	std::string status;
-
+	
 	switch(_request.getParseStatus()){
 		case 0	:{status = "P_PARSE"; break;}
 		case 1	:{status = "P_AWAIT"; break;}
@@ -378,10 +336,11 @@ void	Client::generateLogMessage(void){
 		case 3	:{status = "P ERROR : " + _request.getErrMsg(); break;}
 		default	:{status = "UNKNOWN"; break;}
 	}
-	std::cout << _request._re << std::endl;
+	//std::cout << _request._re << std::endl;
 	std::string message = _log_msg + "Parsing : " + status;
 	Log::instance().log(Log::INFO, Log::TYPE_REQUEST_PARSING, message, false);
 	Log::instance().log(Log::INFO, Log::TYPE_REQUEST_PARSING, printstream(_request), false);
+	Log::instance().log(Log::INFO, Log::TYPE_REQUESTS, printReqStatus(_request, _fd), false);
 }
 
 /*
@@ -492,4 +451,56 @@ std::ostream& operator<<(std::ostream& os, const respond_t& re){
 	os << "keep-alive             : " << re.keep_alive << std::endl;
 	os << "Accept content-type(s) : " << re.accept_type << std::endl;
 	return os;
+}
+
+std::string	printReqStatus(Request& _request, int fd){
+
+	std::string p_status;
+	std::string r_status;
+	std::ostringstream os;
+
+	switch(_request.getParseStatus()){
+		case 0	:{p_status = "P_PARSE"; break;}
+		case 1	:{p_status = "P_AWAIT"; break;}
+		case 2	:{p_status = "P DONE"; break;}
+		case 3	:{p_status = "P ERROR"; break;}
+		default	:{p_status = "UNKNOWN"; break;}
+	}
+	switch(_request.getReqStatus()){
+		case 0	:{r_status = "P_REQLINE"; break;}
+		case 1	:{r_status = "P_REQLINE_PARAMS"; break;}
+		case 2	:{r_status = "V_REQLINE"; break;}
+		case 3	:{r_status = "P_HEADERS"; break;}
+		case 4	:{r_status = "V_HEADERS"; break;}
+		case 5	:{r_status = "P_BODY"; break;}
+		case 6	:{r_status = "V_BODY"; break;}
+		case 7	:{r_status = "P_TRAILERS"; break;}
+		case 8	:{r_status = "V_TRAILERS"; break;}
+		case 9	:{r_status = "P_MULTI"; break;}
+		case 10	:{r_status = "V_MPHEADERS"; break;}
+		case 11	:{r_status = "V_MPBODY"; break;}
+		case 12	:{r_status = "REQ_DONE"; break;}
+		default	:{r_status = "UNKNOWN"; break;}
+	}
+	os << std::left << std::setw(21) << "\nFile Descriptor" << std::setw(3) << " : " << "[" << fd << "]" << std::endl;
+	os << std::left << std::setw(20) << "Parse Status" << std::setw(3) << " : " << "[" << p_status << "]" << std::endl;
+	os << std::left << std::setw(20) << "Request Status"  << std::setw(3)<< " : " << "[" << r_status << "]" << std::endl;
+	os << std::left << std::setw(20) << "Method" << std::setw(3) << " : " << "[" << _request._method << "]" << std::endl;
+	os << std::left << std::setw(20) << "ErrNum" << std::setw(3) << " : " << "[" << _request._errNum << "]" << std::endl;
+	os << std::left << std::setw(20) << "ErrMess" << std::setw(3) << " : " << "[" << _request._errMess << "]" << std::endl;
+	
+	os << std::left << std::setw(20) << "URI" << std::setw(3) << " : " << "[" << _request._uri_str << "]" << std::endl;
+	os << std::left << std::setw(20) << "Matched Location URI" << std::setw(3) << " : " << "[" << _request._matched_location->getURI() << "]" << std::endl;
+	os << std::left << std::setw(20) << "URI remainder" << std::setw(3) << " : " << "[" << _request._leftover << "]" << std::endl;
+	if ( p_status == "P ERROR")
+		os << std::left << std::setw(20) << "Path" << std::setw(3) << " : " << "[" << _request._re.paths.error_path.path << "]" << std::endl << std::endl;
+	else if (_request._re.paths.upload_paths.size()){
+		for (size_t i = 0; i < _request._re.paths.upload_paths.size(); i++)
+			os << std::left << std::setw(20) << "Upload Path [" + toString(i) + "]" << std::setw(3) << " : " << "[" << _request._re.paths.upload_paths[i].first.path << "]" << std::endl << std::endl;
+	}
+	else {
+		os << std::left << std::setw(20) << "Path" <<  std::setw(3) << " : " << "[" << _request._re.paths.resource_path.path << "]" << std::endl << std::endl;
+	}
+	std::string result = os.str();
+	return result;
 }

@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/30 11:28:22 by kmooney           #+#    #+#             */
-/*   Updated: 2026/04/17 16:31:49 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/04/20 17:33:22 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,10 +32,6 @@ Request::Request(void) :
 	_errMess(""), 
 	_p_state (P_PARSE), 
 	_r_state (P_REQLINE),
-	// _content_length(0),
-	// _body_length(0),
-	// _body_local_size(0),
-	// _unparsed_length(0),
 	_hasBody(false), 
 	_isCGI(false), 
 	_isChunked(false), 
@@ -56,8 +52,6 @@ Request::Request( listenInstance_s* listen_instance ) :
 	_errMess(""), 
 	_p_state (P_PARSE),
 	_r_state (P_REQLINE), 
-	// _content_length(0),
-	// _unparsed_length(0), 
 	_hasBody(false), 
 	_isCGI(false), 
 	_isChunked(false), 
@@ -76,7 +70,8 @@ Request::Request(const Request &other) : _parser(NULL),
 	_version(other._version), 
 	_req_line(other._req_line), 
 	_uri(other._uri), 
-	_headers(other._headers), 
+	_headers(other._headers),
+	_content_length(other._content_length),
 	_body(other._body),
 	_boundary(other._boundary), 
 	_default_mp_content_type(other._default_mp_content_type), 
@@ -86,9 +81,6 @@ Request::Request(const Request &other) : _parser(NULL),
 	_p_state(other._p_state), 
 	_r_state(other._r_state),
 	_sizes(other._sizes),
-	// _content_length(other._content_length), 
-	// _body_length(other._body_length), 
-	// _unparsed_length(other._unparsed_length),
 	_hasBody(other._hasBody), 
 	_isCGI(other._isCGI), 
 	_isChunked(other._isChunked), 
@@ -96,7 +88,8 @@ Request::Request(const Request &other) : _parser(NULL),
 	_bodyUTF8(other._bodyUTF8),
 	_isRedirect(other._isRedirect),
 	_body_complete(other._body_complete),
-	_re(other._re){}
+	_re(other._re),
+	_leftover(other._leftover){}
 				
 Request& Request::operator=(const Request &other){
 	if (this != &other){
@@ -109,6 +102,7 @@ Request& Request::operator=(const Request &other){
 		_req_line = other._req_line;
 		_uri = other._uri;
 		_headers = other._headers;
+		_content_length = other._content_length;
 		_body = other._body;
 		_boundary = other._boundary;
 		_default_mp_content_type = other._default_mp_content_type;
@@ -118,9 +112,6 @@ Request& Request::operator=(const Request &other){
 		_p_state = other._p_state;
 		_r_state = other._r_state;
 		_sizes = other._sizes;
-		// _content_length = other._content_length;
-		// _body_length = other._body_length;
-		// _unparsed_length = other._unparsed_length;
 		_hasBody = other._hasBody;
 		_isCGI = other._isCGI;
 		_isChunked = other._isChunked;
@@ -129,6 +120,7 @@ Request& Request::operator=(const Request &other){
 		_isRedirect = other._isRedirect;
 		_body_complete = other._body_complete;
 		_re = other._re;
+		_leftover = other._leftover;
 	}
 	return *this;
 }
@@ -158,8 +150,10 @@ void	Request::clear() {
 		_buffer.erase(_buffer.begin(), _buffer.begin() + remainder);
 	else
 		_buffer.erase(_buffer.begin(), _buffer.end());
+
 	_unparsed.begin = 0;
 	_unparsed.end = remainder;
+	
 	_matched_location = NULL;
 	_method.clear();
 	_uri_str.clear();
@@ -168,6 +162,7 @@ void	Request::clear() {
 	_host_header.clear();
 	_uri.reset();
 	deleteHeaders();
+	_content_length.clear();
 	_body.clear();
 	_body_filename.clear();
 	_boundary.clear();
@@ -180,17 +175,13 @@ void	Request::clear() {
 	_p_state = P_PARSE;
 	_r_state = P_REQLINE;
 
-	// _body_local_size = 0;
-	// _body_length = 0;
-	// _content_length = 0;
-	// _unparsed_length = _unparsed.end - _unparsed.begin;
-	
 	_hasBody = false;
 	_isCGI = false; 
 	_isChunked = false;
 	_isMultiPart = false;
 	_bodyUTF8 = false;
 	_body_complete = false;
+	
 	deleteHeaders();
 	_re.reset();
 
@@ -219,6 +210,7 @@ void	Request::deleteHeaders(void){
 */
 
 eParse	Request::parseRequest(const char* rawData, size_t length) {
+	_sizes.bytes_received += length;
 	
 	if (!_parser)
 		_parser = new RequestParser(this);
@@ -277,8 +269,7 @@ std::string	Request::getUnparsedStr(){
 	return _parser->tokenToString(_unparsed);
 }
 
-std::string Request::get_root_dir()
-{
+std::string Request::get_root_dir(){
 	return(_matched_location->getRootDir());
 }
 
@@ -292,11 +283,11 @@ void	Request::setBodyType( bool hasBody, bool isChunked ){
 	
 	_hasBody = hasBody;
 	_isChunked = isChunked;
-// KM . finish writing
+
 	if (hasBody == false) // BODY IS NOT EXPECTED 
 		_body_type = BODY_NONE;
 	// BODY IS EXPECTED
-	else if (isChunked)	
+	else if (isChunked)
 		_body_type = BODY_CHUNKED;			
 	else if (_sizes.body_bytes_expected > 0)
 		_body_type = BODY_CONTENT_LEN;
@@ -395,21 +386,19 @@ bool	Request::matchServerToHostHeader(void){
 	else
 		_matched_server = (_listen_instance->name_to_srv.find(hostname))->second;
 	_re.server = _matched_server;
-	return true;		
+	return true;
 }
 
 bool	Request::matchLocationToURIPath(void){
-	
-	std::string leftover;
-
-	_matched_location = _matched_server->getLocationForPath(_uri.path, leftover);
+		_matched_location = _matched_server->getLocationForPath(_uri.path, _leftover);
 	if (!_matched_location)
 		return false;
 	if (_matched_location->isCGIMapSet())
 		_isCGI = true;
 	
 	_re.location = _matched_location;
-	updateTargetPathInfo(leftover);
+	updateTargetPathInfo(_leftover);
+
 	return true;
 }
 
@@ -437,7 +426,7 @@ void	Request::updateTargetPathInfo(std::string& leftover){
 	_re.paths.upload_base = appendPathToRoot(_matched_location->getUploadPath(), cwd);		//  upload path is not appended to location root
 }
 
-void	Request::updateErrorPagePath(void){
+void	Request::updateErrorPagePath(int errnum){
 	
 	char	cwd[2048];
 	//getcwd(cwd, sizeof(cwd));
@@ -447,11 +436,11 @@ void	Request::updateErrorPagePath(void){
 	std::string root;
 	
 	if (_matched_location){
-		target = _matched_location->getErrorPage(_errNum);
+		target = _matched_location->getErrorPage(errnum);
 		root = _matched_location->getRootDir();
 	}
 	else if (_matched_server){
-		target = _matched_server->getErrorPage(_errNum);
+		target = _matched_server->getErrorPage(errnum);
 		root = _matched_server->getRootDir();
 	}
 	if (target.length() > 0 && root.length() > 0){
@@ -472,7 +461,7 @@ void	Request::updateRe(void){
 	
 	if (_p_state == P_ERROR){
 		_re.type = RESPOND_ERROR;
-		updateErrorPagePath();
+		updateErrorPagePath(_errNum);
 	}
 	else if (_p_state == P_DONE){
 

@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 16:24:23 by kmooney           #+#    #+#             */
-/*   Updated: 2026/04/17 13:28:51 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/04/20 14:51:15 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -127,11 +127,12 @@ struct mpPart_t {
 	std::vector<field_t*>								supported_content;
 	std::vector<char>									body;					// used if no file upload
 
+	size_t												body_size;				// bytes that have been added to body file or body 
 	bool												isFile;					// set to true if filename is present
 	std::string											tempFilePath;			// created if filename is present and body is appended here each read cycle
 	fileInfo_s											upload_dest;			// populated when validating content-disposition header
 	int													fd; 					// might not be required as fstream is used to append data
-	mpPart_t(): headers(new fieldMap_t), isFile(0), fd(-1){}
+	mpPart_t(): headers(new fieldMap_t), body_size(0), isFile(0), fd(-1){}
 };
 
 struct mpMessage_t {

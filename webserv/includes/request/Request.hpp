@@ -68,16 +68,18 @@ class Request {
 	bool				matchServerToHostHeader(void);
 	bool				matchLocationToURIPath(void);
 	void				updateTargetPathInfo(std::string& leftover);
-	void				updateErrorPagePath(void);
+	void				updateErrorPagePath(int errnum);
 	void				updateRe(void);
 
 	std::vector<field_t* >		findRequestHeaderValue(const std::string& header_name);
 
 	RequestParser*		_parser;
 	RequestValidator*	_validator;
+
 	listenInstance_s*	_listen_instance;
 	const CLocation*	_matched_location;
 	CServer*			_matched_server;
+	
 	std::deque<char>	_buffer;
 	token_s				_unparsed;
 
@@ -85,6 +87,8 @@ class Request {
 	uri_t				_uri;
 	fieldMap_t 			_headers;
 	fieldMap_t 			_trailers;
+
+	std::string			_content_length;
 	std::string 		_body;
 	std::string			_body_filename;
 	std::string 		_boundary;
@@ -100,14 +104,11 @@ class Request {
 	
 	parsedSizes_s		_sizes;
 	
-	uint64_t			_content_length, _body_length, _body_local_size, _unparsed_length;	//_content_length used when content length is provided. 
-																					    	// body_buffer tracks size of _body string : used to decide if body -> file
-																							// When body_length > max_body_buffer, tmpfile is used.
-																							// When body_length > max_body_size, error is thrown.
 	bool 				_hasBody, _isCGI, _isChunked, _isMultiPart, _bodyUTF8, _isRedirect, _bodyInFile, _body_complete;
 	
 	respond_t			_re;
 	eBodyType			_body_type;
+	std::string 		_leftover; // uri remaining after matching location
 	
 	private : 
 };

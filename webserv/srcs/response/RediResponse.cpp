@@ -31,32 +31,32 @@ RediResponse &RediResponse::operator=(const RediResponse &other)
 RediResponse::~RediResponse()
 {}
 
-// std::string	RediResponse::getMPUploadLocation(){
+std::string	RediResponse::getMPUploadLocation(){
 	
-// 	size_t	size = _request._re.paths.upload_paths.size();
-// 	if (size == 1){
-// 		std::string path = _request._re.paths.upload_paths[0].first.path.substr(_request._re.paths.upload_paths[0].first.path.find(_request._re.uri_path));
-// 		//return _request._re.paths.upload_paths[0].first.path.substr(_request._re.paths.upload_base.length()); // return upload path - cwd
-// 		//std::string path = pathAppendToRoot(_request._re.paths.upload_paths[0].second, _request._re.uri_path);
-// 		return path;
-// 	}
-// 	else {
-// 		std::string base = _request._re.paths.upload_base;
-// 		std::string result_path = base + "/results/" + generate_batch_id(1); //next_folder - int that tracks filename 
+	size_t	size = _request._re.paths.upload_paths.size();
+	if (size == 1){
+		std::string path = _request._re.paths.upload_paths[0].first.path.substr(_request._re.paths.upload_paths[0].first.path.find(_request._re.uri_path));
+		//return _request._re.paths.upload_paths[0].first.path.substr(_request._re.paths.upload_base.length()); // return upload path - cwd
+		//std::string path = pathAppendToRoot(_request._re.paths.upload_paths[0].second, _request._re.uri_path);
+		return path;
+	}
+	else {
+		std::string base = _request._re.paths.upload_base;
+		std::string result_path = base + "/results/" + generate_batch_id(1); //next_folder - int that tracks filename 
 
-// 		if (mkdir(result_path.c_str(), 0755) == 0){
-// 			std::string filepath = result_path + "/" + "results.txt";
-// 			std::ofstream results (filepath.c_str());
-// 			for (size_t i = 0; i < size; i++)
-// 				results << _request._re.paths.upload_paths[i].second.substr(_request._re.paths.resource_path.path.size()) << std::endl;
-// 			results.close();
-// 			return result_path;
-// 		}
-// 		else
-//         	std::cerr << "Error creating results directory" << std::endl;
-//         return "";
-// 	}
-// }
+		if (mkdir(result_path.c_str(), 0755) == 0){
+			std::string filepath = result_path + "/" + "results.txt";
+			std::ofstream results (filepath.c_str());
+			for (size_t i = 0; i < size; i++)
+				results << _request._re.paths.upload_paths[i].second.substr(_request._re.paths.resource_path.path.size()) << std::endl;
+			results.close();
+			return result_path;
+		}
+		else
+        	std::cerr << "Error creating results directory" << std::endl;
+        return "";
+	}
+}
 
 int RediResponse::generate()
 {
@@ -65,7 +65,6 @@ int RediResponse::generate()
 	{
 		if (_is_mp){
 			error_catch = save_mp_file(_request._mp_m.parts);
-			// _headers["Location"] = getMPUploadLocation(); // If single file, return upload path + sanitised filename, otherwise create new page (save to)
 			_headers["Content-Length"] = "0";
 		}
 		else
@@ -148,7 +147,6 @@ int RediResponse::save_mp_file(std::vector<mpPart_t>& mp_vec)
 {
 	std::vector<mpPart_t>::iterator it;
 	std::string body;
-
 	std::cout << "MP PART COUNT: " << mp_vec.size() << std::endl;
 
 	for (size_t i = 0; i < mp_vec.size(); i++) {
@@ -161,43 +159,17 @@ int RediResponse::save_mp_file(std::vector<mpPart_t>& mp_vec)
 	{
 		if ((*it).isFile)
 		{
-			body = std::string((*it).body.begin(), (*it).body.end());
-			return (save_file((*it).filename, body));
+			if ( copyFile(it->tempFilePath.c_str(), it->upload_dest.path.c_str()) != 0)
+				return 1;
 		}
+		else if (save_file((*it).filename, body))
+			return 500;
 	}
-	return(1);
+	_location = getMPUploadLocation(); // If single file, return upload path + sanitised filename, otherwise create new page (save to)
+	_headers["Location"] = _location;
+	return(0);
 }
 
-// int RediResponse::save_mp_file(std::vector<mpPart_t>& mp_vec)
-// {
-// 	(void)mp_vec;
-// 	size_t size = _request._re.paths.upload_paths.size();
-	
-// 	for (size_t i = 0; i < size; i++){
-
-// 		fileInfo_s& dest = _request._re.paths.upload_paths[i].first;
-// 		std::string& tmp = _request._re.paths.upload_paths[i].second;
-		
-// 		size_t num = 1;													// number to append
-
-// 		std::string name = dest.path;
-
-// 		while (42){
-// 			int i = std::rename(tmp.c_str(), name.c_str());
-// 			perror("Rename failed : ");
-// 			std::cout << i << std::endl;
-// 			if (std::rename(tmp.c_str(), name.c_str()) == 0){
-// 				dest.path = name;
-// 				std::cout << "file successfully saved to upload folder as : " << name << std::endl;
-// 				break;
-// 			}
-
-// 			std::cerr << "Existing file with same name : file renamed" << std::endl;
-// 			name = dest.path + "_" + toString(num);
-// 			num++;
-// 		}
-// 	}
-// 	return 0;
 // 	/* 
 // 		std::vector<mpPart_t>::iterator it;
 // 		std::string body; // If it's a file, see below 

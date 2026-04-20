@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/30 11:26:19 by kmooney           #+#    #+#             */
-/*   Updated: 2026/04/17 14:01:13 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/04/20 17:03:37 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -550,7 +550,7 @@ bool	RequestValidator::updateMPparams(mpPart_t& part, const std::vector<std::pai
 		if (params[i].first == "filename"){
 			std::string fname = params[i].second;
 			fn++;
-			if (sanitiseFilename(fname))
+			if (sanitiseFilename(fname)) // Should be sanitiseFilename
 				part.filename = fname;
 			else
 				return false;
@@ -685,7 +685,6 @@ bool	RequestValidator::identifyLengthHeader(){
 		return validateTransferEncoding();
 	else if ((_req->_method == "POST" || _req->_method == "PUT") && _req->_version == "HTTP/1.1") // FOR 1.0, EOF can be used to indicate end of body if no TE or content-length
 		return _req->setState(P_ERROR, "Malformed Request : Headers : content-length or transfer-encoding required for request type", 400);
-	_req->_content_length = 0; // KM - replaced with _sizes.body_bytes_expected
 	_req->_sizes.body_bytes_expected = 0;
 	_req->setBodyType(NO_BODY, NOT_CHUNKED);
 	return true;
@@ -702,11 +701,10 @@ bool	RequestValidator::validateContentLength() {
 	else if (count > 1)
 		return _req->setState(P_ERROR, V_HEADERS, "Multiple 'Content-Length' headers", 400);
 
-	if (_req->_content_length == 0)
+	if (_req->_sizes.body_bytes_expected == 0)
 		_req->setBodyType(NO_BODY, NOT_CHUNKED);
 	else
 		_req->setBodyType(HAS_BODY, NOT_CHUNKED);
-	_req->_sizes.body_bytes_expected;
 	return true;
 }
 
@@ -715,7 +713,7 @@ bool	RequestValidator::convertContentLength( void ){
 	const std::string&	val = _req->_headers.find("content-length")->second[0]->val;
 	char*				endptr = NULL;
 
-	_req->_content_length = strtoull(val.c_str(), &endptr, 10); // remove once body_bytes 
+	_req->_content_length = val.c_str();
 	_req->_sizes.body_bytes_expected = strtoull(val.c_str(), &endptr, 10);
 	if (*endptr != '\0')
 		return false;
@@ -781,6 +779,7 @@ bool	RequestValidator::sanitiseFilename(std::string& name){
 	// reject control characters
 	// replace ' ' with _
 	// limit length
+	replaceChar(name, ' ','_');
 	return true;
 }
 

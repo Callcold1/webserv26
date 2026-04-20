@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   utilityFunctions.hpp                               :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: junruh <junruh@student.42.fr>              +#+  +:+       +#+        */
+/*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/11 16:04:15 by kmooney           #+#    #+#             */
-/*   Updated: 2026/04/14 13:52:26 by junruh           ###   ########.fr       */
+/*   Updated: 2026/04/20 17:02:06 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -243,3 +243,7 @@ std::string	printstream(T& src){
 
 const std::map<std::string, std::string>&	mimeToMagicMap(void);
 std::string									detectMimeFromFilename(const std::string& filename);
+
+
+int		copyFile(const std::string& src, const std::string& dst);
+void	replaceChar(std::string& name, char remove, char replace);
