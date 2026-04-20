@@ -40,11 +40,11 @@ public:
 
 	//debug:
 	void print_response();
-	int			_status;
-	Request&	_request;
 
 protected:
 	HeaderMap_t _headers;
+	int			_status;
+	Request&	_request;
 	std::string _body;
-	fileInfo_s _path_km;
+	fileInfo_s	_path_km;
 };

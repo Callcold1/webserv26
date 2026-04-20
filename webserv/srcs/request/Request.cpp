@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
+/*   By: junruh <junruh@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/30 11:28:22 by kmooney           #+#    #+#             */
-/*   Updated: 2026/04/14 14:52:19 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/04/17 17:56:10 by junruh           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -411,7 +411,7 @@ void	Request::updateTargetPathInfo(std::string& leftover){
 	_re.paths.upload_base = appendPathToRoot(_matched_location->getUploadPath(), cwd);		//  upload path is not appended to location root
 }
 
-void	Request::updateErrorPagePath(void){
+void	Request::updateErrorPagePath(int errnum){
 	
 	char	cwd[2048];
 	//getcwd(cwd, sizeof(cwd));
@@ -421,11 +421,11 @@ void	Request::updateErrorPagePath(void){
 	std::string root;
 	
 	if (_matched_location){
-		target = _matched_location->getErrorPage(_errNum);
+		target = _matched_location->getErrorPage(errnum);
 		root = _matched_location->getRootDir();
 	}
 	else if (_matched_server){
-		target = _matched_server->getErrorPage(_errNum);
+		target = _matched_server->getErrorPage(errnum);
 		root = _matched_server->getRootDir();
 	}
 	if (target.length() > 0 && root.length() > 0){
@@ -445,7 +445,7 @@ void	Request::updateRe(void){
 	
 	if (_p_state == P_ERROR){
 		_re.type = RESPOND_ERROR;
-		updateErrorPagePath();
+		updateErrorPagePath(_errNum);
 	}
 	else if (_p_state == P_DONE){
 

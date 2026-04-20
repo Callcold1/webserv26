@@ -67,7 +67,7 @@ class Request {
 	bool				matchServerToHostHeader(void);
 	bool				matchLocationToURIPath(void);
 	void				updateTargetPathInfo(std::string& leftover);
-	void				updateErrorPagePath(void);
+	void				updateErrorPagePath(int errnum);
 	void				updateRe(void);
 
 	std::vector<field_t* >		findRequestHeaderValue(const std::string& header_name);
