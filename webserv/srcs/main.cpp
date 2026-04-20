@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: junruh <junruh@student.42.fr>              +#+  +:+       +#+        */
+/*   By: jake <jake@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/07 10:25:15 by kmooney           #+#    #+#             */
-/*   Updated: 2026/03/24 15:02:34 by junruh           ###   ########.fr       */
+/*   Updated: 2026/04/20 18:05:41 by jake             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,11 +37,12 @@ int	main(int argc, char** argv){
 		config_path = DEFAULT_PATH;
 		Log::instance().log(Log::INFO, Log::TYPE_CONF, NO_CLI_ARG + config_path, true);
 	}
-
 	else {
 		Log::instance().log(Log::ERROR, Log::TYPE_ERROR, TOO_MANY_ARGS, true);
 		return 1;
 	}
+	if (signal_setup() != 0)
+		return (2);
 
 	try {
 		CParser p(config_path);

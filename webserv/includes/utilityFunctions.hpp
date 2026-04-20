@@ -6,7 +6,7 @@
 /*   By: jake <jake@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/11 16:04:15 by kmooney           #+#    #+#             */
-/*   Updated: 2026/04/20 07:47:18 by jake             ###   ########.fr       */
+/*   Updated: 2026/04/20 18:15:25 by jake             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,6 +31,8 @@
 #include <sys/stat.h>
 #include <time.h>
 #include <unistd.h>
+#include <signal.h>
+
 
 
 // PATH STRUCT
@@ -244,3 +246,13 @@ std::string	printstream(T& src){
 
 const std::map<std::string, std::string>&	mimeToMagicMap(void);
 std::string									detectMimeFromFilename(const std::string& filename);
+
+/*
+>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<
+>>>>>>		SIGNALS					<<<<<<
+>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<
+*/
+
+int signal_setup();
+
+void alarm_handler(int sig);

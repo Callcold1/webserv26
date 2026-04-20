@@ -156,6 +156,34 @@ int SuccessResponse::gen_index_page(bool is_gallery)
 	return(0);
 }
 
+std::string SuccessResponse::get_index_file() //not finished 
+{
+	char	cwd[2048];
+	//getcwd(cwd, sizeof(cwd));
+	cwd[0] = '\0';
+	
+	std::vector<std::string> index_pages;
+	std::string target;
+	std::string root;
+
+	if (_request._matched_location)
+	{
+		index_pages = _request._matched_location->getIndex();
+		root = _request._matched_location->getRootDir();
+	}
+	else if (_request._matched_server)
+	{
+		index_pages = _request._matched_server->getIndex();
+		root = _request._matched_server->getRootDir();
+	}
+	if (target.length() > 0 && root.length() > 0)
+	{
+		std::string	fs_root = appendPathToRoot(root, cwd);
+		std::string	error_page = appendPathToRoot(target, fs_root);
+		getFileInfo(error_page, _re.paths.error_path);
+	}
+}
+
 int SuccessResponse::get_file()
 {
 	struct stat st;

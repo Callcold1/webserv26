@@ -11,11 +11,12 @@ public:
 	SuccessResponse &operator=(const SuccessResponse &other);
 	~SuccessResponse();
 
-	int		generate();
+	int			generate();
 
-	int		gen_index_page(bool is_gallery);
-	int		get_file();
-	int		if_delete();
+	int			gen_index_page(bool is_gallery);
+	std::string get_index_file();
+	int			get_file();
+	int			if_delete();
 
 	void	static_headers();
 

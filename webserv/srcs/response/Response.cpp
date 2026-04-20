@@ -72,6 +72,7 @@ std::string Response::status_text()
 		case 501: return "Not Implemented"; //TODO where do we check if requested method is implemented
 		//case 502: return "Bad Gateway";
 		case 503: return "Service Unavailable";
+		case 504: return "Gateway Timeout";
 		//etc
 		default: return "Unknown Error";
 	}

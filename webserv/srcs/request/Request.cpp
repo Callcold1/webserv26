@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: junruh <junruh@student.42.fr>              +#+  +:+       +#+        */
+/*   By: jake <jake@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/30 11:28:22 by kmooney           #+#    #+#             */
-/*   Updated: 2026/04/17 17:56:10 by junruh           ###   ########.fr       */
+/*   Updated: 2026/04/21 00:09:37 by jake             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -434,7 +434,7 @@ void	Request::updateErrorPagePath(int errnum){
 		getFileInfo(error_page, _re.paths.error_path);
 	}
 	else
-		Log::instance().log(Log::ERROR, Log::TYPE_CLASS, "No default error page found", true);
+		Log::instance().log(Log::INFO, Log::TYPE_CLASS, "No default error page found", true);
 }
 
 void	Request::updateRe(void){
