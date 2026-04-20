@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   utilityFunctions.hpp                               :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: junruh <junruh@student.42.fr>              +#+  +:+       +#+        */
+/*   By: jake <jake@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/11 16:04:15 by kmooney           #+#    #+#             */
-/*   Updated: 2026/04/14 13:52:26 by junruh           ###   ########.fr       */
+/*   Updated: 2026/04/20 07:47:18 by jake             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,7 +53,7 @@ struct fileInfo_s
 	time_t		last_modified;
 	std::string	mime_type;
 	std::string	path;
-	__mode_t	permissions;
+	mode_t	permissions;
 	off_t		size;
 
 	fileInfo_s() : inaccessible(false), is_dir(false), is_exec(false), is_file(false), is_symlink(false), not_found(false),
@@ -96,6 +96,7 @@ void								trimEndChar( std::string& str, char target);
 void								trimLWS(std::string &str);
 void								trimTWS(std::string &str);
 void								trimWS( std::string& str);
+bool								ends_with(std::string str, std::string substr);
 
 /* STRING/CHAR TO NUMBER TYPE CONVERSION */
 int									str_to_int( const std::string str);

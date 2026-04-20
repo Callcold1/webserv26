@@ -6,7 +6,7 @@
 /*   By: jake <jake@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/16 15:33:48 by kmooney           #+#    #+#             */
-/*   Updated: 2026/03/27 14:26:50 by jake             ###   ########.fr       */
+/*   Updated: 2026/04/20 07:46:05 by jake             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -97,6 +97,13 @@ void trimWS(std::string &str)
 		start++;
 	}
 	str.erase(0, start);
+}
+
+bool ends_with(std::string str, std::string substr)
+{
+	if (str.rfind(substr) == (str.size() - substr.size()))
+		return true;
+	return false;
 }
 
 /*

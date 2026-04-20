@@ -170,7 +170,7 @@ void Client::handle_request()
 {
 	int error_catch = 0;
 	std::cout << _request._uri.path << std::endl;
-	std::string path = _request._re.paths.resource_path.path; //_request.get_root_dir() + _request._uri.path;
+	std::string path = _request._re.paths.resource_path.path;//_request.get_root_dir() + _request._uri.path; //
 
 	std::cout << "path hr: " << path << std::endl;
 	std::cout << _matched_location->getRedirect().url << std::endl;
@@ -223,9 +223,9 @@ void Client::handle_request()
 		struct stat st;
 		if (stat(path.c_str(), &st) == 0 && S_ISREG(st.st_mode))
 		{
-			if (path.find("www/cgi-bin/python/") != std::string::npos)
+			if (ends_with(path, ".py"))
 				_response =  new CgiResponse(_request, true);
-			else if (path.find("www/cgi-bin/php/") != std::string::npos)
+			else if (ends_with(path, ".php"))
 				_response =  new CgiResponse(_request, false);
 			error_catch = _response->generate();
 			if (error_catch != 0)

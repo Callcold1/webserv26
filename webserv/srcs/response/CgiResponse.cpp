@@ -77,7 +77,7 @@ int CgiResponse::execute() //TODO maybe remove one of the pipes
 
 		dup2(toCgi[0], STDIN_FILENO);    //POST request data 
 		dup2(toServer[1], STDOUT_FILENO); //PNG bytes 
-		dup2(toServer[1], STDERR_FILENO);
+		//dup2(toServer[1], STDERR_FILENO);
 
 		close(toCgi[0]); close(toServer[1]);
 
@@ -96,7 +96,7 @@ int CgiResponse::execute() //TODO maybe remove one of the pipes
 		std::string path_env = "PATH=" + std::string(system_path ? system_path : "/usr/bin:/bin");
 		std::string q = "QUERY_STRING=" + _request._uri.query;
 		std::string len = "CONTENT_LENGTH=" + toString(_request._body.length());
-		std::string type = "CONTENT_TYPE=application/x-www-form-urlencoded"; // or from headers
+		std::string type = "CONTENT_TYPE=application/x-www-form-urlencoded"; // or from headers: std::string type = "CONTENT_TYPE=" + _request.getHeader("Content-Type");
 		std::string m = "REQUEST_METHOD=" + _request._method;
 		std::string script = "SCRIPT_FILENAME=" + _path; // system path to file
 		std::string script_name = "SCRIPT_NAME=" + _path;//_request._uri.path;
