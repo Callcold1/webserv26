@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   RequestParser.cpp                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: junruh <junruh@student.42.fr>              +#+  +:+       +#+        */
+/*   By: jake <jake@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/23 01:37:52 by kmooney           #+#    #+#             */
-/*   Updated: 2026/03/24 13:59:25 by junruh           ###   ########.fr       */
+/*   Updated: 2026/04/16 11:59:24 by jake             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -1396,7 +1396,7 @@ bool	RequestParser::parseDelimiterPairs(token_s& it, std::vector<token_s>& out, 
 
 			char c = _req->_buffer[pos];
 			
-			if ((c == primary_delim)) {
+			if (c == primary_delim) {
 				
 				pos++;										// move to char following primary_delim
 				c = _req->_buffer[pos];

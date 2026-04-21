@@ -6,7 +6,7 @@
 /*   By: jake <jake@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/16 15:33:48 by kmooney           #+#    #+#             */
-/*   Updated: 2026/03/27 14:26:50 by jake             ###   ########.fr       */
+/*   Updated: 2026/04/20 18:15:52 by jake             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -97,6 +97,13 @@ void trimWS(std::string &str)
 		start++;
 	}
 	str.erase(0, start);
+}
+
+bool ends_with(std::string str, std::string substr)
+{
+	if (str.rfind(substr) == (str.size() - substr.size()))
+		return true;
+	return false;
 }
 
 /*
@@ -1001,4 +1008,39 @@ std::string	detectMimeFromFilename(const std::string& filename) {
             return mime;
     }
     return "application/octet-stream";
+}
+
+//signals:
+
+//globals: 
+volatile sig_atomic_t g_timed_out = 0;
+volatile pid_t g_child_pid = -1;
+
+void alarm_handler(int sig)
+{
+    (void)sig;
+    g_timed_out = 1;
+    if (g_child_pid > 0) {
+        kill(g_child_pid, SIGKILL);
+    }
+	g_child_pid = -1;
+}
+
+int signal_setup()
+{
+	struct sigaction sa;
+	
+	//timeout for cgi
+	sigemptyset(&sa.sa_mask);
+    sa.sa_flags = 0;
+    sa.sa_handler = alarm_handler;
+    if (sigaction(SIGALRM, &sa, NULL) == -1)
+    {
+        return -1; //connect this to exit logic
+    }
+	
+	//ignore sigpipe
+	if (signal(SIGPIPE, SIG_IGN) == SIG_ERR)
+		return -1;
+	return (0);
 }

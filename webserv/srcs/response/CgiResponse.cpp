@@ -4,6 +4,8 @@
 #include <fcntl.h>
 #include <iostream>
 
+extern volatile sig_atomic_t g_timed_out;
+extern volatile pid_t g_child_pid;
 
 CgiResponse::CgiResponse(Request &request, bool is_python) : Response(request), _is_py(is_python)
 {
@@ -28,39 +30,30 @@ CgiResponse::~CgiResponse()
 int	CgiResponse::generate()
 {
 	_path = _request._re.paths.resource_path.path;
-	std::cout << "entered cgi repone: " << _path << std::endl;
-	int i = 0; //debug
+	int i = 0;
 	if ((i = execute()) != 0)
 	{
 		std::cout << i << std::endl;
-		return(500);
+		return (i);
 	}
 	defaultHeaders();
 	cgi_headers();
 	return(0);
 }
 
-int CgiResponse::execute() //TODO maybe remove one of the pipes 
+int CgiResponse::execute()
 {
 	int toCgi[2];
 	int toServer[2];
 
 	if (pipe(toCgi) < 0)
-		return(1);
+		return(500);
 	if (pipe(toServer) < 0)
 	{
 		close(toCgi[0]);
 		close(toCgi[1]);
-		return(1);
+		return(500);
 	}
-	std::cout << "query; " << _request._uri.query << std::endl;
-	// std::string abs_path = get_absolute_path(_path);
-	// if (abs_path.empty())
-	// {
-	// 	std::cout << " no target path" << std::endl;
-	// 	return (500);
-	// }
-	// std::cout << "target path" << abs_path << std::endl;
 
 	pid_t pid;
 	if ((pid = fork()) < 0) //failure
@@ -69,7 +62,7 @@ int CgiResponse::execute() //TODO maybe remove one of the pipes
 		close(toCgi[1]);
 		close(toServer[0]);
 		close(toServer[1]);
-		return(2);
+		return(500);
 	}
 	if (pid == 0) //child
 	{
@@ -77,7 +70,7 @@ int CgiResponse::execute() //TODO maybe remove one of the pipes
 
 		dup2(toCgi[0], STDIN_FILENO);    //POST request data 
 		dup2(toServer[1], STDOUT_FILENO); //PNG bytes 
-		dup2(toServer[1], STDERR_FILENO);
+		//dup2(toServer[1], STDERR_FILENO);
 
 		close(toCgi[0]); close(toServer[1]);
 
@@ -96,7 +89,7 @@ int CgiResponse::execute() //TODO maybe remove one of the pipes
 		std::string path_env = "PATH=" + std::string(system_path ? system_path : "/usr/bin:/bin");
 		std::string q = "QUERY_STRING=" + _request._uri.query;
 		std::string len = "CONTENT_LENGTH=" + toString(_request._body.length());
-		std::string type = "CONTENT_TYPE=application/x-www-form-urlencoded"; // or from headers
+		std::string type = "CONTENT_TYPE=application/x-www-form-urlencoded"; // or from headers: std::string type = "CONTENT_TYPE=" + _request.getHeader("Content-Type");
 		std::string m = "REQUEST_METHOD=" + _request._method;
 		std::string script = "SCRIPT_FILENAME=" + _path; // system path to file
 		std::string script_name = "SCRIPT_NAME=" + _path;//_request._uri.path;
@@ -118,20 +111,22 @@ int CgiResponse::execute() //TODO maybe remove one of the pipes
 			NULL
 		};
 		//std::string interpreter_path = "/usr/bin/python3";
-		std::string interpreter_path = "~/.local/lib/python3.13/site-packages";
-		if (!_is_py)
-			interpreter_path = "/usr/bin/php-cgi";
+		//std::string interpreter_path = "~/.local/lib/python3.13/site-packages";
+		//if (!_is_py)
+		//	interpreter_path = "/usr/bin/php-cgi";
 			//interpreter_path = "/usr/local/bin/php-cgi";
 		//execve(interpreter_path.c_str(), args, const_cast<char * const *>(envp)); 
 		execve("/usr/bin/env", args, envp);
-		_exit(1);
+		_exit(500);
 	}
 	else //parent
 	{
 		char buf[2048];
 		std::string res;
-		ssize_t bytes_read;
+		ssize_t bytes_read = -1;
 		ssize_t total_bytes = 0;
+		g_timed_out = 0;
+		g_child_pid = pid;
 
 		close(toServer[1]);
 		close(toCgi[0]);
@@ -141,27 +136,41 @@ int CgiResponse::execute() //TODO maybe remove one of the pipes
 			{
 				close(toCgi[1]); close(toServer[0]);
 				waitpid(pid, NULL, 0);
-				return(3);
+				return(500);
 			}
         }
 		close(toCgi[1]);
 		
-		while ((bytes_read = read(toServer[0], buf, 2048)) > 0)
+		alarm(3);
+		while (bytes_read != 0)
 		{
+			if (g_timed_out)
+				break;
+			bytes_read = read(toServer[0], buf, 2048);
+			if (bytes_read < 0)
+			{
+				if (errno == EINTR)
+				{
+					if (g_timed_out)
+						break;
+					continue; // it was interrupted by different signal, keep reading
+				}
+				close(toCgi[1]); close(toServer[0]);
+				waitpid(pid, NULL, 0);
+				return(502);
+			}
 			res.append(buf, bytes_read);
 			total_bytes += bytes_read;
 		}
-		if (bytes_read < 0)
-		{
-			close(toCgi[1]); close(toServer[0]);
-			waitpid(pid, NULL, 0);
-			return(4);
-		}
+		alarm(0);
+
+		if (g_timed_out)
+			return(504); //gateway timeout
 		if (total_bytes <= 0)
 		{
 			close(toCgi[1]); close(toServer[0]);
 			waitpid(pid, NULL, 0);
-			return(5);
+			return(502);
 		}
 		if (!_is_py)
 		{
@@ -182,9 +191,9 @@ int CgiResponse::execute() //TODO maybe remove one of the pipes
 		else
 			_body = res;
 		
-		int fd = open("outfile.html", O_CREAT| O_WRONLY | O_TRUNC, 0644);
-		write(fd, res.c_str(), total_bytes);
-		close(fd);
+		// int fd = open("outfile.html", O_CREAT| O_WRONLY | O_TRUNC, 0644);
+		// write(fd, res.c_str(), total_bytes);
+		// close(fd);
 		close(toServer[0]);
 		waitpid(pid, NULL, 0);
 		return (0);

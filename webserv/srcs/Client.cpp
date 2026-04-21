@@ -170,8 +170,9 @@ void Client::handle_request()
 {
 	int error_catch = 0;
 	std::cout << _request._uri.path << std::endl;
-	std::string path = _request._re.paths.resource_path.path; //_request.get_root_dir() + _request._uri.path;
+	std::string path = _request._re.paths.resource_path.path;//_request.get_root_dir() + _request._uri.path; //
 
+	
 	std::cout << "path hr: " << path << std::endl;
 	std::cout << _matched_location->getRedirect().url << std::endl;
 
@@ -220,12 +221,13 @@ void Client::handle_request()
 	else if (path.find(CGI_PATH) != std::string::npos)
 	{
 		std::cout << "cgi found" << std::endl;
-		struct stat st;
-		if (stat(path.c_str(), &st) == 0 && S_ISREG(st.st_mode))
+		fileInfo_s info;
+		getFileInfo(path, info);
+		if (info.is_exec)
 		{
-			if (path.find("www/cgi-bin/python/") != std::string::npos)
+			if (ends_with(path, ".py"))
 				_response =  new CgiResponse(_request, true);
-			else if (path.find("www/cgi-bin/php/") != std::string::npos)
+			else if (ends_with(path, ".php"))
 				_response =  new CgiResponse(_request, false);
 			error_catch = _response->generate();
 			if (error_catch != 0)
@@ -234,12 +236,12 @@ void Client::handle_request()
 				_response = new ErrorResponse(error_catch, _request);
 			}
 		}
+		else if (info.is_dir || info.is_file || info.inaccessible)
+			_response = new ErrorResponse(403, _request);				//permission denied
 		else
-		{
-			_response = new ErrorResponse(NOT_FOUND_ERROR, _request); //again, could be 403 for directories etc but this is for security
-		}
+			_response = new ErrorResponse(NOT_FOUND_ERROR, _request);
 	}
-	else if (path.find(HTML_PATH) != std::string::npos || path.find(PHOTO_PATH) != std::string::npos || path.find("assets/") != std::string::npos)
+	else if (path.find(HTML_PATH) != std::string::npos || path.find(_request._re.paths.upload_base) != std::string::npos || path.find("assets/") != std::string::npos)
 	{
 		std::cout << "static page found" << std::endl;
 		_response = new SuccessResponse(_request);
