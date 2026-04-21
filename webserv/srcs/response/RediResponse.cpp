@@ -134,7 +134,6 @@ int RediResponse::save_file(std::string filename, std::string file_body)
 	int fd = open(file_path.c_str(), O_CREAT | O_WRONLY | O_EXCL, 0644);
 	if (fd < 0)
 		return (500);
-	std::cout << "aaaaaaaaaaaaaaa " << file_body.c_str() << std::endl;
 	if (write(fd, file_body.c_str(), file_body.length()) < 1)
 	{
 		close(fd);
