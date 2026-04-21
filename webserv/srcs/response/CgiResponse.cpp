@@ -54,14 +54,6 @@ int CgiResponse::execute()
 		close(toCgi[1]);
 		return(500);
 	}
-	std::cout << "query; " << _request._uri.query << std::endl;
-	// std::string abs_path = get_absolute_path(_path);
-	// if (abs_path.empty())
-	// {
-	// 	std::cout << " no target path" << std::endl;
-	// 	return (500);
-	// }
-	// std::cout << "target path" << abs_path << std::endl;
 
 	pid_t pid;
 	if ((pid = fork()) < 0) //failure
@@ -119,9 +111,9 @@ int CgiResponse::execute()
 			NULL
 		};
 		//std::string interpreter_path = "/usr/bin/python3";
-		std::string interpreter_path = "~/.local/lib/python3.13/site-packages";
-		if (!_is_py)
-			interpreter_path = "/usr/bin/php-cgi";
+		//std::string interpreter_path = "~/.local/lib/python3.13/site-packages";
+		//if (!_is_py)
+		//	interpreter_path = "/usr/bin/php-cgi";
 			//interpreter_path = "/usr/local/bin/php-cgi";
 		//execve(interpreter_path.c_str(), args, const_cast<char * const *>(envp)); 
 		execve("/usr/bin/env", args, envp);

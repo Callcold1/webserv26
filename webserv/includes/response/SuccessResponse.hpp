@@ -14,7 +14,8 @@ public:
 	int			generate();
 
 	int			gen_index_page(bool is_gallery);
-	std::string get_index_file();
+	int			get_index_file();\
+	void		serve_file();
 	int			get_file();
 	int			if_delete();
 

@@ -42,12 +42,9 @@ int SuccessResponse::generate()
 		static_headers();
 	return (0);
 }
-
 int SuccessResponse::if_delete()
 {
-	if ((_path.find(HTML_PATH) != std::string::npos) && (_request._method == "DELETE"))
-	 	return(405); //method not allowed
-	else if ((_path.find(PHOTO_PATH) != std::string::npos) && (_request._method == "DELETE"))
+	if ((_path.find(_request._re.paths.upload_base) != std::string::npos) && (_request._method == "DELETE"))
 	{
 		if (access(_path.c_str(), F_OK) == -1)
 		{
@@ -156,60 +153,84 @@ int SuccessResponse::gen_index_page(bool is_gallery)
 	return(0);
 }
 
-std::string SuccessResponse::get_index_file() //not finished 
-{
-	char	cwd[2048];
-	//getcwd(cwd, sizeof(cwd));
-	cwd[0] = '\0';
-	
+int SuccessResponse::get_index_file()
+{	
 	std::vector<std::string> index_pages;
 	std::string target;
 	std::string root;
+	fileInfo_s	info;
 
-	if (_request._matched_location)
+	index_pages = _request._matched_location->getIndex();
+	root = _request._matched_location->getRootDir();
+
+	
+	std::cout << "vec size: " << index_pages.size() << std::endl;
+	for (std::vector<std::string>::iterator it = index_pages.begin() ; it != index_pages.end(); ++it)
 	{
-		index_pages = _request._matched_location->getIndex();
-		root = _request._matched_location->getRootDir();
+		target = *it;
+		std::cout << "lookiingn for: " << target << std::endl;
+		std::string	index = appendPathToRoot(target, root);
+		getFileInfo(index, info);
+		if (info.is_file)
+		{
+			if (info.inaccessible)
+			{
+				return (403); //permission denied
+			}
+			_path = index;
+			serve_file();
+			return (0);
+		}
 	}
-	else if (_request._matched_server)
+	if (_request._matched_location->getAutoIndex())
 	{
-		index_pages = _request._matched_server->getIndex();
-		root = _request._matched_server->getRootDir();
+		gen_index_page(false);
+		return (0);
 	}
-	if (target.length() > 0 && root.length() > 0)
-	{
-		std::string	fs_root = appendPathToRoot(root, cwd);
-		std::string	error_page = appendPathToRoot(target, fs_root);
-		getFileInfo(error_page, _re.paths.error_path);
-	}
+	return (NOT_FOUND_ERROR);
+}
+
+void SuccessResponse::serve_file()
+{
+	std::cout << "serving: " << _path << std::endl;
+	std::ifstream in(_path.c_str(), std::ios::binary);
+	std::string s((std::istreambuf_iterator<char>(in)), \
+		std::istreambuf_iterator<char>());
+	_body = s;
 }
 
 int SuccessResponse::get_file()
 {
-	struct stat st;
+	fileInfo_s	info;
 	std::cout << "get file entered: " << _path << std::endl;
-	if (stat(_path.c_str(), &st) == 0)
+	getFileInfo(_path, info);
+	
+	if (info.is_dir)
 	{
-		if (S_ISDIR(st.st_mode))
+		std::cout << "dir" << std::endl;
+		if (_path.find(_request._re.paths.upload_base) != std::string::npos)
+			gen_index_page(true);
+		else
 		{
-			std::cout << "dir" << std::endl;
-			if (_path.find(HTML_PATH) != std::string::npos)
-				gen_index_page(false);
-			else if (_path.find(PHOTO_PATH) != std::string::npos)
-				gen_index_page(true);
-			_is_dir = true;
+			int err = get_index_file();
+			if ( err > 0)
+				return (err);
 		}
-		else if (S_ISREG(st.st_mode))
-		{
-			std::cout << "file found" << std::endl;
-			std::ifstream in(_path.c_str(), std::ios::binary);
-			std::string s((std::istreambuf_iterator<char>(in)), \
-            	std::istreambuf_iterator<char>());
-			_body = s;
-		}
+		_is_dir = true;
+	}
+	else if (info.is_file)
+	{
+		std::cout << "file found" << std::endl;
+		serve_file();
+	}
+	else if (info.inaccessible)
+	{
+		return (403); //permission denied
 	}
 	else 
-		return (NOT_FOUND_ERROR); //some of this can be permission denied (403) as well but this is safer
+	{
+		return (NOT_FOUND_ERROR);
+	}
 	return (0);
 }
 
