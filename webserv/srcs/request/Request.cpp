@@ -6,7 +6,7 @@
 /*   By: junruh <junruh@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/30 11:28:22 by kmooney           #+#    #+#             */
-/*   Updated: 2026/04/21 17:03:04 by junruh           ###   ########.fr       */
+/*   Updated: 2026/04/21 17:27:26 by junruh           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -449,7 +449,6 @@ void	Request::updateTargetPathInfo(std::string& leftover){
 	_re.paths.upload_base = appendPathToRoot(_matched_location->getUploadPath(), cwd);		//  upload path is not appended to location root
 }
 
-void	Request::updateErrorPagePath(int errnum){
 void	Request::updateErrorPagePath(int errnum){
 	
 	char	cwd[2048];

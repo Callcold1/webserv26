@@ -171,19 +171,3 @@ int RediResponse::save_mp_file(std::vector<mpPart_t>& mp_vec)
 	_headers["Location"] = _location;
 	return(0);
 }
-
-// 	/* 
-// 		std::vector<mpPart_t>::iterator it;
-// 		std::string body; // If it's a file, see below 
-
-// 		for(it = mp_vec.begin(); it != mp_vec.end(); it++)
-// 		{
-// 			if ((*it).isFile)
-// 			{
-// 				body = std::string((*it).body.begin(), (*it).body.end());
-// 				return (save_file((*it).filename, body)); // If we have to handle more than one file? If so, should this iterate until end
-// 			}
-// 		}
-// 		return(1);
-// 	*/
-// }
