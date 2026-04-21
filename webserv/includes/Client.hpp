@@ -13,8 +13,6 @@
 #include "RequestParser.hpp"
 #include "Response.hpp"
 
-// Could keep this simple (READ, WRITE, ERROR)
-// Alternatively, get very granular?
 enum cState {
 	CONNECTED,
 	READ,
@@ -56,6 +54,7 @@ class Client {
 
 								/* HANDLERS */
 			bool				handleClientRead(const char *buffer, size_t len);
+			void				handleZeroRead(void);
 			int 				if_file_upload(Request &request);
 			void				handle_request();
 
@@ -90,3 +89,5 @@ std::ostream&	operator<<(std::ostream& os, Request& request);
 std::ostream&	operator<<(std::ostream& os, const std::vector<std::pair <fileInfo_s, std::string> >& upload_paths);
 std::ostream&	operator<<(std::ostream& os, const reqPaths_s& paths);
 std::ostream&	operator<<(std::ostream& os, const respond_t& re);
+
+std::string	printReqStatus(Request& _request, int fd);

@@ -1,10 +1,17 @@
 WIP
 ===
-1) Look at error page - should we treat as full path or redirect to error page (e.g. location /50x.html{} for error_page 501 502 /50x.html)
+POST CGI - body not populating correctly + sizes are incorrect 
+FILE SAVING - from temp to save location
 
-2) Validate headers
+1) Parsing sizes and saving body to file : need to accurately record all sizes, and where body is saved 
 
-3) Add DELETE (If DELETE allowed for location, use query string kv pair or multipart?
+2) Consolidate properties in request into similar types in structs
+
+3) Look at error page - should we treat as full path or redirect to error page (e.g. location /50x.html{} for error_page 501 502 /50x.html)
+
+4) Validate headers
+
+5) Add DELETE (If DELETE allowed for location, use query string kv pair or multipart?
     Location needs to allow uploads
     Check upload folder for given filename.
     If it exists, delete it.
@@ -14,29 +21,27 @@ WIP
     Could serve list of resources in upload folder, and allow selection of resource for deletion?
 ) 
 
-3) Consolidate common config properties into a base class to remove duplicated code 
+6) Consolidate common config properties into a base class to remove duplicated code 
 
-4) Remove cwd? : Better to use absolute paths for everything? Or alter config to allow both absolute/relative or allow selection of path type in config
+7) Remove cwd? : Better to use absolute paths for everything? Or alter config to allow both absolute/relative or allow selection of path type in config
     Could make all paths relative to a base path?
 
-5) Response for multiple files uploaded should be a redirect to a file containing the uploaded files. Not sure how to handle in terms of location matching?
+8) Response for multiple files uploaded should be a redirect to a file containing the uploaded files. Not sure how to handle in terms of location matching?
     Started but not finished
 
-6) Validate config : e.g. root must start with '/'? 
+9) Validate config : e.g. root must start with '/'? 
 
-7) Fully test config (write test config files and tests)
+10) Fully test config (write test config files and tests)
 
-8) Sort out config error handling (Partially done)
+11) Sort out config error handling (Partially done)
 
-9) Error handling for file opening in program - e.g. run "./webserv ./webserv" or "./webserv ./" - both cause issues
+12) Error handling for file opening in program - e.g. run "./webserv ./webserv" or "./webserv ./" - both cause issues
 
-10) Make request private where necessary
+13) Make request private where necessary
 
-11) CGI environmental variables (from body/from headers)
+14) CGI environmental variables (from body/from headers)
 
-12) Use mime map to inform Content-Type in response? e.g. if file ext returned is .png, Content-Type should be image/png?
-
-13) Signals
+15) Use mime map to inform Content-Type in response? e.g. if file ext returned is .png, Content-Type should be image/png?
 
 Problems
 ========			    
@@ -58,7 +63,7 @@ Added path_t struct (not sure if we'll use this but it does help with indicating
 
 Changed from iterators to indexing for accessing deque : altered tokens to use index instead of iterator, altered all relevant functions (due to iterators being invalidated - seems to work ok)
 
-If connection: keep-alive, then we treat any data at end of message as new message & request class is cleared (apart from unparsed data) and re-used
+If connection: keep-alive, then we treat any data at end of message as new message & request class is cleared (apart from bytes_unread data) and re-used
 
 Client/Response Classes Changes
 ===============================
@@ -321,4 +326,27 @@ location /images/icons
 
 and why sorting locations by URI length is absolutely critical for correct routing.
 
+multipart
+=========
+Each part MUST contain a Content-Disposition header field
+The Content-Disposition header field MUST also contain an additional parameter of "name"
+	(possibly encoded)
+The file name isn't mandatory for cases where the file name isn't available or is meaningless or
+private (e.g. file drag and dropped)
 
+Filenames can be percent-encoded
+Each form-data field (or part) contains a 'name' parameter
+
+Content-Type
+============
+Each part MAY have an (optional) "Content-Type" header field, which
+defaults to "text/plain".  If the contents of a file are to be sent,
+the file data SHOULD be labeled with an appropriate media type, if
+known, or "application/octet-stream".
+
+Character Set
+=============
+If there is a Content-Disposition field with name: "__charset__", then the body of that part
+should contain the default charset for the form-data
+
+Form parts with identical field names MUST NOT be coalesced

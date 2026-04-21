@@ -1,0 +1,167 @@
+1. Have headers been fully parsed?
+
+Check if you have reached:
+
+\r\n\r\n (end of headers)
+
+If NO:
+
+- Request is incomplete
+- Client closed early
+
+✔ Action:
+
+return 400 Bad Request
+    or silently drop connection (depending on server policy)
+
+2. Is the HTTP request line valid and complete?
+
+Ensure you have:
+
+Method (GET/POST/etc.)
+Path
+Version (HTTP/1.0 or 1.1)
+If missing/partial:
+
+✔ Action:
+
+400 Bad Request
+
+3. Are you expecting a request body?
+
+Determine from headers:
+
+Check:
+    Content-Length present?
+Transfer-Encoding: chunked?
+    
+Case A: No body expected (GET, HEAD, etc.)
+
+If headers are complete and method has no body:
+
+✔ EOF is OK
+✔ Action:
+
+treat request as complete
+process immediately
+Case B: Content-Length exists
+
+Check:
+
+bytes_received_body < Content-Length
+If YES:
+
+✔ Problem: incomplete body
+
+✔ Action:
+
+400 Bad Request or 408 Request Timeout
+Case C: Chunked transfer encoding
+
+Check chunk state:
+
+Have all chunks fully parsed?
+Have you seen terminating 0\r\n\r\n chunk?
+If NO:
+
+✔ EOF means truncated stream
+
+✔ Action:
+
+400 Bad Request
+Case D: HTTP/1.0 with no Content-Length
+
+This is special:
+
+Body = “until connection close”
+
+So EOF is:
+
+✔ normal end of body
+
+✔ Action:
+
+finalize request body
+proceed to handler
+4. Are you mid-request parsing state?
+
+Check your parser state machine:
+
+States where EOF is BAD:
+reading headers
+reading partial body (Content-Length or chunked)
+reading chunk metadata
+
+✔ Action:
+
+treat as incomplete request
+State where EOF is OK:
+request fully parsed
+waiting for next request (keep-alive idle)
+
+✔ Action:
+
+close connection cleanly
+5. Did you already finish a full request on this connection?
+
+Important for pipelining (HTTP/1.1):
+
+You may have:
+
+[Request 1 complete][Request 2 partial]
+
+If EOF occurs:
+
+✔ If next request not fully parsed:
+
+incomplete → error or discard
+
+✔ If everything is clean:
+
+normal close
+6. Connection context checks
+
+Check socket-level context:
+
+Was Connection: close sent?
+Is keep-alive expected?
+Are there leftover buffered bytes?
+7. Protocol version handling
+HTTP/1.0
+No persistent connection by default
+EOF often = request end (if no Content-Length)
+HTTP/1.1
+Persistent connection default
+EOF is usually unexpected unless:
+request complete
+server initiated close
+client explicitly closed
+8. Error classification decision tree
+
+When read() == 0:
+
+Step 1: headers complete?
+No → 400
+Step 2: body expected?
+Yes → check completeness
+Step 3: body complete?
+No → 400 / 408
+Step 4: everything complete?
+Yes → clean close
+9. Minimal rule set (practical implementation)
+
+You can simplify into:
+
+if headers_not_complete:
+    reject (400)
+
+else if body_expected and body_not_complete:
+    reject (400 or 408)
+
+else:
+    if request_complete:
+        accept + close
+    else if HTTP/1.0 and no Content-Length:
+        finalize using EOF
+    else:
+        treat as connection abort

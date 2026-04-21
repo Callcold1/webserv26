@@ -50,6 +50,7 @@ int	main(int argc, char** argv){
 
 		p.parseConfigFile(config);
 		Server server(config);
+		Server::setupSignals();
 		server.loop();
 	}
 

@@ -27,15 +27,16 @@ class Request {
 	
 	public:
 						Request();
-						Request(Config* config);
-						Request( listenInstance_s* listen_instance );
+						Request( listenInstance_s* listen_instance);
 						Request(const Request &other);
 						Request& operator=(const Request &other);
 						~Request(void);
 
 	eParse				parseRequest(const char* rawData, size_t length);
+	bool				checkSizes(void);
 	void	    		clear();
-
+	void				deleteHeaders(void);
+	
 						/* GETTERS */
 	const std::string&	getErrMsg(void) const;
 	const std::string&	getMethod()const;
@@ -50,19 +51,19 @@ class Request {
 
 						/* SETTERS */
 
-	void				setBodyType( bool hasBody, bool isChunked );
-	void				setBodyEncoding( const std::string& encoding );
-	void				setBoundaryString( const std::string& boundary );
-	void				setDefaultMultiPartType( const std::string& type );
+	void				setBodyType( bool hasBody, bool isChunked);
+	void				setBodyEncoding( const std::string& encoding);
+	void				setBoundaryString( const std::string& boundary);
+	void				setDefaultMultiPartType( const std::string& type);
 	std::vector<field_t* >	findHeader(const std::string& header_name);
-	void	 			iterateOverFieldT(std::vector<field_t*>& vec );
+	void	 			iterateOverFieldT(std::vector<field_t*>& vec);
 	std::string			findQuery(const std::string id);
 	
-	void				setHostname( const std::string& hostname );
+	void				setHostname( const std::string& hostname); 
 	void 				setPstate(eParse p_state);
 	void 				setRstate(eReqState r_state);
-	bool 				setState(eParse p_state, std::string err_mess, unsigned int err_num );
-	bool 				setState(eParse p_state, eReqState r_state, std::string err_mess, unsigned int err_num );
+	bool 				setState(eParse p_state, std::string err_mess, unsigned int err_num);
+	bool 				setState(eParse p_state, eReqState r_state, std::string err_mess, unsigned int err_num);
 
 	bool				matchServerToHostHeader(void);
 	bool				matchLocationToURIPath(void);
@@ -74,9 +75,11 @@ class Request {
 
 	RequestParser*		_parser;
 	RequestValidator*	_validator;
+
 	listenInstance_s*	_listen_instance;
 	const CLocation*	_matched_location;
 	CServer*			_matched_server;
+	
 	std::deque<char>	_buffer;
 	token_s				_unparsed;
 
@@ -84,6 +87,8 @@ class Request {
 	uri_t				_uri;
 	fieldMap_t 			_headers;
 	fieldMap_t 			_trailers;
+
+	std::string			_content_length;
 	std::string 		_body;
 	std::string			_body_filename;
 	std::string 		_boundary;
@@ -97,14 +102,14 @@ class Request {
 	eParse				_p_state;
 	eReqState			_r_state;
 	
-	uint64_t			_content_length, _body_length, _body_buffer, _unparsed_length;	//_content_length used when content length is provided. 
-																					    // body_length tracks length parsed
-																					    // body_buffer tracks size of _body string : used to decide if body -> file
-																						// When body_length > max_body_buffer, tmpfile is used.
-																						// When body_length > max_body_size, error is thrown.
-	bool 				_hasBody, _isCGI, _isChunked, _isMultiPart, _bodyUTF8, _isRedirect, _bodyInFile;
+	parsedSizes_s		_sizes;
+	
+	bool 				_hasBody, _isCGI, _isChunked, _isMultiPart, _bodyUTF8, _isRedirect, _bodyInFile, _body_complete;
 	
 	respond_t			_re;
+	eBodyType			_body_type;
+	std::string 		_leftover; // uri remaining after matching location
+	
 	private : 
 };
 

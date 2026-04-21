@@ -484,6 +484,46 @@ curl -D - http://localhost:8080/
 <!-- Verbose debugging -->
 curl -v http://localhost:8080/
 
-==================================================
-END OF TEST SUITE
-=================
+## Chunked CURL
+
+1. Basic valid chunked
+printf '4\r\nWiki\r\n5\r\npedia\r\n0\r\n\r\n' | curl -X POST http://localhost:8080/ --http1.1 -H "Transfer-Encoding: chunked" --data-binary @-
+2. Single chunk
+printf 'B\r\nHello World\r\n0\r\n\r\n' | curl -X POST http://localhost:8080 -H "Transfer-Encoding: chunked" --data-binary @-
+3. Multiple small chunks
+printf '1\r\na\r\n1\r\nb\r\n1\r\nc\r\n0\r\n\r\n' | curl -X POST http://localhost:8080 -H "Transfer-Encoding: chunked" --data-binary @-
+4. Chunk extensions
+printf '5;ext=value\r\nHello\r\n0\r\n\r\n' | curl -X POST http://localhost:8080 -H "Transfer-Encoding: chunked" --data-binary @-
+5. Uppercase hex size
+printf 'A\r\n0123456789\r\n0\r\n\r\n' | curl -X POST http://localhost:8080 -H "Transfer-Encoding: chunked" --data-binary @-
+6. Lowercase hex size
+printf 'a\r\n0123456789\r\n0\r\n\r\n' | curl -X POST http://localhost:8080 -H "Transfer-Encoding: chunked" --data-binary @-
+7. Empty body (just terminator)
+printf '0\r\n\r\n' | curl -X POST http://localhost:8080 -H "Transfer-Encoding: chunked" --data-binary @-
+8. Chunk with CRLF inside data
+printf '6\r\nhi\r\nok\r\n0\r\n\r\n' | curl -X POST http://localhost:8080 -H "Transfer-Encoding: chunked" --data-binary @-
+9. Trailers present
+printf '5\r\nHello\r\n0\r\nX-Test: yes\r\n\r\n' | curl -X POST http://localhost:8080 -H "Transfer-Encoding: chunked" -H "Trailer: X-Test" --data-binary @-
+10. Large chunk
+printf '20\r\n12345678901234567890123456789012\r\n0\r\n\r\n' | curl -X POST http://localhost:8080 -H "Transfer-Encoding: chunked" --data-binary @-
+🔴 11–20: Invalid / edge cases
+11. Missing final CRLF
+printf '5\r\nHello\r\n0\r\n' | curl -X POST http://localhost:8080 -H "Transfer-Encoding: chunked" --data-binary @-
+12. Invalid hex size
+printf 'Z\r\nHello\r\n0\r\n\r\n' | curl -X POST http://localhost:8080 -H "Transfer-Encoding: chunked" --data-binary @-
+13. Size smaller than data
+printf '3\r\nHello\r\n0\r\n\r\n' | curl -X POST http://localhost:8080 -H "Transfer-Encoding: chunked" --data-binary @-
+14. Size larger than data
+printf 'A\r\nHi\r\n0\r\n\r\n' | curl -X POST http://localhost:8080 -H "Transfer-Encoding: chunked" --data-binary @-
+15. Missing terminating chunk
+printf '5\r\nHello\r\n' | curl -X POST http://localhost:8080 -H "Transfer-Encoding: chunked" --data-binary @-
+16. Extra CRLF before chunk size
+printf '\r\n5\r\nHello\r\n0\r\n\r\n' | curl -X POST http://localhost:8080 -H "Transfer-Encoding: chunked" --data-binary @-
+17. Negative chunk size
+printf '-5\r\nHello\r\n0\r\n\r\n' | curl -X POST http://localhost:8080 -H "Transfer-Encoding: chunked" --data-binary @-
+18. Chunk size with spaces
+printf '5 \r\nHello\r\n0\r\n\r\n' | curl -X POST http://localhost:8080 -H "Transfer-Encoding: chunked" --data-binary @-
+19. Missing CRLF after chunk data
+printf '5\r\nHello0\r\n\r\n' | curl -X POST http://localhost:8080 -H "Transfer-Encoding: chunked" --data-binary @-
+20. Multiple terminating chunks
+printf '5\r\nHello\r\n0\r\n\r\n0\r\n\r\n' | curl -X POST http://localhost:8080 -H "Transfer-Encoding: chunked" --data-binary @-
