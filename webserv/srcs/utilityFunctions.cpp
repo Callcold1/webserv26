@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/16 15:33:48 by kmooney           #+#    #+#             */
-/*   Updated: 2026/04/20 17:02:13 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/04/21 16:02:43 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -1012,21 +1012,44 @@ std::string	detectMimeFromFilename(const std::string& filename) {
     return "application/octet-stream";
 }
 
-int	copyFile(const std::string& src, const std::string& dest)
+void uniqueFilename(std::string& filename){
+	
+	std::string base = filename;
+	std::string ext;
+
+	size_t dot = filename.find_last_of('.');
+	if (dot != std::string::npos)
+	{
+		base = filename.substr(0, dot);
+		ext = filename.substr(dot);
+	}
+
+	//std::string file_path = "../photos/" + filename; 
+	//base = "../photos/" + base;
+	int i = 2;
+
+	while (file_exists(filename.c_str()))
+	{
+		filename = base + "_" + toString(i) + ext;
+		i++;
+	}
+}
+
+int	copyFile(const std::string& src, std::string& dest)
 {
     int in_fd = open(src.c_str(), O_RDONLY);
     
 	if (in_fd < 0) {
         std::cerr << "open src failed: " << strerror(errno) << std::endl;
-        return -1;
+		return -1;
     }
-
+	uniqueFilename(dest);
     int out_fd = open(dest.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
 
     if (out_fd < 0) {
         std::cerr << "open dest failed: " << strerror(errno) << std::endl;
         close(in_fd);
-        return -1;
+        return -2;
     }
 
     char buffer[8192];
@@ -1043,7 +1066,7 @@ int	copyFile(const std::string& src, const std::string& dest)
                 std::cerr << "write failed: " << strerror(errno) << std::endl;
                 close(in_fd);
                 close(out_fd);
-                return -1;
+                return -3;
             }
             total_written += bytes_written;
         }
@@ -1056,6 +1079,6 @@ int	copyFile(const std::string& src, const std::string& dest)
     close(out_fd);
 
 	if (bytes_read < 0)
-    	return -1;
+    	return -4;
 	return 0;
 }

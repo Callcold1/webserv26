@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/11 16:04:15 by kmooney           #+#    #+#             */
-/*   Updated: 2026/04/20 17:02:06 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/04/21 16:02:36 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -245,5 +245,6 @@ const std::map<std::string, std::string>&	mimeToMagicMap(void);
 std::string									detectMimeFromFilename(const std::string& filename);
 
 
-int		copyFile(const std::string& src, const std::string& dst);
+void	uniqueFilename(std::string& filename);
+int		copyFile(const std::string& src, std::string& dst);
 void	replaceChar(std::string& name, char remove, char replace);

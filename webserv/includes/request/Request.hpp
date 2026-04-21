@@ -27,13 +27,13 @@ class Request {
 	
 	public:
 						Request();
-						Request(Config* config);
-						Request( listenInstance_s* listen_instance );
+						Request( listenInstance_s* listen_instance);
 						Request(const Request &other);
 						Request& operator=(const Request &other);
 						~Request(void);
 
 	eParse				parseRequest(const char* rawData, size_t length);
+	bool				checkSizes(void);
 	void	    		clear();
 	void				deleteHeaders(void);
 	
@@ -51,19 +51,19 @@ class Request {
 
 						/* SETTERS */
 
-	void				setBodyType( bool hasBody, bool isChunked );
-	void				setBodyEncoding( const std::string& encoding );
-	void				setBoundaryString( const std::string& boundary );
-	void				setDefaultMultiPartType( const std::string& type );
+	void				setBodyType( bool hasBody, bool isChunked);
+	void				setBodyEncoding( const std::string& encoding);
+	void				setBoundaryString( const std::string& boundary);
+	void				setDefaultMultiPartType( const std::string& type);
 	std::vector<field_t* >	findHeader(const std::string& header_name);
-	void	 			iterateOverFieldT(std::vector<field_t*>& vec );
+	void	 			iterateOverFieldT(std::vector<field_t*>& vec);
 	std::string			findQuery(const std::string id);
 	
-	void				setHostname( const std::string& hostname );
+	void				setHostname( const std::string& hostname); 
 	void 				setPstate(eParse p_state);
 	void 				setRstate(eReqState r_state);
-	bool 				setState(eParse p_state, std::string err_mess, unsigned int err_num );
-	bool 				setState(eParse p_state, eReqState r_state, std::string err_mess, unsigned int err_num );
+	bool 				setState(eParse p_state, std::string err_mess, unsigned int err_num);
+	bool 				setState(eParse p_state, eReqState r_state, std::string err_mess, unsigned int err_num);
 
 	bool				matchServerToHostHeader(void);
 	bool				matchLocationToURIPath(void);

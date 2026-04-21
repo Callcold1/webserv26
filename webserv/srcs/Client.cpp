@@ -224,7 +224,7 @@ void Client::handle_request()
 	std::string path = _request._re.paths.resource_path.path; //_request.get_root_dir() + _request._uri.path;
 
 	std::cout << "path hr: " << path << std::endl;
-	std::cout << _matched_location->getRedirect().url << std::endl;
+	//std::cout << _matched_location->getRedirect().url << std::endl;
 
 	if (!_matched_location)
 	{
@@ -290,7 +290,7 @@ void Client::handle_request()
 			_response = new ErrorResponse(NOT_FOUND_ERROR, _request); //again, could be 403 for directories etc but this is for security
 		}
 	}
-	else if (path.find(HTML_PATH) != std::string::npos || path.find(PHOTO_PATH) != std::string::npos || path.find("assets/") != std::string::npos || _request._re.type == RESPOND_STATIC) // KM - I think we should change this : hardcoded feels wrong - should be able to alter config
+	else if (_request._re.type == RESPOND_STATIC) // KM - I think we should change this : hardcoded feels wrong - should be able to alter config
 	{
 		std::cout << "static page found" << std::endl;
 		_response = new SuccessResponse(_request);
@@ -340,7 +340,8 @@ void	Client::generateLogMessage(void){
 	std::string message = _log_msg + "Parsing : " + status;
 	Log::instance().log(Log::INFO, Log::TYPE_REQUEST_PARSING, message, false);
 	Log::instance().log(Log::INFO, Log::TYPE_REQUEST_PARSING, printstream(_request), false);
-	Log::instance().log(Log::INFO, Log::TYPE_REQUESTS, printReqStatus(_request, _fd), false);
+	if (_request._p_state != P_ERROR)
+		Log::instance().log(Log::INFO, Log::TYPE_REQUESTS, printReqStatus(_request, _fd), false);
 }
 
 /*

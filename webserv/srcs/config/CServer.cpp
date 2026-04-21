@@ -153,6 +153,22 @@ bool	CServer::isTimeoutRWSet(void) const{
 }
 
 /*
+>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<
+>>>>>>		CHECK VARIABLE		<<<<<<
+>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<
+*/
+
+bool	CServer::isMethodSupported(const std::string& method) const{
+	size_t size = _method.size();
+	
+	for (size_t i = 0; i < size; i++){
+		if (method.compare(_method[i]))
+			return true;
+	}
+	return false;
+}
+
+/*
 >>>>>>>>>>>>>>><<<<<<<<<<<<<<<
 >>>>>>		GETTERS		<<<<<<
 >>>>>>>>>>>>>>><<<<<<<<<<<<<<<

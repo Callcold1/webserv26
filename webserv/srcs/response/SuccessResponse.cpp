@@ -169,6 +169,8 @@ int SuccessResponse::get_file()
 				gen_index_page(false);
 			else if (_path.find(PHOTO_PATH) != std::string::npos)
 				gen_index_page(true);
+			else
+				gen_index_page(true);
 			_is_dir = true;
 		}
 		else if (S_ISREG(st.st_mode))

@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/30 11:28:22 by kmooney           #+#    #+#             */
-/*   Updated: 2026/04/20 17:33:22 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/04/21 16:45:35 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -222,8 +222,27 @@ eParse	Request::parseRequest(const char* rawData, size_t length) {
 		if (_p_state == P_PARSE)
 			_parser->parseRequest();
 	}
+	if (_matched_server)
+		checkSizes();
 	updateRe();
 	return _p_state;
+}
+
+/*
+>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<
+>>>>>>		SIZE CHECKS		<<<<<<
+>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<
+*/
+bool	Request::checkSizes(void){
+
+	if (_r_state <= V_HEADERS && _sizes.bytes_read > (size_t)_matched_server->getMaxHeaderSize())
+		return this->setState(P_ERROR, "Malformed Request : Header size > maximum header size", 400);
+
+	if (_r_state > V_HEADERS && (_sizes.body_bytes_expected > (size_t)_matched_location->getMaxBodySize()
+		 || _sizes.body_bytes_read > (size_t)_matched_location->getMaxBodySize())){
+		return this->setState(P_ERROR, "Malformed Request : Body size > maximum body size", 400);
+	}
+	return true;
 }
 
 /*
@@ -288,7 +307,7 @@ void	Request::setBodyType( bool hasBody, bool isChunked ){
 		_body_type = BODY_NONE;
 	// BODY IS EXPECTED
 	else if (isChunked)
-		_body_type = BODY_CHUNKED;			
+		_body_type = BODY_CHUNKED;
 	else if (_sizes.body_bytes_expected > 0)
 		_body_type = BODY_CONTENT_LEN;
 	else if (_version == "HTTP/1.0")
@@ -321,6 +340,7 @@ bool	Request::setState(eParse p_state, std::string err_mess, unsigned int err_nu
 	_p_state = p_state;
 	_errMess = err_mess;
 	_errNum = err_num;
+	Log::instance().log(Log::INFO, Log::TYPE_REQUESTS, err_mess + toString(err_num), false);
 	return false;
 }
 
@@ -329,6 +349,8 @@ bool	Request::setState(eParse p_state, eReqState r_state, std::string err_mess, 
 	_r_state = r_state;
 	_errMess = err_mess;
 	_errNum = err_num;
+	Log::instance().log(Log::INFO, Log::TYPE_REQUESTS, err_mess + ": " + toString(err_num), false);
+	Log::instance().log(Log::ERROR, Log::TYPE_ERROR, err_mess + ": " + toString(err_num), true);
 	return false;
 }
 
@@ -378,11 +400,12 @@ bool	Request::matchServerToHostHeader(void){
 	    hostname = _host_header;
 
 	if (_listen_instance->name_to_srv.find(hostname) == _listen_instance->name_to_srv.end() &&
-			_listen_instance->name_to_srv.find(_host_header) == _listen_instance->name_to_srv.end())
+			_listen_instance->name_to_srv.find(_host_header) == _listen_instance->name_to_srv.end()){
 		if (_version == "HTTP/1.0")
 			_matched_server = _listen_instance->def_srv;
 		else
 			return false;
+	}
 	else
 		_matched_server = (_listen_instance->name_to_srv.find(hostname))->second;
 	_re.server = _matched_server;

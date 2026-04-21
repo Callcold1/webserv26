@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/30 11:26:19 by kmooney           #+#    #+#             */
-/*   Updated: 2026/04/20 17:03:37 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/04/21 16:45:16 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -76,9 +76,13 @@ bool	RequestValidator::validateMethod(){
 
 	if (_req->_r_state != V_REQLINE) {
 
-		if (!_req->_matched_location->isMethodSupported(method))
-			return _req->setState(P_ERROR, _req->_r_state, ERR_RL_METHOD_NOT_PERMITTED, 501);
-		
+		if (!_req->_matched_location->isMethodSupported(method)){
+
+			if(!_req->_matched_server->isMethodSupported(method))
+				return _req->setState(P_ERROR, _req->_r_state, ERR_RL_METHOD_NOT_PERMITTED, 501);
+			else
+				return _req->setState(P_ERROR, _req->_r_state, ERR_RL_METHOD_NOT_PERMITTED, 405);
+		}
 		else if (_req->_matched_location->isMethodSupported(to_upper(method)))
 			return _req->setState(P_ERROR, V_REQLINE, ERR_RL_METHOD_CASE, 400);
 	}
@@ -273,10 +277,6 @@ bool	RequestValidator::percentDecode( str_t& encoded){
 void	RequestValidator::validateHeaders( void ){
 	if (!validateHostHeader())
 		return;
-	if (!validateRepresentation())
-		return;
-	if (!validateConnectionHeader())
-		return;
 	if (!_req->matchServerToHostHeader()){
 		_req->setState(P_ERROR, V_HEADERS, ERR_NO_MATCHING_SERVER, 404);
 		return;
@@ -285,6 +285,11 @@ void	RequestValidator::validateHeaders( void ){
 		_req->setState(P_ERROR, V_HEADERS, ERR_NO_MATCHING_LOCATION, 404);
 		return;
 	}
+	if (!validateRepresentation())
+		return;
+	if (!validateConnectionHeader())
+		return;
+
 	if (_req->_hasBody)
 		_req->setRstate(P_BODY);
 	else {
@@ -406,7 +411,7 @@ bool	RequestValidator::validateContentType(){ // CHECK SERVER SUPPORTS TYPE
 	if (!_req->_matched_server)
 		return _req->setState(P_ERROR, V_HEADERS, "Trying to validate content type but no matching server", 404);
 	std::map<std::string, std::vector<std::string> > server_content_types = _req->_matched_server->getMime();
-	if (!isValidContentType(val))
+	if (!isValidContentType(val)) //KM - remove or just check syntax? Not really an error or not?
 		return _req->setState(P_ERROR, V_HEADERS, "Content-Type not supported", 415);
 	if (val.find("multipart/") != std::string::npos)
 		return validateMultiPartHeader(val, options);
@@ -420,6 +425,7 @@ bool	isValidContentType(const std::string& name){ // THESE ARE TEST VALUES TO BE
 	static std::vector<std::string> validTypes;
 
 	if (validTypes.empty()){
+		validTypes.push_back("application/x-www-form-urlencoded");
 		validTypes.push_back("application/javascript");
 		validTypes.push_back("application/json");
 		validTypes.push_back("application/octet-stream");
@@ -550,7 +556,7 @@ bool	RequestValidator::updateMPparams(mpPart_t& part, const std::vector<std::pai
 		if (params[i].first == "filename"){
 			std::string fname = params[i].second;
 			fn++;
-			if (sanitiseFilename(fname)) // Should be sanitiseFilename
+			if (sanitiseFilename(fname))
 				part.filename = fname;
 			else
 				return false;
@@ -636,6 +642,8 @@ bool	RequestValidator::validateMultiPartBody(){
 		_req->setRstate(P_BODY);
 		_req->setPstate(P_AWAIT);
 	}
+	else
+		_req->setRstate(P_MULTI);
 	return true;
 }
 

@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/23 01:37:52 by kmooney           #+#    #+#             */
-/*   Updated: 2026/04/20 16:30:30 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/04/21 11:48:02 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -383,7 +383,6 @@ void	RequestParser::parseRequest(){
 		_req->setState(P_ERROR, "Error Parsing : Index invalidated", 500);
 	return ;
 }
-
 
 /*
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<

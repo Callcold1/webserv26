@@ -761,7 +761,7 @@ bool	CParser::setIndex(node_t* node, std::vector<std::string>& index){
 	if (size == 0)
 		return false;
 
-	for (size_t i = 0; i < size - 1; i++)
+	for (size_t i = 0; i < size; i++)
 			index.push_back(node->args[i]);
 	return true;
 }
