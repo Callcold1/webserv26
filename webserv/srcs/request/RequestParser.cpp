@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   RequestParser.cpp                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: junruh <junruh@student.42.fr>              +#+  +:+       +#+        */
+/*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/23 01:37:52 by kmooney           #+#    #+#             */
-/*   Updated: 2026/04/21 17:03:17 by junruh           ###   ########.fr       */
+/*   Updated: 2026/04/21 20:49:42 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -959,7 +959,7 @@ bool	RequestParser::appendToTempFile(std::string& filename, std::string& data){
 */
 void	RequestParser::parsePlain(token_s& it) {
 
-	size_t remaining = _req->_sizes.body_bytes_expected - _req->_sizes.body_bytes_read; 
+	size_t remaining = _req->_sizes.body_bytes_expected - _req->_sizes.body_bytes_read;
 
 	if (it.end < it.begin)
 		_req->setState(P_ERROR, "Parsing Error : invalid index", 500);
@@ -968,19 +968,21 @@ void	RequestParser::parsePlain(token_s& it) {
 	size_t to_copy   = std::min(remaining, available);
 
 	if (to_copy > 0) {
-		_req->_body.append(it.begin, it.begin + to_copy);
-		_req->_sizes.body_bytes_read += to_copy;
+		_req->_body.append(_req->_buffer.begin() + it.begin, _req->_buffer.begin() + it.begin + to_copy);
+		_req->_sizes.body_size += to_copy;
 		it.begin += to_copy;
 		
-		if (_req->_sizes.body_bytes_read < _req->_sizes.body_bytes_expected) {
-			_req->setPstate(P_AWAIT); // RELYING ON SERVER TO TIME OUT IF FULL BODY IS NOT RECEIVED
+		if (_req->_sizes.body_size < _req->_sizes.body_bytes_expected) {
+			_req->setPstate(P_AWAIT);
 			return;
 		}
 	}
-	if (_req->_sizes.body_bytes_read != _req->_sizes.body_bytes_expected)
+	if (_req->_sizes.body_size != _req->_sizes.body_bytes_expected)
 		_req->setState(P_ERROR, P_REQLINE, "Bad Request : Malformed Body : body size does not match value in content-length header", 400);
-	else
+	else {
 		_req->setState(P_DONE, V_BODY, "Parsing Complete", 200);
+		_req->_body_complete = true;
+	}
 }
 
 /*
@@ -1042,6 +1044,9 @@ void	RequestParser::finalChunkChecks(token_s& it){
 		_req->setPstate(P_AWAIT);
 		return;
 	}
+	
+	_req->_body_complete = true;
+	
 	if (line.begin != line.end)
 		_req->setRstate(P_TRAILERS);
 	else

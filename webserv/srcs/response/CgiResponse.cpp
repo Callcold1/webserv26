@@ -87,7 +87,7 @@ int CgiResponse::execute()
 
 		char* system_path = getenv("PATH"); // current system PATH so we dont have to hardcode it
 		std::string path_env = "PATH=" + std::string(system_path ? system_path : "/usr/bin:/bin");
-		std::string q = "QUERY_STRING=" + _request._uri.query;
+		std::string q = "QUERY_STRING=";
 		std::string len = "CONTENT_LENGTH=" + toString(_request._sizes.body_size); //was :_request._body.length() JAKE : replace body.length with "" (the size of the body after parsing - file or string)
 		std::string type = "CONTENT_TYPE=application/x-www-form-urlencoded"; // or from headers
 		std::string m = "REQUEST_METHOD=" + _request._method;
@@ -96,6 +96,9 @@ int CgiResponse::execute()
 		std::string redirect = "REDIRECT_STATUS=200";    // security handshake for PHP
 		std::string gateway = "GATEWAY_INTERFACE=CGI/1.1";
 		std::string protocol = "SERVER_PROTOCOL=HTTP/1.1";
+
+		if (_request._method == "GET")
+    		q += _request._uri.query;
 
 		char* envp[] = {
 			const_cast<char*>(q.c_str()),
@@ -130,7 +133,6 @@ int CgiResponse::execute()
 
 		close(toServer[1]);
 		close(toCgi[0]);
-
 		if ((!_request._body.empty())) {
 			if (write(toCgi[1], _request._body.c_str(), _request._body.length()) < 0)
 			{

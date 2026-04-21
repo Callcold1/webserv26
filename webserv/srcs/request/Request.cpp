@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: junruh <junruh@student.42.fr>              +#+  +:+       +#+        */
+/*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/30 11:28:22 by kmooney           #+#    #+#             */
-/*   Updated: 2026/04/21 17:27:26 by junruh           ###   ########.fr       */
+/*   Updated: 2026/04/21 19:08:09 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -413,7 +413,8 @@ bool	Request::matchServerToHostHeader(void){
 }
 
 bool	Request::matchLocationToURIPath(void){
-		_matched_location = _matched_server->getLocationForPath(_uri.path, _leftover);
+	
+	_matched_location = _matched_server->getLocationForPath(_uri.path, _leftover);
 	if (!_matched_location)
 		return false;
 	if (_matched_location->isCGIMapSet())

@@ -1,10 +1,5 @@
 WIP
 ===
-POST CGI - body not populating correctly + sizes are incorrect 
-FILE SAVING - from temp to save location
-
-1) Parsing sizes and saving body to file : need to accurately record all sizes, and where body is saved 
-
 2) Consolidate properties in request into similar types in structs
 
 3) Look at error page - should we treat as full path or redirect to error page (e.g. location /50x.html{} for error_page 501 502 /50x.html)
