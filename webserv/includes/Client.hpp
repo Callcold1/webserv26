@@ -51,6 +51,8 @@ class Client {
 			eConn				getConn(void);
 			std::string& 		get_msg();
 			int			 		getFD();
+			int					getServerTimeout();
+			time_t				getLastActivity();
 
 								/* HANDLERS */
 			bool				handleClientRead(const char *buffer, size_t len);
@@ -61,6 +63,8 @@ class Client {
 								/* WRITING */
 			void 				append_write(std::string str);
 			void				generateLogMessage(void);
+								/* SETTERS */
+			void				setLastActivity();
 
 	private:
 

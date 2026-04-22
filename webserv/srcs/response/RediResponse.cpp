@@ -105,9 +105,8 @@ int RediResponse::save_file(std::string filename, std::string file_body)
 		ext = filename.substr(dot);
 	}
 
-	std::string file_path = "../photos/" + filename;
-	//std::string file_path = _request._re.paths.upload_paths[0];
-	base = "../photos/" + base;
+	std::string file_path = _request._re.paths.upload_base + filename;
+	base = _request._re.paths.upload_base + base;
 	int i = 2;
 
 	while (file_exists(file_path.c_str()))

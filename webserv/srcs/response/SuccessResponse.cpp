@@ -207,8 +207,8 @@ int SuccessResponse::get_file()
 	
 	if (info.is_dir)
 	{
-		std::cout << "dir" << std::endl;
-		if (_path.find(_request._re.paths.upload_base) != std::string::npos)
+		std::cout << "dir " << _request._re.paths.upload_base << std::endl;
+		if (_request._matched_location->isUploadPathSet() && _path.find(_request._re.paths.upload_base) != std::string::npos)
 			gen_index_page(true);
 		else
 		{

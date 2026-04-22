@@ -218,7 +218,7 @@ void	Server::loop(){
 
 	while (true) {
 		
-		int activity = poll(&_sockets[0], _sockets.size(), -1);
+		int activity = poll(&_sockets[0], _sockets.size(), 1000);
 		
 		if (activity < 0){
 			Log::instance().log(Log::INFO, Log::TYPE_CLASS, "Signal received : exiting server", true);
@@ -226,6 +226,7 @@ void	Server::loop(){
 		}
 		if (!handleEvents())
 			break;
+		checkTimeouts();
 	}
 }
 
@@ -314,6 +315,8 @@ void	Server::addClient(int client_fd, int listen_index){
 
 	Client	new_client(&_listen_sockets[listen_index], client_fd);
 
+	new_client.setLastActivity();
+
 	_clients.insert(std::make_pair(client_fd, new_client));
 
 	pollfd pfd;
@@ -335,6 +338,7 @@ void	Server::handleClientRead(int fd, bool pipe_closed){
 		return;
 	}
 	Client&	client = it->second;
+	client.setLastActivity();
 
 	char buffer[BUF_SIZE];
 
@@ -365,7 +369,8 @@ void    Server::handleClientWrite(int fd)
 	}
 
     Client& client = it->second;
-    std::string &response = client.get_msg();
+	client.setLastActivity();
+	std::string &response = client.get_msg();
 
     ssize_t sent = send(fd, response.c_str(), response.size(), 0);
 
@@ -383,6 +388,62 @@ void    Server::handleClientWrite(int fd)
         }
     }
 }
+
+void Server::checkTimeouts()
+{
+    std::time_t now = std::time(0);
+    std::vector<int> timedOutFds;
+	int					timeout_limit;
+
+    for (std::map<int, Client>::iterator it = _clients.begin(); it != _clients.end(); ++it)
+    {
+        timeout_limit = it->second.getServerTimeout();
+        
+        if (timeout_limit < 0)
+        {
+            if (_config && _config->isTimeoutKASet())
+                timeout_limit = _config->getTimeoutKA();
+            else
+                timeout_limit = 10;
+        }
+        if (difftime(now, it->second.getLastActivity()) > timeout_limit) {
+            timedOutFds.push_back(it->first);
+        }
+    }
+    for (size_t i = 0; i < timedOutFds.size(); ++i)
+	{
+
+        disconnectClient(timedOutFds[i], "Timeout");
+    }
+}
+
+// void Server::checkTimeouts()
+// {
+//     std::time_t now = std::time(0);
+//     int	timeout_limit = 10;
+// 	std::map<int, Client>::iterator current;
+
+//     std::map<int, Client>::iterator it = _clients.begin();
+//     while (it != _clients.end())
+// 	{
+//         current = it++;  // increment the iterator before potentially erasing
+// 		if ((timeout_limit = (*current).second.getServerTimeout()) < 0)
+// 		{
+// 			if (_config->isTimeoutKASet())
+// 				timeout_limit = _config->getTimeoutKA();
+// 			else
+// 				timeout_limit = 10;
+// 		}
+//         if (difftime(now, current->second.getLastActivity()) > timeout_limit) {
+//             Log::instance().log(Log::INFO, Log::TYPE_ACCESS, 
+//                 "Closing connection: Timeout on fd [" + toString(current->first) + "]", true);
+            
+//             // Re-use your existing disconnect logic
+//             int fd_to_close = current->first;
+//             disconnectClient(fd_to_close, "Timeout");
+//         }
+//     }
+// }
 
 /*
 >>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<

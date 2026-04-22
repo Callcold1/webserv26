@@ -102,6 +102,20 @@ std::string&	Client::get_msg(){
 	return(_out_buff);
 }
 
+int	Client::getServerTimeout()
+{
+	if (_matched_server && _matched_server->isTimeoutKASet())
+	{
+		return(_matched_server->getTimeoutKA());
+	}
+	return (-1);
+}
+
+time_t	Client::getLastActivity()
+{
+	return(_last_active);
+}
+
 /*
 >>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<
 >>>>>>		HANDLERS		<<<<<<
@@ -227,10 +241,8 @@ void Client::handle_request()
 	std::cout << "path hr: " << path << std::endl;
 	//std::cout << _matched_location->getRedirect().url << std::endl;
 
-	if (!_matched_location)
-	{
-		_response = new ErrorResponse(NOT_FOUND_ERROR, _request);
-	}
+	if (_request._re.type == RESPOND_ERROR)
+		_response = new ErrorResponse(_request._errNum, _request);
 	/* int			error_catch = 0;
 	respond_t&	re = _request._re;
 
@@ -269,7 +281,7 @@ void Client::handle_request()
 			_response = new ErrorResponse(error_catch, _request);
 	}
 
-	else if (path.find(CGI_PATH) != std::string::npos)//_request.isCGI
+	else if (_request._isCGI)//_request.isCGI
 	{
 		std::cout << "cgi found" << std::endl;
 		fileInfo_s info;
@@ -506,4 +518,11 @@ std::string	printReqStatus(Request& _request, int fd){
 	}
 	std::string result = os.str();
 	return result;
+}
+
+//setters
+
+void				Client::setLastActivity()
+{
+	_last_active = std::time(0);
 }

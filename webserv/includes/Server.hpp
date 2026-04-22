@@ -60,6 +60,7 @@ class Server {
 		
 		void	handleClientRead(int fd, bool pipe_closed);
 		void	handleClientWrite(int fd);
+		void	checkTimeouts();
 		
 		void	disconnectClient(int fd, const std::string& reason);
 		void	removeClientFromPoll(int fd);
