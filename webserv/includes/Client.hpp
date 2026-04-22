@@ -61,6 +61,7 @@ class Client {
 			void				handle_request();
 
 								/* WRITING */
+			std::string			getStatusString(void);
 			void 				append_write(std::string str);
 			void				generateLogMessage(void);
 								/* SETTERS */

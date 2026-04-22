@@ -90,7 +90,8 @@ class Request {
 
 	std::string			_content_length;
 	std::string 		_body;
-	std::string			_body_filename;
+	std::string			_body_filename; // temp location that the body is saved to 
+	fileInfo_s			_upload; 		// the upload destination that a non-multipart upload will be moved to
 	std::string 		_boundary;
 	std::string 		_default_mp_content_type;
 	mpMessage_t			_mp_m;
@@ -109,6 +110,7 @@ class Request {
 	respond_t			_re;
 	eBodyType			_body_type;
 	std::string 		_leftover; // uri remaining after matching location
+	
 	
 	private : 
 };

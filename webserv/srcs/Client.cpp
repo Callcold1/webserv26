@@ -142,11 +142,9 @@ bool	Client::handleClientRead(const char *buffer, size_t len){
 		throw std::runtime_error("handleClientRead() : " + err);
 	}
 
-	std::cout << "lala" << std::endl;
-
 	switch(p_state){
 		case P_PARSE	: 	{ _state = READ; generateLogMessage(); return false;}
-		case P_AWAIT	: 	{ _state = READ; generateLogMessage(); return false;}
+		case P_AWAIT	: 	{ _state = READ; if (_request._r_state > V_HEADERS) { generateLogMessage();} return false;}
 		case P_DONE		:	{ _state = WRITE; generateLogMessage();	break;}
 		case P_ERROR	: 	{ _state = ERROR;_request._re.type = RESPOND_ERROR; _conn = CONN_CLOSE; generateLogMessage(); break;}
 		default	: break;
@@ -233,7 +231,11 @@ int Client::if_file_upload(Request &request)
 
 void Client::handle_request()
 {
+	Log::instance().log(Log::INFO, Log::TYPE_RESPONSE,	"Client [" + toString(_fd) + "] : response instantiated" , false);
+	Log::instance().log(Log::INFO, Log::TYPE_RESPONSE,	"Client [" + toString(_fd) + "] : " + getStatusString(), false);
+
 	int error_catch = 0;
+	
 	std::cout << _request._uri.path << std::endl;
 	std::string path = _request._re.paths.resource_path.path;//_request.get_root_dir() + _request._uri.path; //
 
@@ -333,6 +335,59 @@ void Client::handle_request()
 >>>>>>>>>>>>>>><<<<<<<<<<<<<<<
 */
 
+std::string	Client::getStatusString(void){
+	
+	std::string str;
+
+	str += "Parsing State : ";
+	
+	switch(_request.getParseStatus()){
+		case 0	:{str += "P_PARSE"; break;}
+		case 1	:{str += "P_AWAIT"; break;}
+		case 2	:{str += "P DONE"; break;}
+		case 3	:{str += "P ERROR : " + _request.getErrMsg(); break;}
+		default	:{str += "UNKNOWN"; break;}
+	}
+	str += " Request State : ";
+
+	switch(_request.getReqStatus()){
+		case 0	:{str += "P_REQLINE"; break;}
+		case 1	:{str += "P_REQLINE_PARAMS"; break;}
+		case 2	:{str += "V_REQLINE"; break;}
+		case 3	:{str += "P_HEADERS"; break;}
+		case 4	:{str += "V_HEADERS"; break;}
+		case 5	:{str += "P_BODY"; break;}
+		case 6	:{str += "V_BODY"; break;}
+		case 7	:{str += "P_TRAILERS"; break;}
+		case 8	:{str += "V_TRAILERS"; break;}
+		case 9	:{str += "P_MULTI"; break;}
+		case 10	:{str += "V_MPHEADERS"; break;}
+		case 11	:{str += "V_MPBODY"; break;}
+		case 12	:{str += "REQ_DONE"; break;}
+		default	:{str += "UNKNOWN"; break;}
+	}
+	str += "\nRequest Buffer : ";
+
+	for (size_t i=0; i < _request._buffer.size(); i++){
+		str += _request._buffer[i];
+	}
+	
+	str += "Initial Response Type : ";
+
+	switch(_request._re.type){
+			case(RESPOND_NOT_SET)	:{str += "RESPOND_NOT_SET\n"; break;}
+			case(RESPOND_CGI)		:{str += "RESPOND_CGI\n"; break;}
+			case(RESPOND_ERROR)		:{str += "RESPOND_ERROR\n"; break;}
+			case(RESPOND_FILE)		:{str += "RESPOND_FILE\n"; break;}
+			case(RESPOND_INDEX)		:{str += "RESPOND_INDEX\n"; break;}
+			case(RESPOND_REDIR)		:{str += "RESPOND_REDIR\n"; break;}
+			case(RESPOND_STATIC)	:{str += "RESPOND_STATIC\n"; break;}
+			case(RESPOND_UPLOAD)	:{str += "RESPOND_UPLOAD\n"; break;}
+			default : break;
+	}
+	return str;
+}
+
 void Client::append_write(std::string str){
 
 	_out_buff.append(str);
@@ -341,17 +396,7 @@ void Client::append_write(std::string str){
 
 void	Client::generateLogMessage(void){
 
-	std::string status;
-	
-	switch(_request.getParseStatus()){
-		case 0	:{status = "P_PARSE"; break;}
-		case 1	:{status = "P_AWAIT"; break;}
-		case 2	:{status = "P DONE"; break;}
-		case 3	:{status = "P ERROR : " + _request.getErrMsg(); break;}
-		default	:{status = "UNKNOWN"; break;}
-	}
-	//std::cout << _request._re << std::endl;
-	std::string message = _log_msg + "Parsing : " + status;
+	std::string message = _log_msg + getStatusString();
 	Log::instance().log(Log::INFO, Log::TYPE_REQUEST_PARSING, message, false);
 	Log::instance().log(Log::INFO, Log::TYPE_REQUEST_PARSING, printstream(_request), false);
 	if (_request._p_state != P_ERROR)
@@ -456,6 +501,7 @@ std::ostream& operator<<(std::ostream& os, const respond_t& re){
 		case(RESPOND_FILE)		:{std::cout << "RESPOND_FILE" << std::endl; break;}
 		case(RESPOND_INDEX)		:{std::cout << "RESPOND_INDEX" << std::endl; break;}
 		case(RESPOND_REDIR)		:{std::cout << "RESPOND_REDIR" << std::endl; break;}
+		case(RESPOND_STATIC)	:{std::cout << "RESPOND_STATIC" << std::endl; break;}
 		case(RESPOND_UPLOAD)	:{std::cout << "RESPOND_UPLOAD" << std::endl; break;}
 		default : break;
 	}

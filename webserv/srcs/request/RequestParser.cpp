@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   RequestParser.cpp                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: junruh <junruh@student.42.fr>              +#+  +:+       +#+        */
+/*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/23 01:37:52 by kmooney           #+#    #+#             */
-/*   Updated: 2026/04/21 17:03:17 by junruh           ###   ########.fr       */
+/*   Updated: 2026/04/22 14:29:59 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -858,31 +858,7 @@ void	RequestParser::parseField(token_s& it) {
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 */
 
-/* 
-	The body is either parsed to a string, or to a file.
-	
-	It is initially parsed into a local string. Once the string reaches the size MAX_LOCAL_BODY,
-	a tempfile is created. The buffer is transferred to the tempfile, and the buffer is cleared.
-	The process is repeated until the full body is parsed.
-
-	Multipart	: 
-	Chunked		:
-	Other		:
-	
-	Params					Local Variable				Local Var Size					Tempfile							Overall Body Size
-	======					==============				==============					========							=================
-
-	Chunked transfers 	:	
-	MP transfers		: 	_req->_mp_m.parts[0].body									_req->_mp_m.parts[0].tempFilePath	_req->_mp_m.parts[0].body
-	Any other			: 	_req->_body					_req->_sizes.body_local_size		
-
-*/
-
-/* FUNCTION TO PARSE THE BODY */
 void	RequestParser::parseBody(token_s& it) {
-
-	if (!checkBodySize())// Need to move buffer if parsing is complete and tmpfile
-		return;
 
 	size_t start = it.begin;
 	
@@ -903,6 +879,8 @@ void	RequestParser::parseBody(token_s& it) {
 			_req->_sizes.body_bytes_read += it.begin - start;
 			return;
 		}
+		if (!checkBodySize())
+			return;
 	}
 	_req->setPstate(P_AWAIT);
 }
@@ -915,24 +893,26 @@ void	RequestParser::parseBody(token_s& it) {
 
 bool	RequestParser::checkBodySize(void){ // Need to move buffer if parsing is complete and tmpfile
 
+	_req->_sizes.body_local_size = _req->_body.size();
 	if ((long long)_req->_sizes.body_bytes_read > _req->_matched_location->getMaxBodySize())
 		_req->setState(P_ERROR, P_REQLINE, "Bad Request : Malformed Body : maximum size exceeded", 400);
 	
-	if (_req->_sizes.body_local_size > MAX_LOCAL_BODY){
-		
-		int fd = -1;
+	if (_req->_sizes.body_local_size > MAX_LOCAL_BODY || (_req->_bodyInFile && _req->_sizes.body_bytes_read == _req->_sizes.body_bytes_expected && _req->_sizes.body_local_size > 0)){
 
 		if (!_req->_bodyInFile){
 			if (!_req->_isMultiPart && _req->_isChunked){
-				if (!assignTempfile(_req->_body_filename, fd, "Chunked_"))
-					_req->setState(P_ERROR, P_REQLINE, "Server Error : Problem creating tempfile", 500);
+				if (!assignTempfile(_req->_body_filename, &(_req->_upload.path), "Chunked_"))
+					return _req->setState(P_ERROR, P_REQLINE, "Server Error : Problem creating tempfile", 500);
 			}
 			else if (!_req->_bodyInFile && !_req->_isMultiPart && !_req->_isChunked){
-				if (!assignTempfile(_req->_body_filename, fd, "Plain_"))
-					_req->setState(P_ERROR, P_REQLINE, "Server Error : Problem creating tempfile", 500);
+				if (!assignTempfile(_req->_body_filename, &(_req->_upload.path), "Plain_"))
+					return _req->setState(P_ERROR, P_REQLINE, "Server Error : Problem creating tempfile", 500);
 			}
-			//_req->_re.paths.upload_paths.push_back(std::pair< fileInfo_s, std::string>(_req->, _req->_body_filename)); //Need to check where file destination is (fileInfo_s) - when upload folder, that's ok but what about cgi?
-		}	// Is this handled in updateRe?
+			_req->_bodyInFile = true;
+			appendPathToRoot(_req->_upload.path, _req->_re.paths.upload_base);
+			getFilePermissions(_req->_upload);
+			_req->_re.paths.upload_paths.push_back(std::pair< fileInfo_s, std::string>(_req->_upload, _req->_body_filename));
+		}
 		if(!appendToTempFile(_req->_body_filename, _req->_body))
 			_req->setState(P_ERROR, P_REQLINE, "Server Error : Problem creating tempfile", 500);
 		_req->_sizes.body_local_size = 0;
@@ -949,6 +929,7 @@ bool	RequestParser::appendToTempFile(std::string& filename, std::string& data){
 
 	ofs.write(data.c_str(), data.size());
 	ofs.close();
+	data.clear();
     return true;
 }
 
@@ -959,7 +940,7 @@ bool	RequestParser::appendToTempFile(std::string& filename, std::string& data){
 */
 void	RequestParser::parsePlain(token_s& it) {
 
-	size_t remaining = _req->_sizes.body_bytes_expected - _req->_sizes.body_bytes_read; 
+	size_t remaining = _req->_sizes.body_bytes_expected - _req->_sizes.body_bytes_read;
 
 	if (it.end < it.begin)
 		_req->setState(P_ERROR, "Parsing Error : invalid index", 500);
@@ -968,19 +949,21 @@ void	RequestParser::parsePlain(token_s& it) {
 	size_t to_copy   = std::min(remaining, available);
 
 	if (to_copy > 0) {
-		_req->_body.append(it.begin, it.begin + to_copy);
-		_req->_sizes.body_bytes_read += to_copy;
+		_req->_body.append(_req->_buffer.begin() + it.begin, _req->_buffer.begin() + it.begin + to_copy);
+		_req->_sizes.body_size += to_copy;
 		it.begin += to_copy;
 		
-		if (_req->_sizes.body_bytes_read < _req->_sizes.body_bytes_expected) {
-			_req->setPstate(P_AWAIT); // RELYING ON SERVER TO TIME OUT IF FULL BODY IS NOT RECEIVED
+		if (_req->_sizes.body_size < _req->_sizes.body_bytes_expected) {
+			_req->setPstate(P_AWAIT);
 			return;
 		}
 	}
-	if (_req->_sizes.body_bytes_read != _req->_sizes.body_bytes_expected)
+	if (_req->_sizes.body_size != _req->_sizes.body_bytes_expected)
 		_req->setState(P_ERROR, P_REQLINE, "Bad Request : Malformed Body : body size does not match value in content-length header", 400);
-	else
+	else {
 		_req->setState(P_DONE, V_BODY, "Parsing Complete", 200);
+		_req->_body_complete = true;
+	}
 }
 
 /*
@@ -1042,6 +1025,9 @@ void	RequestParser::finalChunkChecks(token_s& it){
 		_req->setPstate(P_AWAIT);
 		return;
 	}
+	
+	_req->_body_complete = true;
+	
 	if (line.begin != line.end)
 		_req->setRstate(P_TRAILERS);
 	else
@@ -1105,22 +1091,18 @@ void	RequestParser::parseBoundaryMP(token_s& it){
 	size_t	size = _mp_p.boundary.size();
 	size_t	token_size = it.end - it.begin;
 
-	// Full line received and boundary or last boundary not present 		== error
-	// Part line received and last boundary matches 						== message complete (Could receive a final optional \r\n in next read)
-	// Part line received and boundary matches but final does not			== await \r\n
-
-	if (token_size < size + 2){ 																		// +2 allows for "boundary + \r\n" or "boundary + --"
+	if (token_size < size + 2){
 		if (!parseNextLine(it, line))
 			_req->setPstate(P_AWAIT);
-		else {																							// if \r\n received, then the expected boundary line is invalid
+		else {
 			_req->setState(P_ERROR, P_BODY, "Malformed Body : invalid multipart boundary", 400); 		// CODE CHECK REQUIRED
 			_mp_p.state = MP_ERROR;	
 		}
 	}
-	else if (matchBoundaryMP(it.begin, it.end, final)){													// boundary matches : if final, then final boundary matches
+	else if (matchBoundaryMP(it.begin, it.end, final)){
 		if (final)
 			parseFinalMP(it, token_size);
-		else if (!parseNextLine(it, line) || (line.end - line.begin) > size){ 							// either no "boundary\r\n" received or "boundary + extra chars" - both errors 
+		else if (!parseNextLine(it, line) || (line.end - line.begin) > size){
 				_req->setState(P_ERROR, P_BODY, "Malformed Body : invalid multipart boundary", 400); 	// CODE CHECK REQUIRED
 				_mp_p.state = MP_ERROR;
 		}
@@ -1255,8 +1237,8 @@ void	RequestParser::parseBodyMP(token_s& it) {
 
 void	RequestParser::appendToTempfileMP(mpPart_t& part, size_t begin, size_t size) {
 	
-	if (part.tempFilePath.length() == 0 || part.fd == -1){
-		if (!assignTempfile(part.tempFilePath, part.fd, "Multipart_")){
+	if (part.tempFilePath.length() == 0){
+		if (!assignTempfile(part.tempFilePath, NULL, "Multipart_")){
 			_mp_p.state = MP_ERROR;
 			return;
 		}

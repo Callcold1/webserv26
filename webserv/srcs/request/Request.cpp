@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: junruh <junruh@student.42.fr>              +#+  +:+       +#+        */
+/*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/30 11:28:22 by kmooney           #+#    #+#             */
-/*   Updated: 2026/04/21 17:27:26 by junruh           ###   ########.fr       */
+/*   Updated: 2026/04/22 16:12:10 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -350,7 +350,8 @@ bool	Request::setState(eParse p_state, eReqState r_state, std::string err_mess, 
 	_errMess = err_mess;
 	_errNum = err_num;
 	Log::instance().log(Log::INFO, Log::TYPE_REQUESTS, err_mess + ": " + toString(err_num), false);
-	Log::instance().log(Log::ERROR, Log::TYPE_ERROR, err_mess + ": " + toString(err_num), true);
+	if (_p_state == P_ERROR)
+		Log::instance().log(Log::ERROR, Log::TYPE_ERROR, err_mess + ": " + toString(err_num), true);
 	return false;
 }
 
@@ -413,7 +414,8 @@ bool	Request::matchServerToHostHeader(void){
 }
 
 bool	Request::matchLocationToURIPath(void){
-		_matched_location = _matched_server->getLocationForPath(_uri.path, _leftover);
+	
+	_matched_location = _matched_server->getLocationForPath(_uri.path, _leftover);
 	if (!_matched_location)
 		return false;
 	if (_matched_location->isCGIMapSet())
@@ -426,6 +428,7 @@ bool	Request::matchLocationToURIPath(void){
 }
 
 /*
+>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<
 >>>>>>		UPDATE _RE		<<<<<<
 >>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<
 */
@@ -498,7 +501,7 @@ void	Request::updateRe(void){
 		}
 		else if (!_isMultiPart && _method == "POST"){
 			for (size_t i = 0; i < _re.query_pairs.size(); i++){
-				if (_re.query_pairs[i].first == "importfile" || _bodyInFile ){ 			// ADD || _isCGI?, or what if no filename?, or what if no importfile?  
+				if (_re.query_pairs[i].first == "importfile" || _bodyInFile ){ 			//KM -  ADD || _isCGI?, or what if no filename?, or what if no importfile?  
 					if (_matched_location->isUploadPathSet()){
 						std::string tmp_path = appendPathToRoot(_re.leftover_path, _re.paths.upload_base);
 						std::string upload_path = appendPathToRoot(_re.query_pairs[i].second, tmp_path); //possibly need to normalise/decode if URL encoded?
