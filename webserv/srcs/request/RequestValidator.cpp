@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   RequestValidator.cpp                               :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
+/*   By: junruh <junruh@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/30 11:26:19 by kmooney           #+#    #+#             */
-/*   Updated: 2026/04/22 15:40:02 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/04/22 18:42:47 by junruh           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,17 +77,18 @@ bool	RequestValidator::validateMethod(){
 	if (_req->_r_state != V_REQLINE) {
 
 		if (!_req->_matched_location->isMethodSupported(method)){
+			
+			if (_req->_matched_location->isMethodSupported(to_upper(method)))
+				return _req->setState(P_ERROR, V_REQLINE, ERR_RL_METHOD_CASE, 400);
 			if(!_req->_matched_server->isMethodSupported(method))
 				return _req->setState(P_ERROR, _req->_r_state, ERR_RL_METHOD_NOT_PERMITTED, 501);
 			else
 				return _req->setState(P_ERROR, _req->_r_state, ERR_RL_METHOD_NOT_PERMITTED, 405);
 		}
-		else if (_req->_matched_location->isMethodSupported(to_upper(method)))
-			return _req->setState(P_ERROR, V_REQLINE, ERR_RL_METHOD_CASE, 400);
+		return true;
 	}
-
 	else if (!isValidMethod(method))
-		return _req->setState(P_ERROR, V_REQLINE, ERR_RL_METHOD_NOT_SUPPORTED, 505);
+				return _req->setState(P_ERROR, V_REQLINE, ERR_RL_METHOD_NOT_SUPPORTED, 505);
 	
 	return true;
 }
@@ -284,6 +285,8 @@ void	RequestValidator::validateHeaders( void ){
 		_req->setState(P_ERROR, V_HEADERS, ERR_NO_MATCHING_LOCATION, 404);
 		return;
 	}
+	if (!validateMethod())
+		return;
 	if (!validateRepresentation())
 		return;
 	if (!validateConnectionHeader())
