@@ -553,6 +553,7 @@ std::string	printReqStatus(Request& _request, int fd){
 	os << std::left << std::setw(20) << "URI" << std::setw(3) << " : " << "[" << _request._uri_str << "]" << std::endl;
 	os << std::left << std::setw(20) << "Matched Location URI" << std::setw(3) << " : " << "[" << _request._matched_location->getURI() << "]" << std::endl;
 	os << std::left << std::setw(20) << "URI remainder" << std::setw(3) << " : " << "[" << _request._leftover << "]" << std::endl;
+	os << std::left << std::setw(20) << "Matched Location Methods" << std::setw(3) << " : " << "[" << _request._matched_location->getMethod() << "]" << std::endl;
 	if ( p_status == "P ERROR")
 		os << std::left << std::setw(20) << "Path" << std::setw(3) << " : " << "[" << _request._re.paths.error_path.path << "]" << std::endl << std::endl;
 	else if (_request._re.paths.upload_paths.size()){
