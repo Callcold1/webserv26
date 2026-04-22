@@ -216,6 +216,7 @@ void	CParser::initKeywords(void) {
 
 	// SERVER
 	_server_keywords.push_back("autoindex");
+	_location_keywords.push_back("cgi_path");
 	_server_keywords.push_back("charset");
 	_server_keywords.push_back("error_page");
 	_server_keywords.push_back("index");
@@ -411,7 +412,7 @@ void	CParser::handleCharset(node_t* node, tempConfig_s& tmp){
 }
 
 void	CParser::handleCGIMap(node_t* node, tempConfig_s& tmp, HandlerContext_e context){
-	if (context == LOCATION_HANDLER)
+	if (context == LOCATION_HANDLER || context == SERVER_HANDLER)
 		tmp.cgi_map_set = setCGImap(node, tmp.cgi_map);
 	else
 		throw std::runtime_error("Invalid context for cgi_map directive");
@@ -615,6 +616,8 @@ void	CParser::pushToConfig(tempConfig_s& tmp, Config& dest){
 void	CParser::pushToServer(tempConfig_s& tmp, CServer& dest){
 	if (tmp.charset_set)
 		dest.setCharset(tmp.charset, true);
+	if (tmp.cgi_map_set)
+		dest.setCGIMap(tmp.cgi_map, true);
 	if (tmp.error_page_set)
 		dest.setErrorPage(tmp.error_pages, true);
 	if (tmp.index_set)

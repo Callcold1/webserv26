@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/30 11:26:19 by kmooney           #+#    #+#             */
-/*   Updated: 2026/04/22 15:40:02 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/04/22 17:51:25 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -872,6 +872,8 @@ void	RequestValidator::validateBody() {
 		_req->setState(P_ERROR, V_BODY, "Incomplete Body after connection closed (Chunked)", 400);
 		return;
 	}
+	if (_req->_body_complete)
+		_req->setRstate(REQ_DONE);
 	if (_req->_r_state != P_TRAILERS)
 		_req->setRstate(REQ_DONE);
 }

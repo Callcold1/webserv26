@@ -29,7 +29,7 @@ class Config;
 struct tempConfig_s {
 	std::string							alias;				/*	LOCATION	*/
 	bool								autoindex;			/*	GLOBAL/SERVER/LOCATION	*/
-	std::map<std::string, std::string>	cgi_map;			/*	LOCATION	*/
+	std::map<std::string, std::string>	cgi_map;			/*	LOCATION/SERVER	*/
 	std::vector<std::string>			charset;			/*	GLOBAL/SERVER/LOCATION	*/
 	std::map<int, std::string> 			error_pages;		/*	GLOBAL/SERVER/LOCATION	*/
 	std::vector<std::string>			index;				/*	GLOBAL/SERVER/LOCATION	*/

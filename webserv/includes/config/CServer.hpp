@@ -21,6 +21,7 @@ class CServer {
 	private:
 
 		bool								_autoindex;			// indicates server autoindex setting (true = on, false = off)
+		std::map<std::string, std::string>	_cgi_map;			// cgi map (extension/path)
 		std::vector<std::string>			_charset;			// charset(s) that can be handled
 		std::map<int, std::string>			_error_pages;		// Map of error_page_number and corresponding path
  		std::vector<std::string>			_index;				// ordered list of possible index filenames - first one that works is returned
@@ -36,6 +37,7 @@ class CServer {
 		int									_timeout_rw;		// Length of time before rw timeout (seconds)
 
 		bool								_autoindex_set;
+		bool								_cgi_map_set;
 		bool								_charset_set;
 		bool								_error_page_set;
 		bool								_index_set;
@@ -63,6 +65,7 @@ class CServer {
 
 											/* CHECK IF VARIABLE SET*/
 		bool								isAutoIndexSet(void) const;
+		bool								isCGIMapSet(void) const;
 		bool								isCharsetSet(void) const;
 		bool								isErrorPageSet(void) const;
 		bool								isIndexSet(void) const;
@@ -80,6 +83,8 @@ class CServer {
 
 											/*	GETTERS	*/
 		bool								getAutoIndex(void) const;
+		bool								getCGIEnabled(void) const;
+		std::map<std::string, std::string>	getCGIMap(void) const;
 		std::vector<std::string>			getCharset(void) const;
 		std::string							getErrorPage(int errNum) const;
 		std::map<int, std::string>			getErrorPages(void) const;
@@ -97,6 +102,7 @@ class CServer {
 
 											/*	SETTERS	*/
 		void 								setAutoIndex(bool autoindex, bool set_from_config_file);
+		void 								setCGIMap(const std::map<std::string, std::string> cgi_map, bool set_from_config_file);
 		void								setCharset(std::vector<std::string>& charset, bool set_from_config_file);
 		void 								setErrorPage(const std::map<int, std::string>& error_pages, bool set_from_config_file);
 		void								setIndex(const std::vector<std::string>& index, bool set_from_config_file);

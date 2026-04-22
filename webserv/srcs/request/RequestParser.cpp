@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/23 01:37:52 by kmooney           #+#    #+#             */
-/*   Updated: 2026/04/22 14:29:59 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/04/22 17:51:26 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -1030,8 +1030,10 @@ void	RequestParser::finalChunkChecks(token_s& it){
 	
 	if (line.begin != line.end)
 		_req->setRstate(P_TRAILERS);
-	else
+	else{
 		_req->setState(P_DONE, V_BODY, "Parsing Complete", 200);
+		_req->_body_complete = true;
+	}
 }
 
 void	RequestParser::parseChunked( token_s& it ){

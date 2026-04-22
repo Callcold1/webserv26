@@ -16,7 +16,7 @@
 
 CServer::CServer( void ) :
 	_autoindex(false), _max_body(DEFAULT_MAX_BODY),	_max_header_size(DEFAULT_MAX_HEAD),
-	_timeout_ka(DEFAULT_TM_KA),	_timeout_rw(DEFAULT_TM_RW), _autoindex_set(false),
+	_timeout_ka(DEFAULT_TM_KA),	_timeout_rw(DEFAULT_TM_RW), _autoindex_set(false), _cgi_map_set(false),
 		_charset_set(false), _error_page_set(false), _index_set(false), _listen_set(false),
 		_max_body_set(false),_max_header_set(false),_method_set(false), _mime_set(false), _root_set(false),
 		_server_name_set(false), _timeout_ka_set(false), _timeout_rw_set(false){}
@@ -25,6 +25,7 @@ CServer::~CServer( void ){}
 
 CServer::CServer(const CServer &other){
 	_autoindex = other._autoindex;
+	_cgi_map = other._cgi_map;		
 	_charset = other._charset;
 	_error_pages = other._error_pages;
 	_index = other._index;
@@ -40,6 +41,7 @@ CServer::CServer(const CServer &other){
 	_timeout_rw = other._timeout_rw;
 
 	_autoindex_set = other._autoindex_set;
+	_cgi_map_set = other._cgi_map_set;
 	_charset_set = other._charset_set;
 	_error_page_set = other._error_page_set;
 	_index_set = other._index_set;
@@ -57,6 +59,7 @@ CServer::CServer(const CServer &other){
 CServer& CServer::operator=(const CServer& other) {
 	if (this != &other){
 		_autoindex = other._autoindex;
+		_cgi_map = other._cgi_map;		
 		_charset = other._charset;
 		_error_pages = other._error_pages;
 		_index = other._index;
@@ -71,6 +74,7 @@ CServer& CServer::operator=(const CServer& other) {
 		_timeout_rw = other._timeout_rw;
 
 		_autoindex_set = other._autoindex_set;
+		_cgi_map_set = other._cgi_map_set;
 		_charset_set = other._charset_set;
 		_error_page_set = other._error_page_set;
 		_index_set = other._index_set;
@@ -106,6 +110,10 @@ struct compareByLength_f {
 
 bool	CServer::isAutoIndexSet(void) const{
 	return _autoindex_set;
+}
+
+bool	CServer::isCGIMapSet(void) const{
+	return _cgi_map_set;
 }
 
 bool	CServer::isCharsetSet(void) const{
@@ -178,6 +186,14 @@ bool	CServer::getAutoIndex(void) const{
 	return _autoindex;
 }
 
+bool	CServer::getCGIEnabled(void) const{
+	return _cgi_map.size() > 0;
+}
+
+std::map<std::string, std::string>	CServer::getCGIMap(void) const{
+	return _cgi_map;
+}
+
 std::vector<std::string>	CServer::getCharset(void) const{
 	return _charset;
 }
@@ -246,6 +262,11 @@ int    CServer::getTimeoutRW(void) const{
 void 	CServer::setAutoIndex(bool autoindex, bool set_from_config_file){
 	_autoindex_set = set_from_config_file;
 	_autoindex = autoindex;
+}
+
+void 	CServer::setCGIMap(const std::map<std::string, std::string> cgi_map, bool set_from_config_file){
+	_cgi_map_set = set_from_config_file;
+	_cgi_map = cgi_map;
 }
 
 void	CServer::setCharset(std::vector<std::string>& charset, bool set_from_config_file){
