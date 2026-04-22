@@ -261,11 +261,11 @@ bool	Server::handleEvents(void){
 			if (_sockets[i].revents & POLLOUT)
 				handleClientWrite(fd);
 				
-			if (_sockets[i].revents & POLLIN) // 
+			if (_sockets[i].revents & POLLIN)
 				handleClientRead(fd, true);
-			else if (_sockets[i].revents & POLLHUP) //POLLHUP ADDED TO ENSURE FINAL READ IF PIPE CLOSED (CLIENT WRITE/SERVER READ)
+			else if (_sockets[i].revents & POLLHUP)
 				handleClientRead(fd, false);
-			else if (_sockets[i].revents & (POLLERR | POLLNVAL)) // KM: POLLHUP REMOVED - ANY CONSEQUENCES?
+			else if (_sockets[i].revents & (POLLERR | POLLNVAL))
 				disconnectClient(fd, "handleEvents: POLLERR | POLLHUP | POLLNVAL");
 		}
 		_sockets[i].revents = 0;

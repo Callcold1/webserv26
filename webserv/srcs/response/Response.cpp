@@ -83,14 +83,12 @@ std::string Response::status_text()
 void Response::defaultHeaders()
 {
 	_headers["Server"] = "WebServ";
-	//added KM : previously "_headers["Connection"] = "keep-alive";" 
 	if (_request._re.keep_alive)
 		_headers["Connection"] = "keep-alive";
 	else
 		_headers["Connection"] = "close";
 	_headers["Date"] = get_date();
-	//if (!_body.empty()) // does this need to change for file uploads? Have changed to handle in get_content_len()
-		_headers["Content-Length"] = to_str(get_content_len());
+	_headers["Content-Length"] = to_str(get_content_len());
 }
 
 void Response::addHeader(std::string header, std::string value)
