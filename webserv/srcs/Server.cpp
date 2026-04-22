@@ -2,6 +2,8 @@
 #include "Config.hpp"
 #include "Log.hpp"
 
+Server* Server::_instance = 0;
+
 /*
 >>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<
 >>>>>>		CONSTRUCTORS		<<<<<<
@@ -10,10 +12,19 @@
 
 Server::Server(Config &config) : _config(&config), _running(false), _max_conn(config.getMaxConnections()), _port_count(config.getServerPortCount()){
 
+	_instance = this;
+
+    if (pipe(_pipe_fd) == -1)
+        throw std::runtime_error("Signal: pipe() failed");
+
+    fcntl(_pipe_fd[0], F_SETFL, O_NONBLOCK);
+    fcntl(_pipe_fd[1], F_SETFL, O_NONBLOCK);
+
 	Log::instance().log(Log::INFO, Log::TYPE_CLASS, "Server starting....", true);
 	setupListeningSockets(config);
 
 	addListeningSocketsToPoll();
+	addSignalPipeToPoll();
 	Log::instance().log(Log::INFO, Log::TYPE_CLASS, "Server successfully started", true);
 }
 
@@ -21,14 +32,44 @@ Server::Server(Config &config) : _config(&config), _running(false), _max_conn(co
 
 Server::~Server(void){
 
-	_sockets.clear();
-	_clients.clear();
-	_listen_sockets.clear();
+	close(_pipe_fd[0]);
+	close(_pipe_fd[1]);
 
-	for(int i = 0; i < _port_count + _max_conn; i++){
+	for (size_t i = 0; i < _sockets.size(); i++){
 		if (_sockets[i].fd != -1)
 			close(_sockets[i].fd);
 	}
+	_sockets.clear();
+	_clients.clear();
+	_listen_sockets.clear();
+}
+
+/*
+>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<
+>>>>>>		SIGNAL HANDLING		<<<<<<
+>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<
+*/
+
+void	Server::setupSignals(void) {
+	std::signal(SIGINT, signalHandler);
+	std::signal(SIGTERM, signalHandler);
+}
+
+void	Server::signalHandler(int) {
+	if (_instance){
+		write(_instance->_pipe_fd[1], "x", 1);
+	}
+}
+
+void	Server::addSignalPipeToPoll(void){
+	
+	pollfd pfd;
+
+	pfd.fd = _pipe_fd[0];
+	pfd.events = POLLIN;
+	pfd.revents = 0;
+
+	_sockets.push_back(pfd);
 }
 
 /*
@@ -170,21 +211,22 @@ void	Server::addListeningSocketsToPoll(void){
 >>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<
 */
 
+//KM - https://chatgpt.com/share/69e5331b-33c0-832b-a3ff-5db1e5cdb0dc - need to alter server code
 void	Server::loop(){
 
 	Log::instance().log(Log::INFO, Log::TYPE_CLASS, "Server listening....", false);
 
-	_running = true;
-
-	while (_running) {
+	while (true) {
 		
-		int activity = poll(&_sockets[0], _port_count + _clients.size(), -1);
+		int activity = poll(&_sockets[0], _sockets.size(), 1000);
 		
 		if (activity < 0){
-			Log::instance().log(Log::INFO, Log::TYPE_CLASS, "poll() failed", true);
+			Log::instance().log(Log::INFO, Log::TYPE_CLASS, "Signal received : exiting server", true);
 			continue;
 		}
-		handleEvents();
+		if (!handleEvents())
+			break;
+		checkTimeouts();
 	}
 }
 
@@ -194,38 +236,42 @@ void	Server::loop(){
 >>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<
 */
 
-void	Server::handleEvents(void){
+bool	Server::handleEvents(void){
+	
+	size_t size = _sockets.size();
 
-	for (int i = 0; i < (int)_sockets.size(); ) {
+	for (size_t i = 0; i < size; i++) {
 
 		if (_sockets[i].revents == 0)
-		{
-			i++;
 			continue;
-		}
 
-		if (i < _port_count)
-			handleAccept(i);
+		int fd = _sockets[i].fd;
 
+		if (fd == _pipe_fd[0]) {
+    	    char buf[64];
+    	    read(fd, buf, sizeof(buf));
+    	    return false;
+    	}
+		
+		if (i < (size_t)_port_count){
+			if (_sockets[i].revents & POLLIN)
+				handleAccept(i);
+		} 
 		else {
-
-			int fd = _sockets[i].fd;
 
 			if (_sockets[i].revents & POLLOUT)
 				handleClientWrite(fd);
 				
-			if (_sockets[i].revents & POLLIN)
-				handleClientRead(fd);
-
-			if (_sockets[i].revents & (POLLERR | POLLHUP | POLLNVAL))
-			{
+			if (_sockets[i].revents & POLLIN) // 
+				handleClientRead(fd, true);
+			else if (_sockets[i].revents & POLLHUP) //POLLHUP ADDED TO ENSURE FINAL READ IF PIPE CLOSED (CLIENT WRITE/SERVER READ)
+				handleClientRead(fd, false);
+			else if (_sockets[i].revents & (POLLERR | POLLNVAL)) // KM: POLLHUP REMOVED - ANY CONSEQUENCES?
 				disconnectClient(fd, "handleEvents: POLLERR | POLLHUP | POLLNVAL");
-				continue;
-			}
 		}
 		_sockets[i].revents = 0;
-		i++;
 	}
+	return true;
 }
 
 /*
@@ -269,6 +315,8 @@ void	Server::addClient(int client_fd, int listen_index){
 
 	Client	new_client(&_listen_sockets[listen_index], client_fd);
 
+	new_client.setLastActivity();
+
 	_clients.insert(std::make_pair(client_fd, new_client));
 
 	pollfd pfd;
@@ -281,7 +329,7 @@ void	Server::addClient(int client_fd, int listen_index){
 
 /* >>>>>>	READ FROM CLIENT	<<<<<<*/
 
-void	Server::handleClientRead(int fd){
+void	Server::handleClientRead(int fd, bool pipe_closed){
 
 	std::map<int, Client>::iterator it = _clients.find(fd);
 
@@ -290,6 +338,7 @@ void	Server::handleClientRead(int fd){
 		return;
 	}
 	Client&	client = it->second;
+	client.setLastActivity();
 
 	char buffer[BUF_SIZE];
 
@@ -297,8 +346,13 @@ void	Server::handleClientRead(int fd){
 
 	if (bytes < 0)
 		disconnectClient(fd, "Invalid read");
-	else if (bytes == 0)
+	else if (bytes == 0) {
+		if (pipe_closed) // KM - haven't fully thought this through - added to differentiate between POLLIN and POLLHUP
+			client.handleZeroRead();	// KM - NOT STRAIGHT DISCONNECT - COULD SIGNAL END OF BODY IN HTTP 1.0
+								 	// 		COULD ALSO BE MID-RESPONSE (if response is bigger than kernel buffer)
+									//		COULD HAVE STARTED RESPONSE AND STILL HAVE PIPELINE REQUESTS TO HANDLE
 		disconnectClient(fd, "Read size of zero");
+	}
 	else if (client.handleClientRead(buffer, bytes)){
 		_sockets[getSocketsPosition(fd)].events |= POLLOUT;
 	}
@@ -315,7 +369,8 @@ void    Server::handleClientWrite(int fd)
 	}
 
     Client& client = it->second;
-    std::string &response = client.get_msg();
+	client.setLastActivity();
+	std::string &response = client.get_msg();
 
     ssize_t sent = send(fd, response.c_str(), response.size(), 0);
 
@@ -333,6 +388,62 @@ void    Server::handleClientWrite(int fd)
         }
     }
 }
+
+void Server::checkTimeouts()
+{
+    std::time_t now = std::time(0);
+    std::vector<int> timedOutFds;
+	int					timeout_limit;
+
+    for (std::map<int, Client>::iterator it = _clients.begin(); it != _clients.end(); ++it)
+    {
+        timeout_limit = it->second.getServerTimeout();
+        
+        if (timeout_limit < 0)
+        {
+            if (_config && _config->isTimeoutKASet())
+                timeout_limit = _config->getTimeoutKA();
+            else
+                timeout_limit = 10;
+        }
+        if (difftime(now, it->second.getLastActivity()) > timeout_limit) {
+            timedOutFds.push_back(it->first);
+        }
+    }
+    for (size_t i = 0; i < timedOutFds.size(); ++i)
+	{
+
+        disconnectClient(timedOutFds[i], "Timeout");
+    }
+}
+
+// void Server::checkTimeouts()
+// {
+//     std::time_t now = std::time(0);
+//     int	timeout_limit = 10;
+// 	std::map<int, Client>::iterator current;
+
+//     std::map<int, Client>::iterator it = _clients.begin();
+//     while (it != _clients.end())
+// 	{
+//         current = it++;  // increment the iterator before potentially erasing
+// 		if ((timeout_limit = (*current).second.getServerTimeout()) < 0)
+// 		{
+// 			if (_config->isTimeoutKASet())
+// 				timeout_limit = _config->getTimeoutKA();
+// 			else
+// 				timeout_limit = 10;
+// 		}
+//         if (difftime(now, current->second.getLastActivity()) > timeout_limit) {
+//             Log::instance().log(Log::INFO, Log::TYPE_ACCESS, 
+//                 "Closing connection: Timeout on fd [" + toString(current->first) + "]", true);
+            
+//             // Re-use your existing disconnect logic
+//             int fd_to_close = current->first;
+//             disconnectClient(fd_to_close, "Timeout");
+//         }
+//     }
+// }
 
 /*
 >>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<
@@ -354,7 +465,7 @@ void	Server::disconnectClient(int fd, const std::string& reason){
 
 void Server::removeClientFromPoll(int fd) {
 
-	close(fd);
+	//close(fd);
 
 	for (size_t i = 0; i < _sockets.size(); i++){
 		if (_sockets[i].fd == fd){

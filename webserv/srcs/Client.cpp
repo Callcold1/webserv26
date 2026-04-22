@@ -68,7 +68,8 @@ Client&	Client::operator=(const Client& other){
 >>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<
 */
 
-Client::~Client(){}
+Client::~Client(){
+}
 
 void	Client::clear_out_buff(){
 	_out_buff = "";
@@ -101,6 +102,20 @@ std::string&	Client::get_msg(){
 	return(_out_buff);
 }
 
+int	Client::getServerTimeout()
+{
+	if (_matched_server && _matched_server->isTimeoutKASet())
+	{
+		return(_matched_server->getTimeoutKA());
+	}
+	return (-1);
+}
+
+time_t	Client::getLastActivity()
+{
+	return(_last_active);
+}
+
 /*
 >>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<
 >>>>>>		HANDLERS		<<<<<<
@@ -111,7 +126,7 @@ bool	Client::handleClientRead(const char *buffer, size_t len){
 
 	enum eParse	p_state;
 
-	if (!buffer)
+	if (!buffer && _request._sizes.bytes_unread == 0)
 		return false;
 	try {
 		if (_request.getParseStatus() == P_ERROR)
@@ -127,11 +142,9 @@ bool	Client::handleClientRead(const char *buffer, size_t len){
 		throw std::runtime_error("handleClientRead() : " + err);
 	}
 
-	std::cout << "lala" << std::endl;
-
 	switch(p_state){
-		case P_PARSE	: 	{ _state = READ; generateLogMessage(); return false; }
-		case P_AWAIT	: 	{ _state = READ; generateLogMessage(); return false;}
+		case P_PARSE	: 	{ _state = READ; generateLogMessage(); return false;}
+		case P_AWAIT	: 	{ _state = READ; if (_request._r_state > V_HEADERS) { generateLogMessage();} return false;}
 		case P_DONE		:	{ _state = WRITE; generateLogMessage();	break;}
 		case P_ERROR	: 	{ _state = ERROR;_request._re.type = RESPOND_ERROR; _conn = CONN_CLOSE; generateLogMessage(); break;}
 		default	: break;
@@ -141,6 +154,56 @@ bool	Client::handleClientRead(const char *buffer, size_t len){
 		return true;
 	}
 	return false;
+}
+
+void	Client::handleZeroRead(){
+	
+	eReqState request_state  = _request.getReqStatus();
+	eParse parse_state = _request.getParseStatus();
+	eBodyType body_type = _request._body_type;
+
+	if (parse_state == P_AWAIT) {		// KM - Check if this could lead to segfault (e.g. no matched server, or no matched location, or other problems)
+		if (request_state < P_BODY){
+			_request.setState(P_ERROR, "Malformed Request : Client closed connection before full request received", 400);
+			handle_request();
+			return;
+		}
+		else if (request_state == P_BODY) {
+			switch (body_type){
+				case (BODY_EOF)			: { 
+											if (_request._version == "HTTP/1.0")
+											_request.setState(P_DONE, "Parsing Complete", _request._errNum);
+											handle_request();
+											return;
+										}
+				case (BODY_CHUNKED)		: {
+											_request.setState(P_ERROR, "Malformed Request : Client closed connection before full request received", 400);
+											handle_request();
+											return;
+										}
+				case (BODY_CONTENT_LEN)	: {
+											_request.setState(P_ERROR, "Malformed Request : Client closed connection before full request received", 400);
+											handle_request();
+											return;
+										}
+				default	: return;
+			}
+			return;
+		}
+	}
+	else if (parse_state == P_DONE)
+		return;
+	else if (parse_state == P_PARSE){
+	
+		if (_request._sizes.bytes_unread > 0){ // Still unparsed data in _request._buffer
+			if (_request._re.keep_alive)	  // Connection is set to keep alive
+				handleClientRead(NULL, 0); 	  // Handle new request
+			else if (_request._version == "HTTP/1.0")
+				return;
+		}
+	}
+	else if (parse_state == P_ERROR)
+		return;
 }
 
 int Client::if_file_upload(Request &request)
@@ -168,17 +231,20 @@ int Client::if_file_upload(Request &request)
 
 void Client::handle_request()
 {
+	Log::instance().log(Log::INFO, Log::TYPE_RESPONSE,	"Client [" + toString(_fd) + "] : response instantiated" , false);
+	Log::instance().log(Log::INFO, Log::TYPE_RESPONSE,	"Client [" + toString(_fd) + "] : " + getStatusString(), false);
+
 	int error_catch = 0;
+	
 	std::cout << _request._uri.path << std::endl;
-	std::string path = _request.get_root_dir() + _request._uri.path;
+	std::string path = _request._re.paths.resource_path.path;//_request.get_root_dir() + _request._uri.path; //
 
-	std::cout << path << std::endl;
-	std::cout << _matched_location->getRedirect().url << std::endl;
+	
+	std::cout << "path hr: " << path << std::endl;
+	//std::cout << _matched_location->getRedirect().url << std::endl;
 
-	if (!_matched_location)
-	{
-		_response = new ErrorResponse(NOT_FOUND_ERROR, _request);
-	}
+	if (_request._re.type == RESPOND_ERROR)
+		_response = new ErrorResponse(_request._errNum, _request);
 	/* int			error_catch = 0;
 	respond_t&	re = _request._re;
 
@@ -203,13 +269,12 @@ void Client::handle_request()
 		_response = new ErrorResponse(re.status, _request);
 	} */
 	
-	//else if (!_matched_location->getRedirect().url.empty())
-	//{
-	//	std::cout << "redirect found" << std::endl;
-	//	_response = new RediResponse(_request, _matched_location->getRedirect().url); //TODO is this url validated??
-	//	_response->generate();
-	//}
-
+	else if (!_matched_location->getRedirect().url.empty())
+	{
+		std::cout << "redirect found" << std::endl;
+		_response = new RediResponse(_request, _matched_location->getRedirect().url); //TODO is this url validated??
+		_response->generate();
+	}
 
 	else if ((error_catch = if_file_upload(_request)) != 1)
 	{
@@ -218,15 +283,16 @@ void Client::handle_request()
 			_response = new ErrorResponse(error_catch, _request);
 	}
 
-	else if (path.find(CGI_PATH) != std::string::npos)
+	else if (_request._isCGI)//_request.isCGI
 	{
 		std::cout << "cgi found" << std::endl;
-		struct stat st;
-		if (stat(path.c_str(), &st) == 0 && S_ISREG(st.st_mode))
+		fileInfo_s info;
+		getFileInfo(path, info);
+		if (info.is_exec)
 		{
-			if (path.find("www/cgi-bin/python/") != std::string::npos)
+			if (ends_with(path, ".py"))
 				_response =  new CgiResponse(_request, true);
-			else if (path.find("www/cgi-bin/php/") != std::string::npos)
+			else if (ends_with(path, ".php"))
 				_response =  new CgiResponse(_request, false);
 			error_catch = _response->generate();
 			if (error_catch != 0)
@@ -235,12 +301,12 @@ void Client::handle_request()
 				_response = new ErrorResponse(error_catch, _request);
 			}
 		}
+		else if (info.is_dir || info.is_file || info.inaccessible)
+			_response = new ErrorResponse(403, _request);				//permission denied
 		else
-		{
-			_response = new ErrorResponse(NOT_FOUND_ERROR, _request); //again, could be 403 for directories etc but this is for security
-		}
+			_response = new ErrorResponse(NOT_FOUND_ERROR, _request);
 	}
-	else if (path.find(HTML_PATH) != std::string::npos || path.find(PHOTO_PATH) != std::string::npos || path.find("assets/") != std::string::npos)
+	else if (_request._re.type == RESPOND_STATIC) 
 	{
 		std::cout << "static page found" << std::endl;
 		_response = new SuccessResponse(_request);
@@ -269,6 +335,59 @@ void Client::handle_request()
 >>>>>>>>>>>>>>><<<<<<<<<<<<<<<
 */
 
+std::string	Client::getStatusString(void){
+	
+	std::string str;
+
+	str += "Parsing State : ";
+	
+	switch(_request.getParseStatus()){
+		case 0	:{str += "P_PARSE"; break;}
+		case 1	:{str += "P_AWAIT"; break;}
+		case 2	:{str += "P DONE"; break;}
+		case 3	:{str += "P ERROR : " + _request.getErrMsg(); break;}
+		default	:{str += "UNKNOWN"; break;}
+	}
+	str += " Request State : ";
+
+	switch(_request.getReqStatus()){
+		case 0	:{str += "P_REQLINE"; break;}
+		case 1	:{str += "P_REQLINE_PARAMS"; break;}
+		case 2	:{str += "V_REQLINE"; break;}
+		case 3	:{str += "P_HEADERS"; break;}
+		case 4	:{str += "V_HEADERS"; break;}
+		case 5	:{str += "P_BODY"; break;}
+		case 6	:{str += "V_BODY"; break;}
+		case 7	:{str += "P_TRAILERS"; break;}
+		case 8	:{str += "V_TRAILERS"; break;}
+		case 9	:{str += "P_MULTI"; break;}
+		case 10	:{str += "V_MPHEADERS"; break;}
+		case 11	:{str += "V_MPBODY"; break;}
+		case 12	:{str += "REQ_DONE"; break;}
+		default	:{str += "UNKNOWN"; break;}
+	}
+	str += "\nRequest Buffer : ";
+
+	for (size_t i=0; i < _request._buffer.size(); i++){
+		str += _request._buffer[i];
+	}
+	
+	str += "Initial Response Type : ";
+
+	switch(_request._re.type){
+			case(RESPOND_NOT_SET)	:{str += "RESPOND_NOT_SET\n"; break;}
+			case(RESPOND_CGI)		:{str += "RESPOND_CGI\n"; break;}
+			case(RESPOND_ERROR)		:{str += "RESPOND_ERROR\n"; break;}
+			case(RESPOND_FILE)		:{str += "RESPOND_FILE\n"; break;}
+			case(RESPOND_INDEX)		:{str += "RESPOND_INDEX\n"; break;}
+			case(RESPOND_REDIR)		:{str += "RESPOND_REDIR\n"; break;}
+			case(RESPOND_STATIC)	:{str += "RESPOND_STATIC\n"; break;}
+			case(RESPOND_UPLOAD)	:{str += "RESPOND_UPLOAD\n"; break;}
+			default : break;
+	}
+	return str;
+}
+
 void Client::append_write(std::string str){
 
 	_out_buff.append(str);
@@ -277,19 +396,11 @@ void Client::append_write(std::string str){
 
 void	Client::generateLogMessage(void){
 
-	std::string status;
-
-	switch(_request.getParseStatus()){
-		case 0	:{status = "P_PARSE"; break;}
-		case 1	:{status = "P_AWAIT"; break;}
-		case 2	:{status = "P DONE"; break;}
-		case 3	:{status = "P ERROR : " + _request.getErrMsg(); break;}
-		default	:{status = "UNKNOWN"; break;}
-	}
-	std::cout << _request._re << std::endl;
-	std::string message = _log_msg + "Parsing : " + status;
+	std::string message = _log_msg + getStatusString();
 	Log::instance().log(Log::INFO, Log::TYPE_REQUEST_PARSING, message, false);
 	Log::instance().log(Log::INFO, Log::TYPE_REQUEST_PARSING, printstream(_request), false);
+	if (_request._p_state != P_ERROR)
+		Log::instance().log(Log::INFO, Log::TYPE_REQUESTS, printReqStatus(_request, _fd), false);
 }
 
 /*
@@ -390,6 +501,7 @@ std::ostream& operator<<(std::ostream& os, const respond_t& re){
 		case(RESPOND_FILE)		:{std::cout << "RESPOND_FILE" << std::endl; break;}
 		case(RESPOND_INDEX)		:{std::cout << "RESPOND_INDEX" << std::endl; break;}
 		case(RESPOND_REDIR)		:{std::cout << "RESPOND_REDIR" << std::endl; break;}
+		case(RESPOND_STATIC)	:{std::cout << "RESPOND_STATIC" << std::endl; break;}
 		case(RESPOND_UPLOAD)	:{std::cout << "RESPOND_UPLOAD" << std::endl; break;}
 		default : break;
 	}
@@ -400,4 +512,63 @@ std::ostream& operator<<(std::ostream& os, const respond_t& re){
 	os << "keep-alive             : " << re.keep_alive << std::endl;
 	os << "Accept content-type(s) : " << re.accept_type << std::endl;
 	return os;
+}
+
+std::string	printReqStatus(Request& _request, int fd){
+
+	std::string p_status;
+	std::string r_status;
+	std::ostringstream os;
+
+	switch(_request.getParseStatus()){
+		case 0	:{p_status = "P_PARSE"; break;}
+		case 1	:{p_status = "P_AWAIT"; break;}
+		case 2	:{p_status = "P DONE"; break;}
+		case 3	:{p_status = "P ERROR"; break;}
+		default	:{p_status = "UNKNOWN"; break;}
+	}
+	switch(_request.getReqStatus()){
+		case 0	:{r_status = "P_REQLINE"; break;}
+		case 1	:{r_status = "P_REQLINE_PARAMS"; break;}
+		case 2	:{r_status = "V_REQLINE"; break;}
+		case 3	:{r_status = "P_HEADERS"; break;}
+		case 4	:{r_status = "V_HEADERS"; break;}
+		case 5	:{r_status = "P_BODY"; break;}
+		case 6	:{r_status = "V_BODY"; break;}
+		case 7	:{r_status = "P_TRAILERS"; break;}
+		case 8	:{r_status = "V_TRAILERS"; break;}
+		case 9	:{r_status = "P_MULTI"; break;}
+		case 10	:{r_status = "V_MPHEADERS"; break;}
+		case 11	:{r_status = "V_MPBODY"; break;}
+		case 12	:{r_status = "REQ_DONE"; break;}
+		default	:{r_status = "UNKNOWN"; break;}
+	}
+	os << std::left << std::setw(21) << "\nFile Descriptor" << std::setw(3) << " : " << "[" << fd << "]" << std::endl;
+	os << std::left << std::setw(20) << "Parse Status" << std::setw(3) << " : " << "[" << p_status << "]" << std::endl;
+	os << std::left << std::setw(20) << "Request Status"  << std::setw(3)<< " : " << "[" << r_status << "]" << std::endl;
+	os << std::left << std::setw(20) << "Method" << std::setw(3) << " : " << "[" << _request._method << "]" << std::endl;
+	os << std::left << std::setw(20) << "ErrNum" << std::setw(3) << " : " << "[" << _request._errNum << "]" << std::endl;
+	os << std::left << std::setw(20) << "ErrMess" << std::setw(3) << " : " << "[" << _request._errMess << "]" << std::endl;
+	
+	os << std::left << std::setw(20) << "URI" << std::setw(3) << " : " << "[" << _request._uri_str << "]" << std::endl;
+	os << std::left << std::setw(20) << "Matched Location URI" << std::setw(3) << " : " << "[" << _request._matched_location->getURI() << "]" << std::endl;
+	os << std::left << std::setw(20) << "URI remainder" << std::setw(3) << " : " << "[" << _request._leftover << "]" << std::endl;
+	if ( p_status == "P ERROR")
+		os << std::left << std::setw(20) << "Path" << std::setw(3) << " : " << "[" << _request._re.paths.error_path.path << "]" << std::endl << std::endl;
+	else if (_request._re.paths.upload_paths.size()){
+		for (size_t i = 0; i < _request._re.paths.upload_paths.size(); i++)
+			os << std::left << std::setw(20) << "Upload Path [" + toString(i) + "]" << std::setw(3) << " : " << "[" << _request._re.paths.upload_paths[i].first.path << "]" << std::endl << std::endl;
+	}
+	else {
+		os << std::left << std::setw(20) << "Path" <<  std::setw(3) << " : " << "[" << _request._re.paths.resource_path.path << "]" << std::endl << std::endl;
+	}
+	std::string result = os.str();
+	return result;
+}
+
+//setters
+
+void				Client::setLastActivity()
+{
+	_last_active = std::time(0);
 }

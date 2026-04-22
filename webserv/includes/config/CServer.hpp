@@ -76,6 +76,8 @@ class CServer {
 		bool								isTimeoutKASet(void) const;
 		bool								isTimeoutRWSet(void) const;
 
+		bool								isMethodSupported(const std::string& method) const;
+
 											/*	GETTERS	*/
 		bool								getAutoIndex(void) const;
 		std::vector<std::string>			getCharset(void) const;

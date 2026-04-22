@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: junruh <junruh@student.42.fr>              +#+  +:+       +#+        */
+/*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/07 10:25:15 by kmooney           #+#    #+#             */
-/*   Updated: 2026/03/24 15:02:34 by junruh           ###   ########.fr       */
+/*   Updated: 2026/04/22 13:05:19 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,7 +25,6 @@
 #define NO_CLI_ARG "No config file path provided - attempting to use : "
 #define ERR_CONFIG_NOT_OPEN "Error : the configuration file could not be opened : "
 
-
 int	main(int argc, char** argv){
 
 	std::string config_path;
@@ -37,11 +36,12 @@ int	main(int argc, char** argv){
 		config_path = DEFAULT_PATH;
 		Log::instance().log(Log::INFO, Log::TYPE_CONF, NO_CLI_ARG + config_path, true);
 	}
-
 	else {
 		Log::instance().log(Log::ERROR, Log::TYPE_ERROR, TOO_MANY_ARGS, true);
 		return 1;
 	}
+	if (signal_setup() != 0)
+		return (2);
 
 	try {
 		CParser p(config_path);
@@ -49,6 +49,7 @@ int	main(int argc, char** argv){
 
 		p.parseConfigFile(config);
 		Server server(config);
+		Server::setupSignals();
 		server.loop();
 	}
 

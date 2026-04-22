@@ -8,9 +8,6 @@
 #include "helpers.hpp"
 
 #define HTTP_VERSION "HTTP/1.1"
-#define CGI_PATH "www/cgi-bin/"
-#define HTML_PATH "www/html"
-#define PHOTO_PATH "www/photos"
 #define NOT_FOUND_ERROR 404
 #define BAD_REQUEST_ERROR 400
 #define FILE_UPLOAD_REDIREC 303
@@ -40,11 +37,11 @@ public:
 
 	//debug:
 	void print_response();
-	int			_status;
-	Request&	_request;
 
 protected:
 	HeaderMap_t _headers;
+	int			_status;
+	Request&	_request;
 	std::string _body;
-	fileInfo_s _path_km;
+	fileInfo_s	_path_km;
 };

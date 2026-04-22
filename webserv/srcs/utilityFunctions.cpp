@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   utilityFunctions.cpp                               :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jake <jake@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/16 15:33:48 by kmooney           #+#    #+#             */
-/*   Updated: 2026/03/27 14:26:50 by jake             ###   ########.fr       */
+/*   Updated: 2026/04/22 14:06:43 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -97,6 +97,22 @@ void trimWS(std::string &str)
 		start++;
 	}
 	str.erase(0, start);
+}
+
+bool ends_with(std::string str, std::string substr)
+{
+	if (str.rfind(substr) == (str.size() - substr.size()))
+		return true;
+	return false;
+}
+
+void	replaceChar(std::string& name, char remove, char replace){
+	
+	std::string::size_type pos;
+
+	while ((pos = name.find(remove)) != std::string::npos){
+		name[pos] = replace;
+	}
 }
 
 /*
@@ -450,17 +466,21 @@ std::string	createTimestamp(void){
 	return timestamp;
 }
 
-bool	assignTempfile(std::string& target_path, int& target_fd, const std::string& prefix){
+bool	assignTempfile(std::string& tmp_path, std::string* final_path, const std::string& prefix){
 
 	std::string 		timestamp = createTimestamp();
 	std::string			tmpTemplate = "/tmp/" + prefix + timestamp + "_XXXXXX";
 	std::vector<char>	tmpFilename(tmpTemplate.begin(), tmpTemplate.end());
 
 	tmpFilename.push_back('\0');
-
-	target_fd = mkstemp(tmpFilename.data());
-	target_path = tmpTemplate;
-	if (target_fd == -1)
+	
+	if (final_path){
+		*final_path = prefix + timestamp;
+	}
+	
+	int fd = mkstemp(tmpFilename.data());
+	tmp_path = tmpTemplate;
+	if (fd == -1)
 		return false;
 	return true;
 }
@@ -1001,4 +1021,110 @@ std::string	detectMimeFromFilename(const std::string& filename) {
             return mime;
     }
     return "application/octet-stream";
+}
+
+//signals:
+
+//globals: 
+volatile sig_atomic_t g_timed_out = 0;
+volatile pid_t g_child_pid = -1;
+
+void alarm_handler(int sig)
+{
+    (void)sig;
+    g_timed_out = 1;
+    if (g_child_pid > 0) {
+        kill(g_child_pid, SIGKILL);
+    }
+	g_child_pid = -1;
+}
+
+int signal_setup()
+{
+	struct sigaction sa;
+	
+	//timeout for cgi
+	sigemptyset(&sa.sa_mask);
+    sa.sa_flags = 0;
+    sa.sa_handler = alarm_handler;
+    if (sigaction(SIGALRM, &sa, NULL) == -1)
+    {
+        return -1; //connect this to exit logic
+    }
+	
+	//ignore sigpipe
+	if (signal(SIGPIPE, SIG_IGN) == SIG_ERR)
+		return -1;
+	return (0);
+}
+
+void uniqueFilename(std::string& filename){
+	
+	std::string base = filename;
+	std::string ext;
+
+	size_t dot = filename.find_last_of('.');
+	if (dot != std::string::npos)
+	{
+		base = filename.substr(0, dot);
+		ext = filename.substr(dot);
+	}
+
+	//std::string file_path = "../photos/" + filename; 
+	//base = "../photos/" + base;
+	int i = 2;
+
+	while (file_exists(filename.c_str()))
+	{
+		filename = base + "_" + toString(i) + ext;
+		i++;
+	}
+}
+
+int	copyFile(const std::string& src, std::string& dest)
+{
+    int in_fd = open(src.c_str(), O_RDONLY);
+    
+	if (in_fd < 0) {
+        std::cerr << "open src failed: " << strerror(errno) << std::endl;
+		return -1;
+    }
+	uniqueFilename(dest);
+    int out_fd = open(dest.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
+
+    if (out_fd < 0) {
+        std::cerr << "open dest failed: " << strerror(errno) << std::endl;
+        close(in_fd);
+        return -2;
+    }
+
+    char buffer[8192];
+    ssize_t bytes_read;
+
+    while ((bytes_read = read(in_fd, buffer, sizeof(buffer))) > 0) {
+        
+		ssize_t total_written = 0;
+
+        while (total_written < bytes_read) {
+            ssize_t bytes_written = write(out_fd, buffer + total_written, bytes_read - total_written);
+
+			if (bytes_written < 0) {
+                std::cerr << "write failed: " << strerror(errno) << std::endl;
+                close(in_fd);
+                close(out_fd);
+                return -3;
+            }
+            total_written += bytes_written;
+        }
+    }
+
+    if (bytes_read < 0)
+        std::cerr << "read failed: " << strerror(errno) << std::endl;
+
+    close(in_fd);
+    close(out_fd);
+
+	if (bytes_read < 0)
+    	return -4;
+	return 0;
 }

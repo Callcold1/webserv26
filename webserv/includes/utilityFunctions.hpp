@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   utilityFunctions.hpp                               :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: junruh <junruh@student.42.fr>              +#+  +:+       +#+        */
+/*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/11 16:04:15 by kmooney           #+#    #+#             */
-/*   Updated: 2026/04/14 13:52:26 by junruh           ###   ########.fr       */
+/*   Updated: 2026/04/22 14:07:08 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,6 +31,8 @@
 #include <sys/stat.h>
 #include <time.h>
 #include <unistd.h>
+#include <signal.h>
+
 
 
 // PATH STRUCT
@@ -53,7 +55,7 @@ struct fileInfo_s
 	time_t		last_modified;
 	std::string	mime_type;
 	std::string	path;
-	__mode_t	permissions;
+	mode_t	permissions;
 	off_t		size;
 
 	fileInfo_s() : inaccessible(false), is_dir(false), is_exec(false), is_file(false), is_symlink(false), not_found(false),
@@ -96,6 +98,7 @@ void								trimEndChar( std::string& str, char target);
 void								trimLWS(std::string &str);
 void								trimTWS(std::string &str);
 void								trimWS( std::string& str);
+bool								ends_with(std::string str, std::string substr);
 
 /* STRING/CHAR TO NUMBER TYPE CONVERSION */
 int									str_to_int( const std::string str);
@@ -122,7 +125,7 @@ fileInfo_s*							getFileInfo(std::string& path, std::string& root_dir);
 fileInfo_s*							getFileInfo(std::string& path);
 void								getFileInfo(std::string& path, fileInfo_s& fileinfo);
 bool 								file_exists(const char* filename);
-bool								assignTempfile(std::string& target_path, int& target_fd, const std::string& prefix);
+bool								assignTempfile(std::string& tmp_path, std::string* final_path, const std::string& prefix);
 
 /*	FILEPATH MANIPULATION  */
 std::string							appendPathToRoot(std::string path, std::string root_dir);
@@ -243,3 +246,18 @@ std::string	printstream(T& src){
 
 const std::map<std::string, std::string>&	mimeToMagicMap(void);
 std::string									detectMimeFromFilename(const std::string& filename);
+
+
+/*
+>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<
+>>>>>>		SIGNALS					<<<<<<
+>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<
+*/
+
+int signal_setup();
+
+void alarm_handler(int sig);
+
+void	uniqueFilename(std::string& filename);
+int		copyFile(const std::string& src, std::string& dst);
+void	replaceChar(std::string& name, char remove, char replace);
