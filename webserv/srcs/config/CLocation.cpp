@@ -178,7 +178,7 @@ bool	CLocation::isMethodSupported(const std::string& method) const{
 	size_t size = _method.size();
 	
 	for (size_t i = 0; i < size; i++){
-		if (method.compare(_method[i]))
+		if (method.compare(_method[i]) == 0)
 			return true;
 	}
 	return false;
