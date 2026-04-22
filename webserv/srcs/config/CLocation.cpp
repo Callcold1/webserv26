@@ -269,7 +269,7 @@ std::string	CLocation::getUploadPath(void) const{
 }
 
 const std::string&	CLocation::getURI(void) const{
-	if (_uri.length() > 0)
+	if (!_uri.empty())
 		return _uri;
 	return _no_uri;
 }

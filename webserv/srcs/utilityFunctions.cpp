@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   utilityFunctions.cpp                               :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: junruh <junruh@student.42.fr>              +#+  +:+       +#+        */
+/*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/16 15:33:48 by kmooney           #+#    #+#             */
-/*   Updated: 2026/04/21 16:59:53 by junruh           ###   ########.fr       */
+/*   Updated: 2026/04/22 14:06:43 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -466,17 +466,21 @@ std::string	createTimestamp(void){
 	return timestamp;
 }
 
-bool	assignTempfile(std::string& target_path, int& target_fd, const std::string& prefix){
+bool	assignTempfile(std::string& tmp_path, std::string* final_path, const std::string& prefix){
 
 	std::string 		timestamp = createTimestamp();
 	std::string			tmpTemplate = "/tmp/" + prefix + timestamp + "_XXXXXX";
 	std::vector<char>	tmpFilename(tmpTemplate.begin(), tmpTemplate.end());
 
 	tmpFilename.push_back('\0');
-
-	target_fd = mkstemp(tmpFilename.data());
-	target_path = tmpTemplate;
-	if (target_fd == -1)
+	
+	if (final_path){
+		*final_path = prefix + timestamp;
+	}
+	
+	int fd = mkstemp(tmpFilename.data());
+	tmp_path = tmpTemplate;
+	if (fd == -1)
 		return false;
 	return true;
 }

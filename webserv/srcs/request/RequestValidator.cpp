@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   RequestValidator.cpp                               :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: junruh <junruh@student.42.fr>              +#+  +:+       +#+        */
+/*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/30 11:26:19 by kmooney           #+#    #+#             */
-/*   Updated: 2026/04/21 17:03:45 by junruh           ###   ########.fr       */
+/*   Updated: 2026/04/22 15:40:02 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,7 +77,6 @@ bool	RequestValidator::validateMethod(){
 	if (_req->_r_state != V_REQLINE) {
 
 		if (!_req->_matched_location->isMethodSupported(method)){
-
 			if(!_req->_matched_server->isMethodSupported(method))
 				return _req->setState(P_ERROR, _req->_r_state, ERR_RL_METHOD_NOT_PERMITTED, 501);
 			else
@@ -410,9 +409,11 @@ bool	RequestValidator::validateContentType(){ // CHECK SERVER SUPPORTS TYPE
 
 	if (!_req->_matched_server)
 		return _req->setState(P_ERROR, V_HEADERS, "Trying to validate content type but no matching server", 404);
-	std::map<std::string, std::vector<std::string> > server_content_types = _req->_matched_server->getMime();
-	if (!isValidContentType(val)) //KM - remove or just check syntax? Not really an error or not?
-		return _req->setState(P_ERROR, V_HEADERS, "Content-Type not supported", 415);
+
+	std::map<std::string, std::vector<std::string> > server_content_types = _req->_matched_server->getMime(); // Do we even use this?
+
+	if (!isValidMediaType(val)) //KM - remove or just check syntax? Not really an error or not? Changed to isValidMediaType from isValidContentType 
+		return _req->setState(P_ERROR, V_HEADERS, "Invalid content-Type", 415);
 	if (val.find("multipart/") != std::string::npos)
 		return validateMultiPartHeader(val, options);
 	if (val.find("charset") != std::string::npos)
@@ -420,31 +421,31 @@ bool	RequestValidator::validateContentType(){ // CHECK SERVER SUPPORTS TYPE
 	return true;
 }
 
-bool	isValidContentType(const std::string& name){ // THESE ARE TEST VALUES TO BE REPLACED WITH SERVER CHECK
+// bool	isValidContentType(const std::string& name){ // THESE ARE TEST VALUES TO BE REPLACED WITH SERVER CHECK
 
-	static std::vector<std::string> validTypes;
+// 	static std::vector<std::string> validTypes;
 
-	if (validTypes.empty()){
-		validTypes.push_back("application/x-www-form-urlencoded");
-		validTypes.push_back("application/javascript");
-		validTypes.push_back("application/json");
-		validTypes.push_back("application/octet-stream");
-		validTypes.push_back("application/xml");
-		validTypes.push_back("multipart/form-data");
-		validTypes.push_back("image/gif");
-		validTypes.push_back("image/jpeg");
-		validTypes.push_back("image/png");
-		validTypes.push_back("image/svg+xml");
-		validTypes.push_back("image/webp");
-		validTypes.push_back("image/x-icon");
-		validTypes.push_back("text/css");
-		validTypes.push_back("text/html");
-		validTypes.push_back("text/plain");
-		validTypes.push_back("font/woff");
-		validTypes.push_back("font/woff2");
-	}
-	return (find(validTypes.begin(), validTypes.end(), name) != validTypes.end());
-}
+// 	if (validTypes.empty()){
+// 		validTypes.push_back("application/x-www-form-urlencoded");
+// 		validTypes.push_back("application/javascript");
+// 		validTypes.push_back("application/json");
+// 		validTypes.push_back("application/octet-stream");
+// 		validTypes.push_back("application/xml");
+// 		validTypes.push_back("multipart/form-data");
+// 		validTypes.push_back("image/gif");
+// 		validTypes.push_back("image/jpeg");
+// 		validTypes.push_back("image/png");
+// 		validTypes.push_back("image/svg+xml");
+// 		validTypes.push_back("image/webp");
+// 		validTypes.push_back("image/x-icon");
+// 		validTypes.push_back("text/css");
+// 		validTypes.push_back("text/html");
+// 		validTypes.push_back("text/plain");
+// 		validTypes.push_back("font/woff");
+// 		validTypes.push_back("font/woff2");
+// 	}
+// 	return (find(validTypes.begin(), validTypes.end(), name) != validTypes.end());
+// }
 
 bool	RequestValidator::validateMultiPartHeader(const std::string& val, const std::vector< std::pair<std::string, std::string> >& options){
 	size_t		size = options.size();
@@ -470,7 +471,9 @@ bool	RequestValidator::validateMultiPartHeader(const std::string& val, const std
 			}
 			else if (option_key == "charset"){
 				charset = option_val;
-				if (!isValidContentType(charset))
+				if (!isValidMediaType(charset))
+					return _req->setState(P_ERROR, V_HEADERS, ERR_MP_BOUNDARY_LENGTH, 415);
+				if (!isSupportedMediaType(charset))
 					return _req->setState(P_ERROR, V_HEADERS, ERR_MP_BOUNDARY_LENGTH, 415);
 				has_charset = true;
 			}
@@ -482,6 +485,12 @@ bool	RequestValidator::validateMultiPartHeader(const std::string& val, const std
 	if (has_charset)
 		_req->setDefaultMultiPartType(charset);
 	_req->_isMultiPart = true;
+	return true;
+}
+
+bool	RequestValidator::isSupportedMediaType(const std::string& type){
+	//KM - finish
+	(void)type;
 	return true;
 }
 
@@ -583,7 +592,7 @@ bool	RequestValidator::updateMPparams(mpPart_t& part, const std::vector<std::pai
 bool	RequestValidator::validateMPContentType(mpPart_t& part, const std::vector<field_t*>& header){
 
 	for (size_t i = 0; i < header.size(); i++){
-		if (!isValidContentType(header[i]->val))
+		if (!isValidMediaType(header[i]->val))
 			continue;
 		part.supported_content.push_back(header[i]);
 	}
@@ -653,7 +662,7 @@ bool	RequestValidator::validateCharset(const std::vector< std::pair<std::string,
 	const std::string& option_val = options[0].second;
 
 	if (option_key.compare("charset") == 0 && !option_val.empty()){
-		if (!isValidContentType(option_val))
+		if (!isValidMediaType(option_val))	// KM - add check to see if supported on server
 			return _req->setState(P_ERROR, V_HEADERS, "Content-Type not supported", 415);
 		else
 			_req->setBodyEncoding(option_val);
@@ -915,7 +924,7 @@ bool RequestValidator::validateFileFormat(std::string& path) {
 }
 
 /* >>>>>>		VALIDATE MEDIA TYPE (Content-Type and Accept)		<<<<<< */
-bool	RequestValidator::isValidMediaType(std::string& value){
+bool	RequestValidator::isValidMediaType(const std::string& value){
 
 	size_t pos = value.find('/');
 
@@ -942,6 +951,8 @@ bool	RequestValidator::isValidCharset(std::string& value){
 	}
 	return true;
 }
+
+
 
 bool	RequestValidator::isSupportedCharset(const std::string& value){
 

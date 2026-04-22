@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/23 01:37:52 by kmooney           #+#    #+#             */
-/*   Updated: 2026/03/06 14:08:45 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/04/22 11:52:04 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -135,7 +135,9 @@ class RequestValidator {
 		const std::vector<field_t*>*	getHeader(const fieldMap_t& headers, const str_t& name);
 		const std::vector<field_t*>*	getHeader(const fieldMap_t* headers, const str_t& name);
 
-		bool							isValidMediaType(std::string& value);
+		bool							isValidMediaType(const std::string& value);
+		bool							isSupportedMediaType(const std::string& type);
+
 		bool							isValidCharset(std::string& value);
 		bool							isValidToken(std::string& value);
 
@@ -146,4 +148,4 @@ class RequestValidator {
 
 };
 
-bool	isValidContentType(const std::string& name);
+//bool	isValidContentType(const std::string& name);

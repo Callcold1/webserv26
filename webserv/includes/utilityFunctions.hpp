@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   utilityFunctions.hpp                               :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: junruh <junruh@student.42.fr>              +#+  +:+       +#+        */
+/*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/11 16:04:15 by kmooney           #+#    #+#             */
-/*   Updated: 2026/04/21 16:57:15 by junruh           ###   ########.fr       */
+/*   Updated: 2026/04/22 14:07:08 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -125,7 +125,7 @@ fileInfo_s*							getFileInfo(std::string& path, std::string& root_dir);
 fileInfo_s*							getFileInfo(std::string& path);
 void								getFileInfo(std::string& path, fileInfo_s& fileinfo);
 bool 								file_exists(const char* filename);
-bool								assignTempfile(std::string& target_path, int& target_fd, const std::string& prefix);
+bool								assignTempfile(std::string& tmp_path, std::string* final_path, const std::string& prefix);
 
 /*	FILEPATH MANIPULATION  */
 std::string							appendPathToRoot(std::string path, std::string root_dir);

@@ -14,7 +14,7 @@
 			<p></p>
 			<h2>Meme generator (python cgi test)</h2>
 			<img src="/assets/officememe.png" alt="could not find the office meme template" style="width:400px;height:500px;">
-			<form action="/cgi-bin/python/meme.py" method="GET">
+			<form action="/cgi-bin/python/meme.py" method="POST">
 				<div>
 					<label for="jimtext">Jim(left):</label><br>
 					<input type="text" id="jimtext" name="jimtext" maxlength="200" size="50"><br>
@@ -27,16 +27,22 @@
 			</form>
 			<p></p>
 			<h2>Upload a picture to our Gallery!</h2>
-			<form action="/upload" method="POST" enctype="multipart/form-data">
-				<div>
-					<input id="ImportFile"
-						type="file"
-						name="ImportFile"
-						data-val="true"
-						data-val-required="Please select a file"
-						title="Browse for a picture to upload"
-						accept=".png"/>
-				</div>
+			<input type="file" id="fileInput" accept=".png" />
+				<button onclick="upload()">Upload</button>
+
+				<script>
+				async function upload() {
+				  const file = document.getElementById('fileInput').files[0];
+				
+				  await fetch('/upload', {
+				    method: 'POST',
+				    headers: {
+				      'Content-Type': 'image/png'
+				    },
+				    body: file
+				  });
+				}
+				</script>
 				<div>
 					<p>Accepted file type: .png</p>
 				</div>
