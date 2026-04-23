@@ -10,7 +10,7 @@
 			"request": "launch",
 			"program": "${workspaceFolder}/webserv/webserv",
 			//"args": ["${workspaceFolder}/webserv/testConfigs/testing/matching_location/matching_location1.conf"],
-			"args": ["${workspaceFolder}/webserv/testConfigs/default.conf"],
+			"args": ["${workspaceFolder}/tester.conf"],
 			"stopAtEntry": true,
 			"cwd": "${workspaceFolder}/webserv",
 			"environment": [],
