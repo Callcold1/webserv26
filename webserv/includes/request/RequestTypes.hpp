@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 16:24:23 by kmooney           #+#    #+#             */
-/*   Updated: 2026/04/23 12:07:01 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/04/23 19:21:01 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -133,22 +133,22 @@ struct mpPart_t {																// KM - are the headers being free'd?
 	fileInfo_s											upload_dest;			// populated when validating content-disposition header
 	mpPart_t(): headers(new fieldMap_t), body_size(0), isFile(0){}
 
-	// void clear(void) {
-	// 	deleteHeaders(headers);
-	// }
+	void clear(void) {
+		deleteHeaders(headers);
+	}
 
-	// void	deleteHeaders(fieldMap_t* headers){
+	void	deleteHeaders(fieldMap_t* headers){
 
-	// 	for (fieldMap_t::iterator it = headers->begin(); it != headers->end(); it++){
+		for (fieldMap_t::iterator it = headers->begin(); it != headers->end(); it++){
 
-	// 		size_t size = it->second.size();
+			size_t size = it->second.size();
 
-	// 		for (size_t i = 0; i < size; i++){
-	// 			delete it->second[i];
-	// 			it->second[i] = NULL;
-	// 		}
-	// 	}
-	// }
+			for (size_t i = 0; i < size; i++){
+				delete it->second[i];
+				it->second[i] = NULL;
+			}
+		}
+	}
 };
 
 struct mpMessage_t {
@@ -157,12 +157,12 @@ struct mpMessage_t {
 	size_t					filecount;
 	mpMessage_t(): filecount(0){}
 	
-	// void clear(void) {
-	// 	for (std::vector<mpPart_t>::iterator it = parts.begin(); it != parts.end(); it++){
-	// 		it->clear();
-	// 	}
-	// 	parts.clear();
-	//}
+	void clear(void) {
+		for (std::vector<mpPart_t>::iterator it = parts.begin(); it != parts.end(); it++){
+			it->clear();
+		}
+		parts.clear();
+	}
 };
 
 struct mpParser_t {

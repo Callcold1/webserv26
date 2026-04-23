@@ -126,20 +126,21 @@ int CgiResponse::execute()
 		ssize_t total_bytes = 0;
 		g_timed_out = 0;
 		g_child_pid = pid;
+		int status;
 
 		close(toServer[1]);
 		close(toCgi[0]);
+		alarm(5);
 		if ((!_request._body.empty())) {
 			if (write(toCgi[1], _request._body.c_str(), _request._body.length()) < 0)
 			{
 				close(toCgi[1]); close(toServer[0]);
-				waitpid(pid, NULL, 0);
-				return(500);
+				waitpid(pid, &status, 0);
+				return(502);
 			}
 		}
 		close(toCgi[1]);
 		
-		alarm(5);
 		while (bytes_read != 0)
 		{
 			if (g_timed_out)
@@ -154,7 +155,7 @@ int CgiResponse::execute()
 					continue; // it was interrupted by different signal, keep reading
 				}
 				close(toCgi[1]); close(toServer[0]);
-				waitpid(pid, NULL, 0);
+				waitpid(pid, &status, 0);
 				return(502);
 			}
 			res.append(buf, bytes_read);
@@ -167,7 +168,7 @@ int CgiResponse::execute()
 		if (total_bytes <= 0)
 		{
 			close(toCgi[1]); close(toServer[0]);
-			waitpid(pid, NULL, 0);
+			waitpid(pid, &status, 0);
 			return(502);
 		}
 		if (!_is_py)
@@ -193,7 +194,22 @@ int CgiResponse::execute()
 		// write(fd, res.c_str(), total_bytes);
 		// close(fd);
 		close(toServer[0]);
-		waitpid(pid, NULL, 0);
+		waitpid(pid, &status, 0);
+		if (WIFEXITED(status))
+		{
+			int exit_code = WEXITSTATUS(status);
+			if (exit_code != 0)
+			{
+				std::cerr << "CGI exited with code: " << exit_code << std::endl;
+				return 502;
+			}
+		}
+		else if (WIFSIGNALED(status))
+		{
+			int signal = WTERMSIG(status);
+			std::cerr << "CGI killed by signal: " << signal << std::endl;
+			return 502;
+		}
 		return (0);
 	}
 }
