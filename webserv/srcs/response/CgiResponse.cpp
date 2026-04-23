@@ -139,7 +139,7 @@ int CgiResponse::execute()
 		}
 		close(toCgi[1]);
 		
-		alarm(3);
+		alarm(5);
 		while (bytes_read != 0)
 		{
 			if (g_timed_out)
