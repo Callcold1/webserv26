@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/30 11:28:22 by kmooney           #+#    #+#             */
-/*   Updated: 2026/04/23 16:26:01 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/04/23 19:21:44 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -134,6 +134,7 @@ Request& Request::operator=(const Request &other){
 Request::~Request( void ){
 	
 	deleteHeaders();
+	_mp_m.clear();
 	if (_parser)
 		delete _parser;
 	_parser = NULL;
@@ -169,7 +170,7 @@ void	Request::clear() {
 	_default_mp_content_type.clear();
 	_sizes.reset(remainder);
 
-	//_mp_m.clear();
+	_mp_m.clear();
 
 	_errNum = 200;
 	_errMess.clear();

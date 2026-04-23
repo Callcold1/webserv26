@@ -224,8 +224,17 @@ void	Server::loop(){
 			Log::instance().log(Log::INFO, Log::TYPE_CLASS, "Signal received : exiting server", true);
 			continue;
 		}
-		if (!handleEvents())
+		if (!handleEvents()){
+			if (_clients.empty())
+				break;
+				 
+			std::map<int, Client>::iterator last = _clients.end();
+			last--;
+			for (std::map<int, Client>::iterator it = _clients.begin(); it != last; it++){
+				disconnectClient(it->first, "Signal received : server shutting down");
+   			}
 			break;
+		}
 		checkTimeouts();
 	}
 }
@@ -263,9 +272,9 @@ bool	Server::handleEvents(void){
 				handleClientWrite(fd);
 				
 			if (_sockets[i].revents & POLLIN) // 
-				handleClientRead(fd, true);
-			else if (_sockets[i].revents & POLLHUP) //POLLHUP ADDED TO ENSURE FINAL READ IF PIPE CLOSED (CLIENT WRITE/SERVER READ)
 				handleClientRead(fd, false);
+			else if (_sockets[i].revents & POLLHUP) //POLLHUP ADDED TO ENSURE FINAL READ IF PIPE CLOSED (CLIENT WRITE/SERVER READ)
+				handleClientRead(fd, true);
 			else if (_sockets[i].revents & (POLLERR | POLLNVAL)) // KM: POLLHUP REMOVED - ANY CONSEQUENCES?
 				disconnectClient(fd, "handleEvents: POLLERR | POLLHUP | POLLNVAL");
 		}
@@ -344,18 +353,17 @@ void	Server::handleClientRead(int fd, bool pipe_closed){
 
 	ssize_t bytes = recv(fd, buffer, sizeof(buffer), 0);
 
-	if (bytes < 0)
-		disconnectClient(fd, "Invalid read");
-	else if (bytes == 0) {
-		if (pipe_closed) // KM - haven't fully thought this through - added to differentiate between POLLIN and POLLHUP
-			client.handleZeroRead();	// KM - NOT STRAIGHT DISCONNECT - COULD SIGNAL END OF BODY IN HTTP 1.0
-								 	// 		COULD ALSO BE MID-RESPONSE (if response is bigger than kernel buffer)
-									//		COULD HAVE STARTED RESPONSE AND STILL HAVE PIPELINE REQUESTS TO HANDLE
+	if (bytes == 0) {
+		Log::instance().log(Log::INFO, Log::TYPE_ACCESS, "handleClientRead: fd [" + toString(fd) + "]" + "read == 0" + strerror(errno), true);
+		if (pipe_closed)
+			client.handleZeroRead();
 		disconnectClient(fd, "Read size of zero");
-	}
-	else if (client.handleClientRead(buffer, bytes)){
+	}	
+	else if (bytes < 0 )
+		Log::instance().log(Log::INFO, Log::TYPE_ACCESS, "handleClientRead: fd [" + toString(fd) + "]" + "read < 0" + strerror(errno), true);
+	else if (client.handleClientRead(buffer, bytes))
 		_sockets[getSocketsPosition(fd)].events |= POLLOUT;
-	}
+	return;
 }
 
 /* >>>>>>	WRITE TO CLIENT	<<<<<<*/
@@ -374,10 +382,15 @@ void    Server::handleClientWrite(int fd)
 
     ssize_t sent = send(fd, response.c_str(), response.size(), 0);
 
-    if (sent < 0) {
-        disconnectClient(fd, "send error");
-        return;
-    }
+    if (sent < 0){
+		Log::instance().log(Log::INFO, Log::TYPE_ACCESS, "handleClientWrite: fd [" + toString(fd) + "]" + "sent < 0" + strerror(errno), true);
+		return;
+	}
+    else if (sent == 0){
+		Log::instance().log(Log::INFO, Log::TYPE_ACCESS, "handleClientWrite: fd [" + toString(fd) + "]" + "sent = 0" + strerror(errno), true);
+		return;
+	}
+
 	response.erase(0, sent);
 
     if (response.empty()) {
@@ -455,7 +468,7 @@ void Server::checkTimeouts()
 
 void	Server::disconnectClient(int fd, const std::string& reason){
 
-	Log::instance().log(Log::INFO, Log::TYPE_ACCESS, "Client disconnected: fd [" + toString(fd) + "] : " + reason, true);
+	Log::instance().log(Log::INFO, Log::TYPE_ACCESS, "\nClient disconnected: fd [" + toString(fd) + "] : " + reason, true);
 	close(fd);
 	removeClientFromPoll(fd);
 	_clients.erase(fd);

@@ -155,23 +155,28 @@ std::map<listen_s, std::vector<CServer*> >	Config::getPortServerMap(void) const{
 	return _port_server_map;
 }
 
-void	Config::checkForOverlappingPorts(void) const{
+void Config::checkForOverlappingPorts() const {
 
 	std::map<listen_s, std::vector<CServer*> >::const_iterator it;
-	std::map<listen_s, std::vector<CServer*> >::const_iterator stop;
 	std::map<listen_s, std::vector<CServer*> >::const_iterator compare;
 
-	for (it = _port_server_map.begin(); it != _port_server_map.end(); it++) {
-		if (it->first.ip == 0){
-			stop = it;
-			stop++;
-			continue;
-		}
-		for (compare = _port_server_map.begin(); compare != stop; compare++) {
-			if (it->first.port == compare->first.port)
-				throw std::runtime_error("Overlapping ip:port combination found between servers, please resolve!");
-		}
-	}
+    if (_port_server_map.size() <= 1)
+        return;
+
+    for (it = _port_server_map.begin(); it != _port_server_map.end(); it++) {
+        const listen_s& current = it->first;
+
+        if (current.ip == 0)
+            continue;
+
+        for (compare = _port_server_map.begin(); compare != it; compare++) {
+            const listen_s& other = compare->first;
+
+            if (current.ip == other.ip && current.port == other.port) {
+                throw std::runtime_error("Overlapping ip:port combination found between servers");
+            }
+        }
+    }
 }
 
 /*
