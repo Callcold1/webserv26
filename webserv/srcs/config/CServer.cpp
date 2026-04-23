@@ -336,10 +336,13 @@ void    CServer::setTimeoutRW(int timeout_in_seconds, bool set_from_config_file)
 	_timeout_rw = timeout_in_seconds;
 }
 
-const	CLocation* CServer::getLocationForPath(const std::string& uri_path, std::string& leftover) {
+const	CLocation* CServer::getLocationForPath(const std::string& uri_path, std::string& leftover, bool& redirect) {
 
 	const CLocation* best_match = NULL;
+	const CLocation* redirect_loc = NULL;
 	size_t best_length = 0;
+	size_t loc_size = 0;
+	size_t uri_size = 0;
 
 	for (size_t i = 0; i < _locations.size(); i++) {
 		
@@ -349,15 +352,26 @@ const	CLocation* CServer::getLocationForPath(const std::string& uri_path, std::s
 			leftover = uri_path.substr(loc_path.size());		
 			return &_locations[i];
 		}
-		if (uri_path.compare(0, loc_path.size(), loc_path) == 0 && (uri_path.size() == loc_path.size() || uri_path[loc_path.size() - 1] == '/')){
-			if (loc_path.size() > best_length){
-				best_length = loc_path.size();
+
+		loc_size = loc_path.size();
+		uri_size = uri_path.size();
+		
+		if ((loc_size == uri_size + 1) && loc_path[loc_size - 1] == '/'){
+			redirect = true;
+			redirect_loc = &_locations[i];
+		}
+		else if (uri_path.compare(0, loc_size, loc_path) == 0 && (uri_size == loc_size || uri_path[loc_size - 1] == '/')){
+			if (loc_size > best_length){
+				best_length = loc_size;
 				best_match = &_locations[i];
 			}
 		}
 	}
-	if (best_match) {
+
+	if (best_match && ((redirect && (best_match->getURI().length() == uri_size)) || !redirect)) {
 		leftover = uri_path.substr(best_length);
 	}
+	else if (redirect_loc)
+		return redirect_loc;
 	return best_match;
 }

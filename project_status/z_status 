@@ -1,6 +1,6 @@
 WIP
 ===
-
+segfault when keyword not recognised - catch exception CParser line 170 (throw std::runtime_error("Unexpected token '" + value + "' token number : " + toString(_pos) + ", line number : " + line_num);)
 1) > 100 bytes: Should fail with 413 Payload Too Large. Max sizes need to be implemented and timeouts
 
 3) Look at error page - should we treat as full path or redirect to error page (e.g. location /50x.html{} for error_page 501 502 /50x.html)

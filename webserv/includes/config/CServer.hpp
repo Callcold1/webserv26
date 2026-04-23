@@ -121,5 +121,5 @@ class CServer {
 		void								propagateServerToLocation();
 
 											/*	LOCATION MATCHING (FOR REQUEST URI FIND BEST FIT CLOCATION )	*/
-		const CLocation*					getLocationForPath(const std::string& uri_path, std::string& leftover);
+		const CLocation*					getLocationForPath(const std::string& uri_path, std::string& leftover, bool& redirect);
 };

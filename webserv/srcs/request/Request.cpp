@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/30 11:28:22 by kmooney           #+#    #+#             */
-/*   Updated: 2026/04/22 16:12:10 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/04/23 16:26:01 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -169,6 +169,8 @@ void	Request::clear() {
 	_default_mp_content_type.clear();
 	_sizes.reset(remainder);
 
+	//_mp_m.clear();
+
 	_errNum = 200;
 	_errMess.clear();
 
@@ -176,9 +178,10 @@ void	Request::clear() {
 	_r_state = P_REQLINE;
 
 	_hasBody = false;
-	_isCGI = false; 
+	_isCGI = false;
 	_isChunked = false;
 	_isMultiPart = false;
+	_isRedirect = false;
 	_bodyUTF8 = false;
 	_body_complete = false;
 	
@@ -340,7 +343,11 @@ bool	Request::setState(eParse p_state, std::string err_mess, unsigned int err_nu
 	_p_state = p_state;
 	_errMess = err_mess;
 	_errNum = err_num;
-	Log::instance().log(Log::INFO, Log::TYPE_REQUESTS, err_mess + toString(err_num), false);
+
+	if (_p_state == P_DONE)
+		Log::instance().log(Log::INFO, Log::TYPE_REQUESTS, err_mess + toString(err_num), false);
+	if (_p_state == P_ERROR)
+		Log::instance().log(Log::ERROR, Log::TYPE_ERROR, err_mess + ": " + toString(err_num), true);
 	return false;
 }
 
@@ -349,7 +356,9 @@ bool	Request::setState(eParse p_state, eReqState r_state, std::string err_mess, 
 	_r_state = r_state;
 	_errMess = err_mess;
 	_errNum = err_num;
-	Log::instance().log(Log::INFO, Log::TYPE_REQUESTS, err_mess + ": " + toString(err_num), false);
+
+	if (_p_state == P_DONE)
+		Log::instance().log(Log::INFO, Log::TYPE_REQUESTS, err_mess + ": " + toString(err_num), false);
 	if (_p_state == P_ERROR)
 		Log::instance().log(Log::ERROR, Log::TYPE_ERROR, err_mess + ": " + toString(err_num), true);
 	return false;
@@ -415,12 +424,32 @@ bool	Request::matchServerToHostHeader(void){
 
 bool	Request::matchLocationToURIPath(void){
 	
-	_matched_location = _matched_server->getLocationForPath(_uri.path, _leftover);
+	_matched_location = _matched_server->getLocationForPath(_uri.path, _leftover, _isRedirect);
+	
+	if (_isRedirect){
+		this->setState(P_DONE, "Redirect : missing trailing '/'", 301);
+		_re.paths.redirect_url = _matched_location->getURI();
+		return true;
+	}
 	if (!_matched_location)
 		return false;
 	if (_matched_location->isCGIMapSet())
 		_isCGI = true;
-	
+		
+	else if ((_matched_location->isCGIMapSet() || _matched_server->getCGIEnabled()) && _method == "POST"){
+		std::string ext = getExtension(_uri.path);
+		std::map<std::string, std::string> cgi_map = _matched_server->getCGIMap();
+		std::map<std::string, std::string>::iterator it;
+		std::string second;
+		for (it = cgi_map.begin(); it != cgi_map.end(); it++){
+			if (it->first == ext){
+				_re.paths.resource_path.path = it->second;
+				getFileInfo(_re.paths.resource_path.path, _re.paths.resource_path);
+				_isCGI = true;
+				break;
+			}
+		}
+	}
 	_re.location = _matched_location;
 	updateTargetPathInfo(_leftover);
 
@@ -490,7 +519,6 @@ void	Request::updateRe(void){
 	if (_p_state == P_ERROR){
 		_re.type = RESPOND_ERROR;
 		updateErrorPagePath(_errNum);
-		updateErrorPagePath(_errNum);
 	}
 	else if (_p_state == P_DONE){
 
@@ -515,6 +543,8 @@ void	Request::updateRe(void){
 		else if (_isRedirect){
 			_re.type = RESPOND_REDIR;
 			_re.status = _matched_location->getRedirectStatus(); // duplication?
+			if (_matched_location->isRedirectSet())
+				_re.paths.redirect_url = _matched_location->getRedirect().url;
 		}
 		else if (_isChunked){
 			//_re.type = RESPOND_CHUNKED;
@@ -525,7 +555,13 @@ void	Request::updateRe(void){
 			_re.status = this->_errNum;
 		}
 		else {
-			_re.type = RESPOND_STATIC;
+			// if (_re.paths.resource_path.is_dir && _uri.path[_uri.path.length() - 1] != '/'){
+			// 	this->setState(P_ERROR, "Malformed Request : Matched resource is a directory, not a file", 404);
+			// 	_re.type = RESPOND_ERROR;
+			// 	updateErrorPagePath(_errNum);
+			// }
+			// else
+				_re.type = RESPOND_STATIC;
 		}
 	}
 }

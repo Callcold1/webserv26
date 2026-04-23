@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/23 01:37:52 by kmooney           #+#    #+#             */
-/*   Updated: 2026/04/22 11:52:04 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/04/23 15:33:07 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,7 @@ class RequestParser;
 
 // REQUEST LINE ERRORS
 #define ERR_RL_METHOD_NOT_PERMITTED "Malformed Request Line: Method not permitted "//501 (VALID METHOD BUT NOT SUPPORTED ON ROUTE)
+#define ERR_HEADERS_METHOD_NOT_PERMITTED "Location error: Method not permitted "//501 (VALID METHOD BUT NOT SUPPORTED ON ROUTE)
 #define ERR_RL_METHOD_NOT_SUPPORTED "Malformed Request Line: Method not supported "//501 (VALID METHOD BUT NOT SUPPORTED ON SERVER)
 #define ERR_RL_METHOD_CASE "Malformed Request Line: Method must be uppercase "//400 Bad Request
 #define ERR_RL_VERSION_NOT_SUPPORTED "Malformed Request Line: Unsupported HTTP Version "//505 VALID VERSION, BUT NOT SUPPORTED ON SERVER

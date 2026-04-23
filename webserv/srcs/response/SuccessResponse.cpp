@@ -161,7 +161,7 @@ int SuccessResponse::get_index_file()
 	fileInfo_s	info;
 
 	index_pages = _request._matched_location->getIndex();
-	root = _request._matched_location->getRootDir();
+	root = _path;
 
 	
 	std::cout << "vec size: " << index_pages.size() << std::endl;

@@ -40,20 +40,20 @@ void	CParser::openConfigFile(const std::string& filename)
 
 void	CParser::parseConfigFile(Config& config){
 	
-	Log::instance().log(Log::INFO, Log::TYPE_CLASS, "Config parsing started....", false);
+	//Log::instance().log(Log::INFO, Log::TYPE_CLASS, "Config parsing started....", false);
 	std::ostringstream oss;
 	try {
 		tokeniseStream();
 		initKeywords();
 
 		parseTokens();
-		Log::instance().log(Log::INFO, Log::TYPE_CONF, "Parsed to _raw_config", false);
+	//	Log::instance().log(Log::INFO, Log::TYPE_CONF, "Parsed to _raw_config", false);
 		
 		setConfig(config);
-		Log::instance().log(Log::DEBUG, Log::TYPE_CONF, "Config object created : initial parsing complete : \n\n" + printstream(config), false);
+	//	Log::instance().log(Log::DEBUG, Log::TYPE_CONF, "Config object created : initial parsing complete : \n\n" + printstream(config), false);
 
 		config.propagateVarsToChildren();
-		Log::instance().log(Log::DEBUG, Log::TYPE_CONF, "Variables propagated from global -> server -> location : \n\n" + printstream(config), false);
+		//Log::instance().log(Log::DEBUG, Log::TYPE_CONF, "Variables propagated from global -> server -> location : \n\n" + printstream(config), false);
 		
 		config.mapServersToPorts();
 		config.checkForOverlappingPorts();
@@ -216,7 +216,7 @@ void	CParser::initKeywords(void) {
 
 	// SERVER
 	_server_keywords.push_back("autoindex");
-	_location_keywords.push_back("cgi_path");
+	_server_keywords.push_back("cgi_path");
 	_server_keywords.push_back("charset");
 	_server_keywords.push_back("error_page");
 	_server_keywords.push_back("index");
@@ -696,8 +696,12 @@ bool	CParser::setBoolean(node_t* node, bool& state){
 			state = true;
 	else if (lowercase.length() == 1 && (lowercase == "0" || lowercase == "f"))
 			state = false;
+	else if (lowercase.length() == 2 && ( lowercase == "on"))
+			state = true;
+	else if (lowercase.length() == 3 && (lowercase == "off"))
+			state = false;
 	else
-		throw std::runtime_error("value must be boolean (T/F/t/f/true/false/TRUE/FALSE/1/0) : " 
+		throw std::runtime_error("value must be boolean (T/F/t/f/true/false/TRUE/FALSE/1/0/on/off/ON/OFF) : " 
 			+ node->type + " " + createArgsString(node->args) + " : line " + node->line_num);
 	return true;
 }
@@ -711,11 +715,13 @@ bool	CParser::setCGImap(node_t* node, std::map<std::string, std::string>& cgi_ma
 			+ node->type + " " + createArgsString(node->args) + " : line " + node->line_num);
 	std::string path = node->args[0];
 	std::string ext;
+	if (node->args[0][0] == '.')
+		ext = node->args[0];
+	else
+		throw std::runtime_error("invalid cgi_path : " + node->type + " " + createArgsString(node->args));
+
 	for (size_t i = 1; i < size; i++){
-		if (node->args[i][0] == '.')
-			cgi_map[node->args[i]] = path;
-		else
-			throw std::runtime_error("invalid cgi_path : " + node->type + " " + createArgsString(node->args));
+		cgi_map[node->args[0]] = path;
 	}
 	return true;
 }

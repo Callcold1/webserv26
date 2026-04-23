@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/16 15:33:48 by kmooney           #+#    #+#             */
-/*   Updated: 2026/04/22 14:06:43 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/04/23 11:44:32 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -1070,8 +1070,6 @@ void uniqueFilename(std::string& filename){
 		ext = filename.substr(dot);
 	}
 
-	//std::string file_path = "../photos/" + filename; 
-	//base = "../photos/" + base;
 	int i = 2;
 
 	while (file_exists(filename.c_str()))
@@ -1127,4 +1125,15 @@ int	copyFile(const std::string& src, std::string& dest)
 	if (bytes_read < 0)
     	return -4;
 	return 0;
+}
+
+std::string getExtension(const std::string& path){
+
+	std::string ext;
+	size_t dot = path.find_last_of('.');
+
+	if (dot != std::string::npos)
+		ext = path.substr(dot);
+
+	return ext;
 }

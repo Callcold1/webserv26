@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 16:24:23 by kmooney           #+#    #+#             */
-/*   Updated: 2026/04/22 14:21:05 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/04/23 12:07:01 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -124,7 +124,7 @@ struct mpPart_t {																// KM - are the headers being free'd?
 	std::string											filename; 				// if name=file, filename or filename* must be present
 	std::string											disposition_type;		// header must be present (this stores value)
 	std::vector<std::pair <std::string, std::string> >	disposition_parameters; // parameters from header
-	std::vector<field_t*>								supported_content;
+	std::vector<field_t*>								supported_content;		// KM - deleted elsewhere?
 	std::vector<char>									body;					// used if no file upload
 
 	size_t												body_size;				// bytes that have been added to body file or body 
@@ -132,6 +132,23 @@ struct mpPart_t {																// KM - are the headers being free'd?
 	std::string											tempFilePath;			// created if filename is present and body is appended here each read cycle
 	fileInfo_s											upload_dest;			// populated when validating content-disposition header
 	mpPart_t(): headers(new fieldMap_t), body_size(0), isFile(0){}
+
+	// void clear(void) {
+	// 	deleteHeaders(headers);
+	// }
+
+	// void	deleteHeaders(fieldMap_t* headers){
+
+	// 	for (fieldMap_t::iterator it = headers->begin(); it != headers->end(); it++){
+
+	// 		size_t size = it->second.size();
+
+	// 		for (size_t i = 0; i < size; i++){
+	// 			delete it->second[i];
+	// 			it->second[i] = NULL;
+	// 		}
+	// 	}
+	// }
 };
 
 struct mpMessage_t {
@@ -139,6 +156,13 @@ struct mpMessage_t {
 	std::string				default_charset;
 	size_t					filecount;
 	mpMessage_t(): filecount(0){}
+	
+	// void clear(void) {
+	// 	for (std::vector<mpPart_t>::iterator it = parts.begin(); it != parts.end(); it++){
+	// 		it->clear();
+	// 	}
+	// 	parts.clear();
+	//}
 };
 
 struct mpParser_t {

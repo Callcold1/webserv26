@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/11 16:04:15 by kmooney           #+#    #+#             */
-/*   Updated: 2026/04/22 14:07:08 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/04/23 11:44:18 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -258,6 +258,7 @@ int signal_setup();
 
 void alarm_handler(int sig);
 
-void	uniqueFilename(std::string& filename);
-int		copyFile(const std::string& src, std::string& dst);
-void	replaceChar(std::string& name, char remove, char replace);
+void		uniqueFilename(std::string& filename);
+int			copyFile(const std::string& src, std::string& dst);
+void		replaceChar(std::string& name, char remove, char replace);
+std::string	getExtension(const std::string& path);

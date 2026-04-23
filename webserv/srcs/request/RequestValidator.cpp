@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/30 11:26:19 by kmooney           #+#    #+#             */
-/*   Updated: 2026/04/22 19:22:45 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/04/23 16:26:02 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -75,15 +75,17 @@ bool	RequestValidator::validateMethod(){
 	str_t method = _req->getMethod();
 
 	if (_req->_r_state != V_REQLINE) {
-
+		
 		if (!_req->_matched_location->isMethodSupported(method)){
 			
 			if (_req->_matched_location->isMethodSupported(to_upper(method)))
 				return _req->setState(P_ERROR, V_REQLINE, ERR_RL_METHOD_CASE, 400);
 			if(!_req->_matched_server->isMethodSupported(method))
-				return _req->setState(P_ERROR, _req->_r_state, ERR_RL_METHOD_NOT_PERMITTED, 501);
+				return _req->setState(P_ERROR, _req->_r_state, ERR_HEADERS_METHOD_NOT_PERMITTED, 501);
+			else if (_req->_isCGI && _req->_method == "POST")
+				return true;
 			else
-				return _req->setState(P_ERROR, _req->_r_state, ERR_RL_METHOD_NOT_PERMITTED, 405);
+				return _req->setState(P_ERROR, _req->_r_state, ERR_HEADERS_METHOD_NOT_PERMITTED, 405);
 		}
 		return true;
 	}
