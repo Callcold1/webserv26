@@ -63,13 +63,12 @@ std::string Response::status_text()
 		case 304: return "Not Modified";
 
 		case 400: return "Bad Request";
-		//case 401: return "Unauthorized";
 		case 403: return "Forbidden";
 		case 404: return "Not Found";
 		case 405: return "Method Not Allowed";
 
 		case 500: return "Internal Server Error";
-		case 501: return "Not Implemented"; //TODO where do we check if requested method is implemented
+		case 501: return "Not Implemented";
 		case 502: return "Bad Gateway";
 		case 503: return "Service Unavailable";
 		case 504: return "Gateway Timeout";
@@ -82,14 +81,13 @@ std::string Response::status_text()
 
 void Response::defaultHeaders()
 {
-	_headers["Server"] = "WebServ";
-	//added KM : previously "_headers["Connection"] = "keep-alive";" 
+	_headers["Server"] = "WebServ"; 
 	if (_request._re.keep_alive)
 		_headers["Connection"] = "keep-alive";
 	else
 		_headers["Connection"] = "close";
 	_headers["Date"] = get_date();
-	//if (!_body.empty()) // does this need to change for file uploads? Have changed to handle in get_content_len()
+	if (!_body.empty())
 		_headers["Content-Length"] = to_str(get_content_len());
 }
 
@@ -113,13 +111,12 @@ std::string Response::get_date()
 
 size_t Response::get_content_len()
 {
-	if (_body.empty()){
-		//if ()
+	if (_body.empty())
+	{
 		if(_request._re.paths.upload_paths.size() == 0)
 			return 0;
 		else 
 			return 0;
-			//return file size? What if there are multiple files? (set to 0 and return Location: /upload_path/result/generated_file_with_list_of_uploads)	
 	}
 	return(_body.length());
 }
