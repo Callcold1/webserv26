@@ -34,6 +34,7 @@ public:
 
 	std::string		get_date();
 	size_t			get_content_len();
+	std::string		get_content_type();
 
 	//debug:
 	void print_response();

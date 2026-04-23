@@ -269,10 +269,10 @@ void Client::handle_request()
 		_response = new ErrorResponse(re.status, _request);
 	} */
 	
-	else if (!_matched_location->getRedirect().url.empty())
+	else if (!_request._re.paths.redirect_url.empty())
 	{
 		std::cout << "redirect found" << std::endl;
-		_response = new RediResponse(_request, _matched_location->getRedirect().url); //TODO is this url validated??
+		_response = new RediResponse(_request, _request._re.paths.redirect_url); //TODO is this url validated??
 		_response->generate();
 	}
 
