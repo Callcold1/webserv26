@@ -31,7 +31,6 @@ int SuccessResponse::generate()
 {
 	int re_status = 0;
 
-	//_path = _request.get_root_dir() + _request._uri.path;
 	_path = _request._re.paths.resource_path.path;
 	if ((re_status = if_delete()) != 1)
 		return (re_status);
@@ -74,7 +73,6 @@ int directory_tree(int it, std::stringstream *outfile, std::string rel_path, std
 	DIR *dir = opendir(abs_path.c_str());
 	if (!dir)
 	{
-		//std::cerr << "Error: Directory could not be opened." << std::endl;
 		return(1);
 	}
 	struct stat st;
@@ -147,9 +145,6 @@ int SuccessResponse::gen_index_page(bool is_gallery)
 	</html>";
 
 	_body = ss.str();
-	// int fd = open("Index.html", O_CREAT| O_WRONLY | O_TRUNC, 0644);
-	// write(fd, _body.c_str(), get_content_len());
-	// close(fd);
 	return(0);
 }
 

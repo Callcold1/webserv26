@@ -237,37 +237,13 @@ void Client::handle_request()
 	int error_catch = 0;
 	
 	std::cout << _request._uri.path << std::endl;
-	std::string path = _request._re.paths.resource_path.path;//_request.get_root_dir() + _request._uri.path; //
+	std::string path = _request._re.paths.resource_path.path;//_request.get_root_dir() + _request._uri.path;
 
 	
 	std::cout << "path hr: " << path << std::endl;
-	//std::cout << _matched_location->getRedirect().url << std::endl;
 
 	if (_request._re.type == RESPOND_ERROR)
 		_response = new ErrorResponse(_request._errNum, _request);
-	/* int			error_catch = 0;
-	respond_t&	re = _request._re;
-
-	switch(_request._re.type) {
-		// case(RESPOND_AUTOIND):{ _response = new StaticResponse(_request); break;}
-		case(RESPOND_CGI)    :{	_response = new CgiResponse(_request); break;}
-		//case(RESPOND_DELETE) :{ _response = new DeleteResponse(_request); break;}
-		case(RESPOND_ERROR)  :{ _response = new ErrorResponse(re.status, _request);	break;}
-		case(RESPOND_INDEX)  :{ _response = new StaticResponse(_request); break;}
-		case(RESPOND_NOT_SET):{ _response = new ErrorResponse(NOT_FOUND_ERROR, _request); break;}
-		case(RESPOND_MP_UP)	 :{ _response = new RediResponse(FILE_UPLOAD_REDIREC, _request, true); break;}
-		case(RESPOND_REDIR)  :{ _response = new RediResponse(_request, re.paths.redirect_url); break;}
-		case(RESPOND_STATIC) :{ _response = new StaticResponse(_request); break;}
-		case(RESPOND_UPLOAD) :{ _response = new RediResponse(FILE_UPLOAD_REDIREC, _request, false);	break;}
-		default				 :{ _response = new ErrorResponse(NOT_FOUND_ERROR, _request); break;}
-	}
-	if (re.type != RESPOND_ERROR)
-		error_catch = _response->generate();
-	if (error_catch > 0){
-		re.status = error_catch;
-		delete _response;
-		_response = new ErrorResponse(re.status, _request);
-	} */
 	
 	else if (!_request._re.paths.redirect_url.empty())
 	{

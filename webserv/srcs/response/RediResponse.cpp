@@ -31,25 +31,15 @@ RediResponse &RediResponse::operator=(const RediResponse &other)
 RediResponse::~RediResponse()
 {}
 
-std::string	RediResponse::getMPUploadLocation(){
-	
-	size_t	size = _request._re.paths.upload_paths.size();
-	std::string path;
-
-	if (size == 1)
-		std::string path = _request._re.paths.upload_paths[0].first.path.substr(_request._re.paths.upload_paths[0].first.path.find(_request._re.uri_path));
-	else
-		path = _request._re.uri_path;
-	return path;
-}
 
 int RediResponse::generate()
 {
 	int error_catch = 0;
+	std::cout << "location for redi: " << _location << std::endl;
 	if (_is_upload)
 	{
 		if (_is_mp){
-			error_catch = save_mp_file(_request._mp_m.parts);
+			error_catch = save_mp_file();
 			_headers["Content-Length"] = "0";
 		}
 		else
@@ -81,10 +71,6 @@ void RediResponse::gen_redi_page()
 			</p>\n\
 		</body>\n\
 	</html>";
-
-	// int fd = open("redifile.html", O_CREAT| O_WRONLY | O_TRUNC, 0644);
-	// write(fd, _body.c_str(), get_content_len());
-	// close(fd);
 }
 
 void RediResponse::redi_headers()
@@ -129,30 +115,9 @@ int RediResponse::save_file(std::string filename, std::string file_body)
 	return (0);
 }
 
-int RediResponse::save_mp_file(std::vector<mpPart_t>& mp_vec)
+int RediResponse::save_mp_file()
 {
-	//std::vector<mpPart_t>::iterator it;
 	std::string body;
-	std::cout << "MP PART COUNT: " << mp_vec.size() << std::endl;
-
-/* 	for (size_t i = 0; i < mp_vec.size(); i++) {
-		std::cout << "Part[" << i << "] isFile: " << mp_vec[i].isFile
-				<< " filename: " << mp_vec[i].filename
-				<< " body size: " << mp_vec[i].body.size()
-				<< std::endl;
-	} */
-/* 	for(it = mp_vec.begin(); it != mp_vec.end(); it++)
-	{
-		if ((*it).isFile)
-		{
-			int copy_res = copyFile(it->tempFilePath.c_str(), it->upload_dest.path.c_str());
-			switch (copy_res){
-				case (-1) : return 500; // open src failed
-				case (-2) : return 500; // open dest failed
-				case (-3) : return 500; // write failed
-				case (-4) : return 500; // read failed
-			}
-		}	 */
 	std::vector<std::pair<fileInfo_s, std::string> >::iterator it = _request._re.paths.upload_paths.begin();
 	std::vector<std::pair<fileInfo_s, std::string> >::iterator end = _request._re.paths.upload_paths.end();
 	
@@ -166,7 +131,19 @@ int RediResponse::save_mp_file(std::vector<mpPart_t>& mp_vec)
 			case (-4) : return 500; // read failed
 		}
 	}
-	_location = getMPUploadLocation(); // If single file, return upload path + sanitised filename, otherwise create new page (save to)
+	_location = getMPUploadLocation(); 
 	_headers["Location"] = _location;
 	return(0);
+}
+
+std::string	RediResponse::getMPUploadLocation(){
+	
+	size_t	size = _request._re.paths.upload_paths.size();
+	std::string path;
+
+	if (size == 1)
+		std::string path = _request._re.paths.upload_paths[0].first.path.substr(_request._re.paths.upload_paths[0].first.path.find(_request._re.uri_path));
+	else
+		path = _request._re.uri_path;
+	return path;
 }

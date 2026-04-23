@@ -56,7 +56,7 @@ int CgiResponse::execute()
 	}
 
 	pid_t pid;
-	if ((pid = fork()) < 0) //failure
+	if ((pid = fork()) < 0)
 	{
 		close(toCgi[0]);
 		close(toCgi[1]);
@@ -70,7 +70,6 @@ int CgiResponse::execute()
 
 		dup2(toCgi[0], STDIN_FILENO);    //POST request data 
 		dup2(toServer[1], STDOUT_FILENO); //PNG bytes 
-		//dup2(toServer[1], STDERR_FILENO);
 
 		close(toCgi[0]); close(toServer[1]);
 
@@ -88,7 +87,7 @@ int CgiResponse::execute()
 		char* system_path = getenv("PATH"); // current system PATH so we dont have to hardcode it
 		std::string path_env = "PATH=" + std::string(system_path ? system_path : "/usr/bin:/bin");
 		std::string q = "QUERY_STRING=";
-		std::string len = "CONTENT_LENGTH=" + toString(_request._sizes.body_size); //was :_request._body.length() JAKE : replace body.length with "" (the size of the body after parsing - file or string)
+		std::string len = "CONTENT_LENGTH=" + toString(_request._sizes.body_size);
 		std::string type = "CONTENT_TYPE=application/x-www-form-urlencoded"; // or from headers
 		std::string m = "REQUEST_METHOD=" + _request._method;
 		std::string script = "SCRIPT_FILENAME=" + _path; // system path to file
@@ -175,24 +174,14 @@ int CgiResponse::execute()
 		{
 			size_t pos;
 			if ((pos = res.rfind("\r\n\r\n")) != std::string::npos)
-			{
 				_body = res.substr(pos + 4);
-			}
 			else if ((pos = res.rfind("\n\n")) != std::string::npos)
-			{
 				_body = res.substr(pos + 2);
-			}
 			else
-			{
 				_body = res;
-			}
 		}
 		else
 			_body = res;
-		
-		// int fd = open("outfile.html", O_CREAT| O_WRONLY | O_TRUNC, 0644);
-		// write(fd, res.c_str(), total_bytes);
-		// close(fd);
 		close(toServer[0]);
 		waitpid(pid, &status, 0);
 		if (WIFEXITED(status))
