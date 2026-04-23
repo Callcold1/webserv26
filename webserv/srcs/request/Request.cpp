@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/30 11:28:22 by kmooney           #+#    #+#             */
-/*   Updated: 2026/04/23 19:21:44 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/04/23 23:53:47 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -426,9 +426,10 @@ bool	Request::matchServerToHostHeader(void){
 bool	Request::matchLocationToURIPath(void){
 	
 	_matched_location = _matched_server->getLocationForPath(_uri.path, _leftover, _isRedirect);
-	
-	if (_isRedirect){
+	if (_isRedirect)
 		this->setState(P_DONE, "Redirect : missing trailing '/'", 301);
+	if (_matched_location->getRedirectStatus() || _isRedirect){
+		_isRedirect = true;
 		_re.paths.redirect_url = _matched_location->getURI();
 		return true;
 	}

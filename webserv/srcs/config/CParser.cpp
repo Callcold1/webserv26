@@ -382,7 +382,8 @@ bool	CParser::setLocation(node_t* location_node, std::vector<CLocation>& locatio
 
 	temp.redirect.status = temp.redirect_status;
 	temp.redirect.url = temp.redirect_url;
-
+	if (temp.redirect_status_set || temp.redirect_url_set )
+		temp.redirect_set = true;
 	CLocation	location;
 
 	pushToLocation(temp, location);
@@ -662,7 +663,7 @@ void	CParser::pushToLocation(tempConfig_s& tmp, CLocation& dest){
 		dest.setMethod(tmp.method, true);
 	if (tmp.modifier_set)
 		dest.setModifier(tmp.modifier, true);
-	if (tmp.redirect_set)
+	if (tmp.redirect_status_set)
 		dest.setRedirect(tmp.redirect, true);
 	if (tmp.root_set)
 		dest.setRootDir(tmp.root, true);

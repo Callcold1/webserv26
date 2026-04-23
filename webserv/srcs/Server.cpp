@@ -235,6 +235,7 @@ void	Server::loop(){
    			}
 			break;
 		}
+		}
 		checkTimeouts();
 	}
 }
@@ -273,7 +274,9 @@ bool	Server::handleEvents(void){
 				
 			if (_sockets[i].revents & POLLIN) // 
 				handleClientRead(fd, false);
+				handleClientRead(fd, false);
 			else if (_sockets[i].revents & POLLHUP) //POLLHUP ADDED TO ENSURE FINAL READ IF PIPE CLOSED (CLIENT WRITE/SERVER READ)
+				handleClientRead(fd, true);
 				handleClientRead(fd, true);
 			else if (_sockets[i].revents & (POLLERR | POLLNVAL)) // KM: POLLHUP REMOVED - ANY CONSEQUENCES?
 				disconnectClient(fd, "handleEvents: POLLERR | POLLHUP | POLLNVAL");
