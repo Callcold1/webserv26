@@ -294,8 +294,6 @@ void Client::handle_request()
 				_response =  new CgiResponse(_request, true);
 			else if (ends_with(path, ".php"))
 				_response =  new CgiResponse(_request, false);
-			else if (ends_with(path, ".bla")) //REMOVE
-					_response =  new CgiResponse(_request, false);//REMOVE
 
 			error_catch = _response->generate();
 			if (error_catch != 0)
@@ -324,7 +322,7 @@ void Client::handle_request()
 		std::cout << "nothing found" << std::endl;
 		_response =  new ErrorResponse(NOT_FOUND_ERROR, _request); //defaults to 404 not found
 	}
-	
+	Log::instance().log(Log::INFO, Log::TYPE_RESPONSE,_response->serialize() , false);
 	append_write(_response->serialize());
 	delete _response;
 	if (_request._re.keep_alive == true && _request._p_state == P_DONE){

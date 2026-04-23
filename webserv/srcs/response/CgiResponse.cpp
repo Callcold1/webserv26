@@ -75,10 +75,8 @@ int CgiResponse::execute()
 		close(toCgi[0]); close(toServer[1]);
 
 		std::string interpreter = "python3";
-		if (ends_with(_path, ".php")) //REMOVE
+		if (!_is_py)
 			interpreter = "php-cgi";
-		else if (ends_with(_path, ".bla")) //REMOVE
-			interpreter = "/home/kmooney/Desktop/webserv26/webserv26/main_branch/webserv/cgi_tester";
 
 		char *args[] = {
 			const_cast<char*>("env"),
