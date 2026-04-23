@@ -178,7 +178,7 @@ bool	CLocation::isMethodSupported(const std::string& method) const{
 	size_t size = _method.size();
 	
 	for (size_t i = 0; i < size; i++){
-		if (method.compare(_method[i]))
+		if (method.compare(_method[i]) == 0)
 			return true;
 	}
 	return false;
@@ -269,7 +269,7 @@ std::string	CLocation::getUploadPath(void) const{
 }
 
 const std::string&	CLocation::getURI(void) const{
-	if (_uri.length() > 0)
+	if (!_uri.empty())
 		return _uri;
 	return _no_uri;
 }

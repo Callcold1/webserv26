@@ -70,7 +70,7 @@ std::string Response::status_text()
 
 		case 500: return "Internal Server Error";
 		case 501: return "Not Implemented"; //TODO where do we check if requested method is implemented
-		//case 502: return "Bad Gateway";
+		case 502: return "Bad Gateway";
 		case 503: return "Service Unavailable";
 		case 504: return "Gateway Timeout";
 		//etc
@@ -128,4 +128,27 @@ size_t Response::get_content_len()
 void Response::print_response()
 {
 	std::cout << this->serialize() << std::endl;
+}
+
+
+std::string Response::get_content_type()
+{
+	const unsigned char png_magic[] = {
+		0x89, 0x50, 0x4E, 0x47,
+		0x0D, 0x0A, 0x1A, 0x0A
+	};
+
+	if (_body.size() >= 15 && _body.compare(0, 15, "<!doctype html>") == 0)
+	{
+		return("text/html");
+	}
+	else if (_body.size() >= sizeof(png_magic) &&
+        std::memcmp(_body.data(), png_magic, sizeof(png_magic)) == 0)
+    {
+        return("image/png");
+    }
+	else
+	{
+		return("application/octet-stream");
+	}
 }

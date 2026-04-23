@@ -31,32 +31,17 @@ RediResponse &RediResponse::operator=(const RediResponse &other)
 RediResponse::~RediResponse()
 {}
 
-// std::string	RediResponse::getMPUploadLocation(){
+std::string	RediResponse::getMPUploadLocation(){
 	
-// 	size_t	size = _request._re.paths.upload_paths.size();
-// 	if (size == 1){
-// 		std::string path = _request._re.paths.upload_paths[0].first.path.substr(_request._re.paths.upload_paths[0].first.path.find(_request._re.uri_path));
-// 		//return _request._re.paths.upload_paths[0].first.path.substr(_request._re.paths.upload_base.length()); // return upload path - cwd
-// 		//std::string path = pathAppendToRoot(_request._re.paths.upload_paths[0].second, _request._re.uri_path);
-// 		return path;
-// 	}
-// 	else {
-// 		std::string base = _request._re.paths.upload_base;
-// 		std::string result_path = base + "/results/" + generate_batch_id(1); //next_folder - int that tracks filename 
+	size_t	size = _request._re.paths.upload_paths.size();
+	std::string path;
 
-// 		if (mkdir(result_path.c_str(), 0755) == 0){
-// 			std::string filepath = result_path + "/" + "results.txt";
-// 			std::ofstream results (filepath.c_str());
-// 			for (size_t i = 0; i < size; i++)
-// 				results << _request._re.paths.upload_paths[i].second.substr(_request._re.paths.resource_path.path.size()) << std::endl;
-// 			results.close();
-// 			return result_path;
-// 		}
-// 		else
-//         	std::cerr << "Error creating results directory" << std::endl;
-//         return "";
-// 	}
-// }
+	if (size == 1)
+		std::string path = _request._re.paths.upload_paths[0].first.path.substr(_request._re.paths.upload_paths[0].first.path.find(_request._re.uri_path));
+	else
+		path = _request._re.uri_path;
+	return path;
+}
 
 int RediResponse::generate()
 {
@@ -65,7 +50,6 @@ int RediResponse::generate()
 	{
 		if (_is_mp){
 			error_catch = save_mp_file(_request._mp_m.parts);
-			// _headers["Location"] = getMPUploadLocation(); // If single file, return upload path + sanitised filename, otherwise create new page (save to)
 			_headers["Content-Length"] = "0";
 		}
 		else
@@ -121,9 +105,8 @@ int RediResponse::save_file(std::string filename, std::string file_body)
 		ext = filename.substr(dot);
 	}
 
-	std::string file_path = "../photos/" + filename;
-	//std::string file_path = _request._re.paths.upload_paths[0];
-	base = "../photos/" + base;
+	std::string file_path = _request._re.paths.upload_base + filename;
+	base = _request._re.paths.upload_base + base;
 	int i = 2;
 
 	while (file_exists(file_path.c_str()))
@@ -147,75 +130,42 @@ int RediResponse::save_file(std::string filename, std::string file_body)
 
 int RediResponse::save_mp_file(std::vector<mpPart_t>& mp_vec)
 {
-	std::vector<mpPart_t>::iterator it;
+	//std::vector<mpPart_t>::iterator it;
 	std::string body;
-
 	std::cout << "MP PART COUNT: " << mp_vec.size() << std::endl;
 
-	for (size_t i = 0; i < mp_vec.size(); i++) {
+/* 	for (size_t i = 0; i < mp_vec.size(); i++) {
 		std::cout << "Part[" << i << "] isFile: " << mp_vec[i].isFile
 				<< " filename: " << mp_vec[i].filename
 				<< " body size: " << mp_vec[i].body.size()
 				<< std::endl;
-	}
-	for(it = mp_vec.begin(); it != mp_vec.end(); it++)
+	} */
+/* 	for(it = mp_vec.begin(); it != mp_vec.end(); it++)
 	{
 		if ((*it).isFile)
 		{
-			std::cout << "save dir : " <<  it->upload_dest.path.c_str() << std::endl;
-			if (!rename(it->tempFilePath.c_str(), it->upload_dest.path.c_str()))
-				std::cout << "Not renamed" << std::endl;
-			else
-				std::cout << "Renamed" << std::endl;
-			//body = std::string((*it).body.begin(), (*it).body.end());
-			return (save_file((*it).filename, body));
+			int copy_res = copyFile(it->tempFilePath.c_str(), it->upload_dest.path.c_str());
+			switch (copy_res){
+				case (-1) : return 500; // open src failed
+				case (-2) : return 500; // open dest failed
+				case (-3) : return 500; // write failed
+				case (-4) : return 500; // read failed
+			}
+		}	 */
+	std::vector<std::pair<fileInfo_s, std::string> >::iterator it = _request._re.paths.upload_paths.begin();
+	std::vector<std::pair<fileInfo_s, std::string> >::iterator end = _request._re.paths.upload_paths.end();
+	
+	for(; it != end; it++)
+	{
+		int copy_res = copyFile(it->second, it->first.path);
+		switch (copy_res){
+			case (-1) : return 500; // open src failed
+			case (-2) : return 500; // open dest failed
+			case (-3) : return 500; // write failed
+			case (-4) : return 500; // read failed
 		}
 	}
-	return(1);
+	_location = getMPUploadLocation(); // If single file, return upload path + sanitised filename, otherwise create new page (save to)
+	_headers["Location"] = _location;
+	return(0);
 }
-
-// int RediResponse::save_mp_file(std::vector<mpPart_t>& mp_vec)
-// {
-// 	(void)mp_vec;
-// 	size_t size = _request._re.paths.upload_paths.size();
-	
-// 	for (size_t i = 0; i < size; i++){
-
-// 		fileInfo_s& dest = _request._re.paths.upload_paths[i].first;
-// 		std::string& tmp = _request._re.paths.upload_paths[i].second;
-		
-// 		size_t num = 1;													// number to append
-
-// 		std::string name = dest.path;
-
-// 		while (42){
-// 			int i = std::rename(tmp.c_str(), name.c_str());
-// 			perror("Rename failed : ");
-// 			std::cout << i << std::endl;
-// 			if (std::rename(tmp.c_str(), name.c_str()) == 0){
-// 				dest.path = name;
-// 				std::cout << "file successfully saved to upload folder as : " << name << std::endl;
-// 				break;
-// 			}
-
-// 			std::cerr << "Existing file with same name : file renamed" << std::endl;
-// 			name = dest.path + "_" + toString(num);
-// 			num++;
-// 		}
-// 	}
-// 	return 0;
-// 	/* 
-// 		std::vector<mpPart_t>::iterator it;
-// 		std::string body; // If it's a file, see below 
-
-// 		for(it = mp_vec.begin(); it != mp_vec.end(); it++)
-// 		{
-// 			if ((*it).isFile)
-// 			{
-// 				body = std::string((*it).body.begin(), (*it).body.end());
-// 				return (save_file((*it).filename, body)); // If we have to handle more than one file? If so, should this iterate until end
-// 			}
-// 		}
-// 		return(1);
-// 	*/
-// }

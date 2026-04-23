@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jake <jake@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/07 10:25:15 by kmooney           #+#    #+#             */
-/*   Updated: 2026/04/20 18:05:41 by jake             ###   ########.fr       */
+/*   Updated: 2026/04/22 13:05:19 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,7 +24,6 @@
 #define TOO_MANY_ARGS "Error : too many arguments : the program can be started without arguments (default.conf will be used), or with a valid configuration file path"
 #define NO_CLI_ARG "No config file path provided - attempting to use : "
 #define ERR_CONFIG_NOT_OPEN "Error : the configuration file could not be opened : "
-
 
 int	main(int argc, char** argv){
 
@@ -50,6 +49,7 @@ int	main(int argc, char** argv){
 
 		p.parseConfigFile(config);
 		Server server(config);
+		Server::setupSignals();
 		server.loop();
 	}
 

@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/23 01:37:52 by kmooney           #+#    #+#             */
-/*   Updated: 2026/03/06 14:08:45 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/04/22 11:52:04 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -109,7 +109,6 @@ class RequestValidator {
 
 		bool							validateContentType();
 		bool							validateParamsForContentType(const std::string& type, const std::vector<std::pair<str_t, str_t> > params);
-		//bool							validateCharset(const std::string& val, const std::vector< std::pair<std::string, std::string> >& options);
 		bool							validateCharset(const std::vector< std::pair<std::string, std::string> >& options);
 
 		bool							duplicateOptionCheck(const std::vector< std::pair<std::string, std::string> >& options);
@@ -124,30 +123,21 @@ class RequestValidator {
 		bool							validateMPContentType(mpPart_t& part, const std::vector<field_t*>& header);
 		bool							updateMPparams(mpPart_t& part, const std::vector<std::pair< str_t, str_t> >& params);
 		bool							validateMultiPartBody(void);
+
 		bool							sanitiseFilename(std::string& name);
 		bool							sanitiseFilenameStar(std::string& name);
 		bool							splitFilename(std::string& name, std::vector<std::string>& vec);
 		void							validateTrailers(void);
 
 		int								countHeaderValues (const fieldMap_t& headers, const std::string& headerName);
-		int								countOptions(const std::vector<std::pair<std::string, std::string> >& options);
 		bool							percentDecode( str_t& encoded);
 
-		bool							testHeaderPresent(std::string& name);
 		const std::vector<field_t*>*	getHeader(const fieldMap_t& headers, const str_t& name);
 		const std::vector<field_t*>*	getHeader(const fieldMap_t* headers, const str_t& name);
 
-		bool							validateAllHeaders(const fieldMap_t& headers);
-		bool							validateHeader(const std::vector<field_t*>& values, const headerContext_s& context);
-		headerContext_s					getHeaderContext(const std::string& header_name);
+		bool							isValidMediaType(const std::string& value);
+		bool							isSupportedMediaType(const std::string& type);
 
-										// Header ABNF definition validation
-		bool							isValidCodings(std::string& value);				// Accept-Encoding (gzip, zip etc)
-		bool							isValidContentCodingType(std::string& value);	// Accept-Encoding (called by isValidCodings) && Content-Encoding (gzip, zip etc)
-		bool							isValidMediaRange(std::string& value);
-		bool							isValidMediaType(std::string& value, bool is_range);
-		bool							isValidMediaTypeVal(std::string& value);
-		bool							isValidMediaSubTypeVal(std::string& value);
 		bool							isValidCharset(std::string& value);
 		bool							isValidToken(std::string& value);
 
@@ -158,4 +148,4 @@ class RequestValidator {
 
 };
 
-bool	isValidContentType(const std::string& name);
+//bool	isValidContentType(const std::string& name);

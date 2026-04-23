@@ -8,9 +8,6 @@
 #include "helpers.hpp"
 
 #define HTTP_VERSION "HTTP/1.1"
-#define CGI_PATH "www/cgi-bin/"
-#define HTML_PATH "www/html"
-#define PHOTO_PATH "www/photos"
 #define NOT_FOUND_ERROR 404
 #define BAD_REQUEST_ERROR 400
 #define FILE_UPLOAD_REDIREC 303
@@ -37,6 +34,7 @@ public:
 
 	std::string		get_date();
 	size_t			get_content_len();
+	std::string		get_content_type();
 
 	//debug:
 	void print_response();

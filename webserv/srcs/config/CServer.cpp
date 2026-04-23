@@ -153,6 +153,22 @@ bool	CServer::isTimeoutRWSet(void) const{
 }
 
 /*
+>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<
+>>>>>>		CHECK VARIABLE		<<<<<<
+>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<
+*/
+
+bool	CServer::isMethodSupported(const std::string& method) const{
+	size_t size = _method.size();
+	
+	for (size_t i = 0; i < size; i++){
+		if (method.compare(_method[i]))
+			return true;
+	}
+	return false;
+}
+
+/*
 >>>>>>>>>>>>>>><<<<<<<<<<<<<<<
 >>>>>>		GETTERS		<<<<<<
 >>>>>>>>>>>>>>><<<<<<<<<<<<<<<
@@ -201,7 +217,7 @@ std::vector<std::string>	CServer::getMethod(void) const{
 	return _method;
 }
 
-std::map<std::string, std::vector<std::string> >	CServer::getMime(void) const{
+std::map<std::string, std::vector<std::string> >	CServer::getMime(void) const {
 	return _mime;
 }
 

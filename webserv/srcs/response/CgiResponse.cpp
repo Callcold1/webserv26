@@ -79,23 +79,26 @@ int CgiResponse::execute()
 			interpreter = "php-cgi";
 
 		char *args[] = {
-			const_cast<char*>("env"), 
-			const_cast<char*>(interpreter.c_str()),              
-			const_cast<char*>(_path.c_str()), 
+			const_cast<char*>("env"),
+			const_cast<char*>(interpreter.c_str()),
+			const_cast<char*>(_path.c_str()),
 			NULL
 		};
 
 		char* system_path = getenv("PATH"); // current system PATH so we dont have to hardcode it
 		std::string path_env = "PATH=" + std::string(system_path ? system_path : "/usr/bin:/bin");
-		std::string q = "QUERY_STRING=" + _request._uri.query;
-		std::string len = "CONTENT_LENGTH=" + toString(_request._body.length());
-		std::string type = "CONTENT_TYPE=application/x-www-form-urlencoded"; // or from headers: std::string type = "CONTENT_TYPE=" + _request.getHeader("Content-Type");
+		std::string q = "QUERY_STRING=";
+		std::string len = "CONTENT_LENGTH=" + toString(_request._sizes.body_size); //was :_request._body.length() JAKE : replace body.length with "" (the size of the body after parsing - file or string)
+		std::string type = "CONTENT_TYPE=application/x-www-form-urlencoded"; // or from headers
 		std::string m = "REQUEST_METHOD=" + _request._method;
 		std::string script = "SCRIPT_FILENAME=" + _path; // system path to file
 		std::string script_name = "SCRIPT_NAME=" + _path;//_request._uri.path;
 		std::string redirect = "REDIRECT_STATUS=200";    // security handshake for PHP
 		std::string gateway = "GATEWAY_INTERFACE=CGI/1.1";
 		std::string protocol = "SERVER_PROTOCOL=HTTP/1.1";
+
+		if (_request._method == "GET")
+    		q += _request._uri.query;
 
 		char* envp[] = {
 			const_cast<char*>(q.c_str()),
@@ -110,12 +113,8 @@ int CgiResponse::execute()
 			const_cast<char*>(protocol.c_str()),
 			NULL
 		};
-		//std::string interpreter_path = "/usr/bin/python3";
-		//std::string interpreter_path = "~/.local/lib/python3.13/site-packages";
-		//if (!_is_py)
-		//	interpreter_path = "/usr/bin/php-cgi";
-			//interpreter_path = "/usr/local/bin/php-cgi";
-		//execve(interpreter_path.c_str(), args, const_cast<char * const *>(envp)); 
+
+		chdir((_path.substr(0, _path.find_last_of("/"))).c_str());
 		execve("/usr/bin/env", args, envp);
 		_exit(500);
 	}
@@ -130,18 +129,17 @@ int CgiResponse::execute()
 
 		close(toServer[1]);
 		close(toCgi[0]);
-
 		if ((!_request._body.empty())) {
-            if (write(toCgi[1], _request._body.c_str(), _request._body.length()) < 0)
+			if (write(toCgi[1], _request._body.c_str(), _request._body.length()) < 0)
 			{
 				close(toCgi[1]); close(toServer[0]);
 				waitpid(pid, NULL, 0);
 				return(500);
 			}
-        }
+		}
 		close(toCgi[1]);
 		
-		alarm(3);
+		alarm(5);
 		while (bytes_read != 0)
 		{
 			if (g_timed_out)
@@ -178,11 +176,11 @@ int CgiResponse::execute()
 			if ((pos = res.rfind("\r\n\r\n")) != std::string::npos)
 			{
 				_body = res.substr(pos + 4);
-			} 
+			}
 			else if ((pos = res.rfind("\n\n")) != std::string::npos)
 			{
 				_body = res.substr(pos + 2);
-			} 
+			}
 			else
 			{
 				_body = res;
@@ -202,8 +200,5 @@ int CgiResponse::execute()
 
 void CgiResponse::cgi_headers()
 {
-	if (_is_py)
-		_headers["Content-Type"] = "image/png";
-	if (!_is_py)
-		_headers["Content-Type"] = "text/html";
+	_headers["Content-Type"] = get_content_type();
 }

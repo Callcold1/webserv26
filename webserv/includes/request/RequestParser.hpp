@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/01 22:01:11 by kmooney           #+#    #+#             */
-/*   Updated: 2026/02/23 12:42:37 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/04/22 14:31:50 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,7 @@
 
 #define PARSE_CHUNK_SIZE false
 #define PARSE_CHUNK_BODY true
-#define MAX_LOCAL_BODY 64000
+#define MAX_LOCAL_BODY 16000
 
 class Request;
 
@@ -104,9 +104,6 @@ private:
 	std::vector<token_s>	_tknLst;
 	token_s					_p_it;
 
-	size_t					_os_body_len;
-	size_t					_expected_len;
-	size_t					_parsed_body_len;
 	uint64_t				_chunk_size;
 	bool					_chunk_parser_status;
 	mpParser_t				_mp_p;
