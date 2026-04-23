@@ -113,13 +113,8 @@ int CgiResponse::execute()
 			const_cast<char*>(protocol.c_str()),
 			NULL
 		};
-		//std::string interpreter_path = "/usr/bin/python3";
-		//std::string interpreter_path = "~/.local/lib/python3.13/site-packages";
-		//if (!_is_py)
-		//	interpreter_path = "/usr/bin/php-cgi";
-			//interpreter_path = "/usr/local/bin/php-cgi";
-		//execve(interpreter_path.c_str(), args, const_cast<char * const *>(envp));
-		chdir(_path.substr(0, _path.find_last_of('/')).c_str());
+
+		chdir((_path.substr(0, _path.find_last_of("/"))).c_str());
 		execve("/usr/bin/env", args, envp);
 		_exit(500);
 	}
@@ -144,7 +139,7 @@ int CgiResponse::execute()
 		}
 		close(toCgi[1]);
 		
-		alarm(3);
+		alarm(5);
 		while (bytes_read != 0)
 		{
 			if (g_timed_out)
@@ -205,8 +200,5 @@ int CgiResponse::execute()
 
 void CgiResponse::cgi_headers()
 {
-	if (_is_py)
-		_headers["Content-Type"] = "image/png";
-	if (!_is_py)
-		_headers["Content-Type"] = "text/html";
+	_headers["Content-Type"] = get_content_type();
 }

@@ -234,28 +234,6 @@ int SuccessResponse::get_file()
 	return (0);
 }
 
-std::string SuccessResponse::get_content_type()
-{
-	const unsigned char png_magic[] = {
-		0x89, 0x50, 0x4E, 0x47,
-		0x0D, 0x0A, 0x1A, 0x0A
-	};
-
-	if (_body.size() >= 15 && _body.compare(0, 15, "<!doctype html>") == 0)
-	{
-		return("text/html");
-	}
-	else if (_body.size() >= sizeof(png_magic) &&
-        std::memcmp(_body.data(), png_magic, sizeof(png_magic)) == 0)
-    {
-        return("image/png");
-    }
-	else
-	{
-		return("application/octet-stream");
-	}
-}
-
 void SuccessResponse::static_headers()
 {
 	_headers["Content-Type"] = get_content_type();

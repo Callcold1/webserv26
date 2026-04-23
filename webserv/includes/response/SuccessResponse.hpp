@@ -21,7 +21,6 @@ public:
 
 	void	static_headers();
 
-	std::string get_content_type();
 private:
 	std::string _path;
 	bool		_is_dir;

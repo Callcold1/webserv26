@@ -270,6 +270,7 @@ void Client::handle_request()
 	} */
 	
 	else if (!_request._re.paths.redirect_url.empty())
+	else if (!_request._re.paths.redirect_url.empty())
 	{
 		std::cout << "redirect found : " <<  _request._re.paths.redirect_url << std::endl;
 		_response = new RediResponse(_request, _request._re.paths.redirect_url); //TODO is this url validated??
