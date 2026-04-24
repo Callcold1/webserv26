@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/14 13:35:51 by kmooney           #+#    #+#             */
-/*   Updated: 2026/01/16 14:18:17 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/04/24 11:13:06 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -69,7 +69,7 @@ bool	Log::createFolder(std::string path){
 		}
 		else if (!S_ISDIR(st.st_mode))
 			return false;
-			
+
 		current += "/";
 		i = slash + 1;
 	}
@@ -83,7 +83,7 @@ void	Log::openLogFiles(void){
 	openLogFile(LOG_CLASS, _class_fd);
 	openLogFile(LOG_CONF, _conf_fd);
 	openLogFile(LOG_ERROR, _errors_fd);
-	openLogFile(LOG_REQUEST_PARSING, _request_parsing_fd);
+	openLogFile(LOG_PARSING, _request_parsing_fd);
 	openLogFile(LOG_REQUESTS, _requests_fd);
 	openLogFile(LOG_RESPONSE, _response_fd);
 }
@@ -102,7 +102,7 @@ void	Log::closeLogFiles(void){
 
 // OPEN A SINGLE LOG FILE
 void	Log::openLogFile(std::string filename, int& fd){
-	
+
 	_base_name = filename;
 	_base_path = LOG_CURRENT + filename;
 
@@ -121,7 +121,7 @@ bool	Log::file_exists(void) const{
 	return (access(_base_path.c_str(), F_OK) == 0);
 }
 
-// INCREASE INDEX OF EXISTING LOG FILES 
+// INCREASE INDEX OF EXISTING LOG FILES
 void Log::rotate()
 {
 	_old_path = LOG_OLD + _base_name;
@@ -150,7 +150,7 @@ Log& Log::instance() {
 }
 
 int Log::setOutput(int type) {
-	
+
 	int log_fd = 0;
 
 	switch (type){
@@ -159,7 +159,7 @@ int Log::setOutput(int type) {
 		case TYPE_CLASS : {log_fd = _class_fd; break; }
 		case TYPE_CONF : {log_fd = _conf_fd; break; }
 		case TYPE_ERROR : {log_fd = _errors_fd; break; }
-		case TYPE_REQUEST_PARSING : {log_fd = _request_parsing_fd; break; }
+		case TYPE_PARSING : {log_fd = _request_parsing_fd; break; }
 		case TYPE_REQUESTS : {log_fd = _requests_fd; break; }
 		case TYPE_RESPONSE : {log_fd = _response_fd; break; }
 		default : { break; }
@@ -171,31 +171,29 @@ void Log::log(LogLevel level, const LogType type, const std::string msg, bool pr
 
 	int log_fd = setOutput(type);
 
-	std::string log_line = timestamp() + " [" + levelToString(level) + "] "
-					   + " [" + typeToString(type) + "] " + msg + "\n";
+	std::string log_line = timestamp() + " [" + levelToString(level) + "] " + " [" + typeToString(type) + "] " + msg + "\n";
 
-	write(log_fd, log_line.c_str(), log_line.size()); 	// write to file
+	write(log_fd, log_line.c_str(), log_line.size());
 	if (print)
-		(*_out) << log_line; 								// write to stderr
+		(*_out) << log_line;
 }
 
 void Log::log(LogLevel level, const LogType type, int fd, const std::string msg) {
 
 	int log_fd = setOutput(type);
-	
-	std::string log_line = timestamp() + " [" + levelToString(level) + "] "
-					   + "fd=" + intToString(fd) + " [" + typeToString(type) + "] "
-					   + msg + "\n";
 
-	write(log_fd, log_line.c_str(), log_line.size()); 	// write to file
-	(*_out) << log_line; 								// write to stderr
+	std::string log_line = timestamp() + " [" + levelToString(level) + "] " 
+		+ "fd=" + intToString(fd) + " [" + typeToString(type) + "] " + msg + "\n";
+
+	write(log_fd, log_line.c_str(), log_line.size());
+	(*_out) << log_line;
 }
 
 std::string Log::levelToString(LogLevel level) {
 	switch (level) {
 		case ERROR: return "ERROR";
-		case WARN:  return "WARN";
-		case INFO:  return "INFO";
+		case WARN:  return "WARN ";
+		case INFO:  return "INFO ";
 		case DEBUG: return "DEBUG";
 	}
 	return "UNKNOWN";
@@ -203,14 +201,14 @@ std::string Log::levelToString(LogLevel level) {
 
 std::string Log::typeToString(LogType type) {
 	switch (type) {
-		case TYPE_ACCESS: return "TYPE_ACCESS";
-		case TYPE_CGI: return "TYPE_CGI";
-		case TYPE_CLASS: return "TYPE_CLASS";
-		case TYPE_CONF: return "TYPE_CONF";
-		case TYPE_ERROR: return "TYPE_ERROR";
-		case TYPE_REQUEST_PARSING:  return "TYPE_REQUEST_PARSING";
-		case TYPE_REQUESTS:  return "TYPE_REQUESTS";
-		case TYPE_RESPONSE: return "TYPE_RESPONSE";
+		case TYPE_ACCESS:	return "TYPE_ACCESS  ";
+		case TYPE_CGI:		return "TYPE_CGI     ";
+		case TYPE_CLASS:	return "TYPE_CLASS   ";
+		case TYPE_CONF:		return "TYPE_CONF    ";
+		case TYPE_ERROR:	return "TYPE_ERROR   ";
+		case TYPE_PARSING:  return "TYPE_PARSING ";
+		case TYPE_REQUESTS:	return "TYPE_REQUESTS";
+		case TYPE_RESPONSE:	return "TYPE_RESPONSE";
 	}
 	return "UNKNOWN";
 }

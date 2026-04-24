@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/14 09:52:13 by kmooney           #+#    #+#             */
-/*   Updated: 2026/04/14 08:51:54 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/04/24 11:02:09 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -341,20 +341,20 @@ std::map<int, std::string>	Config::mergeErrorPage(T& child, std::map<int, std::s
 	The map has key : listen_s (i.e. ip:port)
 				val : vector of CServer which have listen directive set to the key (ip:port)
 	
-	The function :
-		- iterates over the servers vector
-			- for each server
+	The function : iterates over the servers vector
+	
+		for each server
+		{
+			iterate over the vector of listen_s (i.e. ip/port info)
 			{
-				iterate over the vector of listen_s (i.e. ip/port info)
-				{
-					- try to find the listen_s in the _port_server_map
-						- if not found
-							- the listen_s is added to the map as a key).
-							- the CServer is added to the val (i.e. vector of servers matching this port info)
-						- if found
-							- the CServer is added to the val
-							- if new listen_s is default_server and there is an existing default_server, throw an error as there can only be one!
-			}
+				try to find the listen_s in the _port_server_map
+					if not found
+						- the listen_s is added to the map as a key).
+						- the CServer is added to the val (i.e. vector of servers matching this port info)
+					- if found
+						- the CServer is added to the val
+						- if new listen_s is default_server and there is an existing default_server, throw an error as there can only be one!
+		}
 							
 */
 bool	Config::mapServersToPorts(void){
@@ -477,8 +477,7 @@ std::ostream&	operator<<(std::ostream &os, const std::vector<CLocation>& locatio
 	}
 	os << std::endl;
 	for (size_t i = 0; i < locations.size(); ++i){
-		os << PrintUtils::indent(2)
-		   << "Location [" << i << "]\n\n";
+		os << PrintUtils::indent(2) << "Location [" << i << "]\n\n";
 		os << locations[i];
 	}
 	return os;
@@ -534,16 +533,8 @@ std::ostream&	operator<<(std::ostream& os, const std::map<int, std::string>& err
 
 /* PORT INFO (LISTEN) */
 std::ostream&	operator<<(std::ostream& os, const listen_s& port_info){
-
-	os
-	<< " IP : "
-	<< ( port_info.ip & 0xFF) << "."
-	<< ((port_info.ip >> 8)  & 0xFF) << "."
-	<< ((port_info.ip >> 16) & 0xFF) << "."
-	<< ((port_info.ip >> 24) & 0xFF)
-	<< ", Port : " << port_info.port
-	<< ", is default : " << port_info.is_default;
-
+	os << std::boolalpha << "IP : "	<< ( port_info.ip & 0xFF) << "." << ((port_info.ip >> 8)  & 0xFF) << "." << ((port_info.ip >> 16) & 0xFF) << "." 
+	<< ((port_info.ip >> 24) & 0xFF) << ", Port: " << port_info.port	<< ", is default: " << port_info.is_default;
 	return os;
 }
 

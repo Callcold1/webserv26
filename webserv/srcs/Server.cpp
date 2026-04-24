@@ -93,7 +93,7 @@ void	Server::setupListeningSockets(Config& config){
 	}
 	catch (const std::exception& e){
 		std::string err = e.what();
-		throw std::runtime_error(err + " : server stopped");
+		throw std::runtime_error(err + ": server stopped");
 	}
 }
 
@@ -119,7 +119,7 @@ void	Server::listenInstanceCreate(int fd, listen_s listen, std::vector<CServer*>
 		instance.def_srv_name = createArgsString(instance.def_srv->getServerName());
 	else
 		instance.def_srv_name = "--NO NAME--";
-	Log::instance().log(Log::INFO, Log::TYPE_CONF, "listening socket created : " + printstream(instance), false);
+	Log::instance().log(Log::INFO, Log::TYPE_CONF, "listening socket created: " + printstream(instance), false);
 	
 	_listen_sockets.push_back(instance);
 }
@@ -157,7 +157,7 @@ int	Server::createListeningSocket(const listen_s& port_info)
 	int	sockfd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 
 	if (sockfd < 0)
-		throw std::runtime_error("socket() failed!");
+		throw std::runtime_error("socket() failed");
 
 	int	opt = 1;
 
@@ -170,12 +170,13 @@ int	Server::createListeningSocket(const listen_s& port_info)
   	addr.sin_addr.s_addr = port_info.ip;
 
 	if (bind(sockfd, (sockaddr*)&addr, sizeof(addr)) < 0){
-		std::cout << "bind() failed for" << port_info << std::endl;
-		throw std::runtime_error("bind() failed!");
+		std::stringstream ss;
+		ss << port_info;
+		throw std::runtime_error("bind() failed: " + ss.str());
 	}
 
 	if (listen(sockfd, SOMAXCONN) < 0)
-		throw std::runtime_error("listen() failed!");
+		throw std::runtime_error("listen() failed");
 
 	return sockfd;
 }
@@ -196,10 +197,10 @@ void	Server::addListeningSocketsToPoll(void){
 		int flags = fcntl(pfd.fd, F_GETFL, 0);
 
 		if (flags < 0)
-			throw std::runtime_error("fcntl(F_GETFL) failed!");
+			throw std::runtime_error("fcntl(F_GETFL) failed");
 
 		if (fcntl(pfd.fd, F_SETFL, flags | O_NONBLOCK) == -1)
-			throw std::runtime_error("fcntl(F_SETFL) failed!");
+			throw std::runtime_error("fcntl(F_SETFL) failed");
 
 		_sockets.push_back(pfd);
 	}
@@ -273,10 +274,10 @@ bool	Server::handleEvents(void){
 				
 			if (_sockets[i].revents & POLLIN) // 
 				handleClientRead(fd, false);
-			else if (_sockets[i].revents & POLLHUP) //POLLHUP ADDED TO ENSURE FINAL READ IF PIPE CLOSED (CLIENT WRITE/SERVER READ)
+			else if (_sockets[i].revents & POLLHUP)
 				handleClientRead(fd, true);
-			else if (_sockets[i].revents & (POLLERR | POLLNVAL)) // KM: POLLHUP REMOVED - ANY CONSEQUENCES?
-				disconnectClient(fd, "handleEvents: POLLERR | POLLHUP | POLLNVAL");
+			else if (_sockets[i].revents & (POLLERR | POLLNVAL))
+				disconnectClient(fd, "handleEvents: POLLERR | POLLNVAL");
 		}
 		_sockets[i].revents = 0;
 	}
@@ -468,7 +469,7 @@ void Server::checkTimeouts()
 
 void	Server::disconnectClient(int fd, const std::string& reason){
 
-	Log::instance().log(Log::INFO, Log::TYPE_ACCESS, "\nClient disconnected: fd [" + toString(fd) + "] : " + reason, true);
+	Log::instance().log(Log::INFO, Log::TYPE_ACCESS, "Client disconnected: fd [" + toString(fd) + "] : " + reason, true);
 	close(fd);
 	removeClientFromPoll(fd);
 	_clients.erase(fd);

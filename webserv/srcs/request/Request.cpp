@@ -6,13 +6,13 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/30 11:28:22 by kmooney           #+#    #+#             */
-/*   Updated: 2026/04/23 23:53:47 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/04/24 11:41:23 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Request.hpp"
 #include "RequestParser.hpp"
-#include "RequestValidator.hpp" 
+#include "RequestValidator.hpp"
 
 /*
 >>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<
@@ -20,77 +20,79 @@
 >>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<
 */
 
-Request::Request(void) : 
-	_parser(NULL), 
-	_validator(NULL), 
-	_listen_instance(NULL), 
-	_matched_server(NULL), 
-	_method(""), 
-	_uri_str(""), 
+Request::Request(void) :
+	_parser(NULL),
+	_validator(NULL),
+	_listen_instance(NULL),
+	_matched_location(NULL),
+	_matched_server(NULL),
+	_method(""),
+	_uri_str(""),
 	_version(""),
-	_errNum(200), 
-	_errMess(""), 
-	_p_state (P_PARSE), 
+	_errNum(200),
+	_errMess(""),
+	_p_state (P_PARSE),
 	_r_state (P_REQLINE),
-	_hasBody(false), 
-	_isCGI(false), 
-	_isChunked(false), 
+	_hasBody(false),
+	_isCGI(false),
+	_isChunked(false),
 	_isMultiPart(false),
 	_bodyUTF8(false),
 	_isRedirect(false),
 	_body_complete(false){}
 
-Request::Request( listenInstance_s* listen_instance ) : 
-	_parser(NULL), 
-	_validator(NULL), 
+Request::Request( listenInstance_s* listen_instance ) :
+	_parser(NULL),
+	_validator(NULL),
 	_listen_instance(listen_instance),
-	_matched_server(NULL), 
-	_method(""), 
-	_uri_str(""), 
+	_matched_location(NULL),
+	_matched_server(NULL),
+	_method(""),
+	_uri_str(""),
 	_version(""),
-	_errNum(200), 
-	_errMess(""), 
+	_errNum(200),
+	_errMess(""),
 	_p_state (P_PARSE),
-	_r_state (P_REQLINE), 
-	_hasBody(false), 
-	_isCGI(false), 
-	_isChunked(false), 
-	_isMultiPart(false), 
+	_r_state (P_REQLINE),
+	_hasBody(false),
+	_isCGI(false),
+	_isChunked(false),
+	_isMultiPart(false),
 	_bodyUTF8(false),
 	_isRedirect(false),
 	_body_complete(false){}
 
-Request::Request(const Request &other) : _parser(NULL), 
-	_validator(NULL), 
+Request::Request(const Request &other) : _parser(NULL),
+	_validator(NULL),
 	_listen_instance(other._listen_instance),
-	_matched_location(other._matched_location), 
-	_matched_server(other._matched_server), 
+	_matched_location(other._matched_location),
+	_matched_server(other._matched_server),
 	_method(other._method),
-	_uri_str(other._uri_str), 
-	_version(other._version), 
-	_req_line(other._req_line), 
-	_uri(other._uri), 
+	_uri_str(other._uri_str),
+	_version(other._version),
+	_req_line(other._req_line),
+	_uri(other._uri),
 	_headers(other._headers),
 	_content_length(other._content_length),
 	_body(other._body),
-	_boundary(other._boundary), 
-	_default_mp_content_type(other._default_mp_content_type), 
+	_boundary(other._boundary),
+	_default_mp_content_type(other._default_mp_content_type),
 	_mp_m(other._mp_m),
-	_errNum(other._errNum), 
-	_errMess(other._errMess), 
-	_p_state(other._p_state), 
+	_errNum(other._errNum),
+	_errMess(other._errMess),
+	_p_state(other._p_state),
 	_r_state(other._r_state),
 	_sizes(other._sizes),
-	_hasBody(other._hasBody), 
-	_isCGI(other._isCGI), 
-	_isChunked(other._isChunked), 
-	_isMultiPart(other._isMultiPart), 
+	_hasBody(other._hasBody),
+	_isCGI(other._isCGI),
+	_isChunked(other._isChunked),
+	_isMultiPart(other._isMultiPart),
 	_bodyUTF8(other._bodyUTF8),
 	_isRedirect(other._isRedirect),
 	_body_complete(other._body_complete),
 	_re(other._re),
 	_leftover(other._leftover){}
-				
+
 Request& Request::operator=(const Request &other){
 	if (this != &other){
 		_listen_instance = other._listen_instance;
@@ -132,7 +134,7 @@ Request& Request::operator=(const Request &other){
 */
 
 Request::~Request( void ){
-	
+
 	deleteHeaders();
 	_mp_m.clear();
 	if (_parser)
@@ -154,7 +156,7 @@ void	Request::clear() {
 
 	_unparsed.begin = 0;
 	_unparsed.end = remainder;
-	
+
 	_matched_location = NULL;
 	_method.clear();
 	_uri_str.clear();
@@ -185,7 +187,7 @@ void	Request::clear() {
 	_isRedirect = false;
 	_bodyUTF8 = false;
 	_body_complete = false;
-	
+
 	deleteHeaders();
 	_re.reset();
 
@@ -196,9 +198,9 @@ void	Request::clear() {
 void	Request::deleteHeaders(void){
 
 	for (fieldMap_t::iterator it = _headers.begin(); it != _headers.end(); it++){
-		
+
 		size_t size = it->second.size();
-		
+
 		for (size_t i = 0; i < size; i++){
 			delete it->second[i];
 			it->second[i] = NULL;
@@ -215,7 +217,7 @@ void	Request::deleteHeaders(void){
 
 eParse	Request::parseRequest(const char* rawData, size_t length) {
 	_sizes.bytes_received += length;
-	
+
 	if (!_parser)
 		_parser = new RequestParser(this);
 	if (!_validator)
@@ -303,11 +305,11 @@ std::string Request::get_root_dir(){
 */
 
 void	Request::setBodyType( bool hasBody, bool isChunked ){
-	
+
 	_hasBody = hasBody;
 	_isChunked = isChunked;
 
-	if (hasBody == false) // BODY IS NOT EXPECTED 
+	if (hasBody == false) // BODY IS NOT EXPECTED
 		_body_type = BODY_NONE;
 	// BODY IS EXPECTED
 	else if (isChunked)
@@ -367,14 +369,14 @@ bool	Request::setState(eParse p_state, eReqState r_state, std::string err_mess, 
 
 std::vector<field_t* >	 Request::findHeader(const std::string& header_name){
 	fieldMap_t::iterator header = _headers.find(header_name);
-	
+
 	if (header == _headers.end())
         return std::vector<field_t*>();
-	
+
 	return header->second;
 }
 
-std::string Request::findQuery(const std::string id)  //function to get specific query value 
+std::string Request::findQuery(const std::string id)  //function to get specific query value
 {
     for (query_t::iterator it = _uri.queries.begin(); it != _uri.queries.end(); ++it) {
         if (it->first == id) {
@@ -394,7 +396,7 @@ void	Request::setHostname(const std::string& hostname){
 */
 
 bool	Request::matchServerToHostHeader(void){
-	
+
 	std::string hostname;
 
 	size_t pos = _host_header.find(':');
@@ -424,7 +426,7 @@ bool	Request::matchServerToHostHeader(void){
 }
 
 bool	Request::matchLocationToURIPath(void){
-	
+
 	_matched_location = _matched_server->getLocationForPath(_uri.path, _leftover, _isRedirect);
 	if (_isRedirect)
 		this->setState(P_DONE, "Redirect : missing trailing '/'", 301);
@@ -437,7 +439,7 @@ bool	Request::matchLocationToURIPath(void){
 		return false;
 	if (_matched_location->isCGIMapSet())
 		_isCGI = true;
-		
+
 	else if ((_matched_location->isCGIMapSet() || _matched_server->getCGIEnabled()) && _method == "POST"){
 		std::string ext = getExtension(_uri.path);
 		std::map<std::string, std::string> cgi_map = _matched_server->getCGIMap();
@@ -466,45 +468,34 @@ bool	Request::matchLocationToURIPath(void){
 
 void	Request::updateTargetPathInfo(std::string& leftover){
 
-	char	cwd[2048] = {0};
-	cwd[0] = '\0';
-	//getcwd(cwd, sizeof(cwd));
-
 	_re.leftover_path = leftover;
-	std::string fs_root = appendPathToRoot(_matched_location->getRootDir(), cwd); 			// base path : i.e. cwd + location_root
-	appendPathToRoot(&_re.paths.resource_path, leftover, fs_root); 				  			// base path + leftover uri (i.e. target resource)
+	std::string fs_root = _matched_location->getRootDir();
+	appendPathToRoot(&_re.paths.resource_path, leftover, fs_root);
 	getFilePermissions(_re.paths.resource_path);
-	
+
 	if (_matched_location->isRedirectSet()){
-		_re.paths.redirect_url = _matched_location->getRedirectURL();				   		// redirect URI from location (no interaction with filesystem)
+		_re.paths.redirect_url = _matched_location->getRedirectURL();
 		_re.status = _matched_location->getRedirectStatus();
 		_isRedirect = true;
 	}
-	_re.paths.upload_base = appendPathToRoot(_matched_location->getUploadPath(), cwd);		//  upload path is not appended to location root
+	_re.paths.upload_base = _matched_location->getUploadPath();
 }
 
 void	Request::updateErrorPagePath(int errnum){
-	
-	char	cwd[2048];
-	//getcwd(cwd, sizeof(cwd));
-	cwd[0] = '\0';
-	
+
 	std::string target;
 	std::string root;
-	
+
 	if (_matched_location){
-		target = _matched_location->getErrorPage(errnum);
 		target = _matched_location->getErrorPage(errnum);
 		root = _matched_location->getRootDir();
 	}
 	else if (_matched_server){
 		target = _matched_server->getErrorPage(errnum);
-		target = _matched_server->getErrorPage(errnum);
 		root = _matched_server->getRootDir();
 	}
 	if (target.length() > 0 && root.length() > 0){
-		std::string	fs_root = appendPathToRoot(root, cwd);
-		std::string	error_page = appendPathToRoot(target, fs_root);
+		std::string	error_page = appendPathToRoot(target, root);
 		getFileInfo(error_page, _re.paths.error_path);
 	}
 	else
@@ -517,21 +508,18 @@ void	Request::updateRe(void){
 	_re.message = this->_errMess;
 	_re.query_pairs = this->_uri.queries;
 	_re.body_in_file = this->_bodyInFile;
-	
+
 	if (_p_state == P_ERROR){
 		_re.type = RESPOND_ERROR;
 		updateErrorPagePath(_errNum);
 	}
 	else if (_p_state == P_DONE){
 
-		if (_isMultiPart && _re.paths.upload_paths.size() > 0){
+		if (_isMultiPart && _re.paths.upload_paths.size() > 0)
 			_re.type = RESPOND_MP_UP;
-			//update upload pages if file uploaded
-			//i.e. need to include URL of upload path/filename in response
-		}
 		else if (!_isMultiPart && _method == "POST"){
 			for (size_t i = 0; i < _re.query_pairs.size(); i++){
-				if (_re.query_pairs[i].first == "importfile" || _bodyInFile ){ 			//KM -  ADD || _isCGI?, or what if no filename?, or what if no importfile?  
+				if (_re.query_pairs[i].first == "importfile" || _bodyInFile ){ 			//KM -  ADD || _isCGI?, or what if no filename?, or what if no importfile?
 					if (_matched_location->isUploadPathSet()){
 						std::string tmp_path = appendPathToRoot(_re.leftover_path, _re.paths.upload_base);
 						std::string upload_path = appendPathToRoot(_re.query_pairs[i].second, tmp_path); //possibly need to normalise/decode if URL encoded?
@@ -548,22 +536,11 @@ void	Request::updateRe(void){
 			if (_matched_location->isRedirectSet())
 				_re.paths.redirect_url = _matched_location->getRedirect().url;
 		}
-		else if (_isChunked){
-			//_re.type = RESPOND_CHUNKED;
-			//update upload page if saved to file?
-		}
 		else if (_isCGI){
 			_re.type = RESPOND_CGI;
 			_re.status = this->_errNum;
 		}
-		else {
-			// if (_re.paths.resource_path.is_dir && _uri.path[_uri.path.length() - 1] != '/'){
-			// 	this->setState(P_ERROR, "Malformed Request : Matched resource is a directory, not a file", 404);
-			// 	_re.type = RESPOND_ERROR;
-			// 	updateErrorPagePath(_errNum);
-			// }
-			// else
-				_re.type = RESPOND_STATIC;
-		}
+		else
+			_re.type = RESPOND_STATIC;
 	}
 }

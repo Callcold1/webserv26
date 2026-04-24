@@ -24,7 +24,7 @@ Client::Client(listenInstance_s* listen_instance, int fd) :
 	_log_msg("fd = " + toString(fd) + ", request status = ")
 {
 	time(&_last_active);
-	Log::instance().log(Log::INFO, Log::TYPE_REQUEST_PARSING,
+	Log::instance().log(Log::INFO, Log::TYPE_PARSING,
 			"Request : " + _log_msg + "instantiated" , false);
 	_request = Request(_listen_instance);
 }
@@ -69,6 +69,7 @@ Client&	Client::operator=(const Client& other){
 */
 
 Client::~Client(){
+	_request.clear();
 }
 
 void	Client::clear_out_buff(){

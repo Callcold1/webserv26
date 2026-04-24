@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/14 13:05:00 by kmooney           #+#    #+#             */
-/*   Updated: 2026/01/16 14:17:57 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/04/24 10:50:09 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,7 +28,7 @@
 #define LOG_CLASS	 			"log_class.log"			// FOR LOG OF LOGGING
 #define LOG_CONF 				"conf.log" 		 		// FOR STARTUP/SHUTDOWN/CONFIGURATION DETAILS
 #define LOG_ERROR 				"errors.log"			// FOR ERROR DETAILS
-#define LOG_REQUEST_PARSING 	"request_parsing.log" 	// FOR REQUEST PARSING DETAILS
+#define LOG_PARSING				"request_parsing.log" 	// FOR REQUEST PARSING DETAILS
 #define LOG_REQUESTS 			"request_status.log"	// FOR REQUEST DETAILS
 #define LOG_RESPONSE 			"response.log"			// FOR RESPONSE DETAILS
 
@@ -51,14 +51,14 @@ public:
 		TYPE_CLASS,
 		TYPE_CONF,
 		TYPE_ERROR,
-		TYPE_REQUEST_PARSING,
+		TYPE_PARSING,
 		TYPE_REQUESTS,
 		TYPE_RESPONSE
 	};
 
 		static Log& 	instance(void);
 
-		void			log(LogLevel level, const LogType type,  const std::string msg, bool print);
+		void			log(LogLevel level, const LogType type, const std::string msg, bool print);
 		void			log(LogLevel level, const LogType type, int fd, const std::string msg);
 
 private:

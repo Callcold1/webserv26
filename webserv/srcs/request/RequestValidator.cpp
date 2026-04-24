@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/30 11:26:19 by kmooney           #+#    #+#             */
-/*   Updated: 2026/04/23 21:20:51 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/04/24 10:50:29 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -329,7 +329,7 @@ bool	RequestValidator::validateHostHeader() {
 		if (_req->_version.compare("HTTP/1.1") == 0)
 			return _req->setState(P_ERROR, V_HEADERS, "Missing 'Host' header", 400);
 		else if (_req->_version.compare("HTTP/1.0") == 0)
-			Log::instance().log(Log::INFO, Log::TYPE_REQUEST_PARSING,
+			Log::instance().log(Log::INFO, Log::TYPE_PARSING,
 				"Request Parsing : Missing host header : using default server", true);
 	}
 	return true;
