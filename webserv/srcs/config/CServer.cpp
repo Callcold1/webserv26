@@ -355,12 +355,12 @@ const	CLocation* CServer::getLocationForPath(const std::string& uri_path, std::s
 
 		loc_size = loc_path.size();
 		uri_size = uri_path.size();
-		
-		if ((loc_size == uri_size + 1) && loc_path[loc_size - 1] == '/'){
+		  
+		if ((loc_size == uri_size + 1) && loc_path[loc_size - 1] == '/' && uri_path.compare(0, loc_size -1, loc_path) == 0){
 			redirect = true;
 			redirect_loc = &_locations[i];
 		}
-		else if (uri_path.compare(0, loc_size, loc_path) == 0 && (uri_size == loc_size || uri_path[loc_size - 1] == '/')){
+		else if (uri_path.compare(0, loc_size, loc_path) == 0 && (uri_size == loc_size || uri_path[loc_size - 1] == '/' || ((uri_size > loc_size) && uri_path[loc_size] == '/'))){
 			if (loc_size > best_length){
 				best_length = loc_size;
 				best_match = &_locations[i];

@@ -334,7 +334,7 @@ bool	CParser::setLocation(node_t* location_node, std::vector<CLocation>& locatio
 
 void	CParser::handleAlias(node_t* node, tempConfig_s& tmp, HandlerContext_e context){
 	if (context == LOCATION_HANDLER)
-		tmp.alias_set = setPath(node, tmp.alias);
+		tmp.alias_set = setPath(node, tmp.alias, false);
 	else
 		throw std::runtime_error("the 'alias' directive can only be used inside a Location block");
 }
@@ -414,13 +414,13 @@ void	CParser::handleRedirectStatus(node_t* node, tempConfig_s& tmp, HandlerConte
 
 void	CParser::handleRedirectURL(node_t* node, tempConfig_s& tmp, HandlerContext_e context){
 	if (context == LOCATION_HANDLER)
-		tmp.redirect_url_set = setPath(node, tmp.redirect_url);
+		tmp.redirect_url_set = setPath(node, tmp.redirect_url, true);
 	else
 		throw std::runtime_error("the 'redirect_path' directive can only be used inside a Location block");
 }
 
 void	CParser::handleRoot(node_t* node, tempConfig_s& tmp){
-	tmp.root_set = setPath(node, tmp.root);
+	tmp.root_set = setPath(node, tmp.root, false);
 }
 
 void	CParser::handleServer(node_t* node, tempConfig_s& tmp, HandlerContext_e context){
@@ -460,7 +460,7 @@ void	CParser::handleTryFiles(node_t* node, tempConfig_s& tmp, HandlerContext_e c
 
 void	CParser::handleUploadPath(node_t* node, tempConfig_s& tmp, HandlerContext_e context){
 	if (context == LOCATION_HANDLER)
-		tmp.upload_path_set = setPath(node, tmp.upload_path);
+		tmp.upload_path_set = setPath(node, tmp.upload_path, false);
 	else
 		throw std::runtime_error("Invalid context for upload_path directive : the 'upload_path' directive can only be used inside a Location block");
 }
@@ -649,6 +649,9 @@ bool	CParser::setCGImap(node_t* node, std::map<std::string, std::string>& cgi_ma
 	if (size <= 1)
 		throw std::runtime_error("invalid cgi_path : must contain path and at least one extension type : " 
 			+ node->type + " " + createArgsString(node->args) + " : line " + node->line_num);
+	else if (node->args[1][0] != '/')
+		throw std::runtime_error("invalid cgi_path : path must begin with '/' : " 
+			+ node->type + " " + createArgsString(node->args) + " : line " + node->line_num);
 	std::string path = node->args[1];
 	std::string ext;
 	if (node->args[0][0] == '.')
@@ -684,6 +687,8 @@ bool	CParser::setErrorPage(node_t* node, std::map<int, std::string>& error_pages
 	int error_num;
 	std::string path;
 
+	if (size <= 1)
+		throw std::runtime_error("error_page must contain error code(s) and error page path/URI : " + createArgsString(node->args) + " : line " + node->line_num);
 	if (convertToType(path, node->args[size - 1])){
 		for (size_t i = 0; i < size - 1; i++){
 			if (convertToType(error_num, node->args[i]) && error_num >= 400 && error_num < 600)
@@ -691,6 +696,8 @@ bool	CParser::setErrorPage(node_t* node, std::map<int, std::string>& error_pages
 			else
 				throw std::runtime_error("invalid error_page number : " + node->args[i] + " : line " + node->line_num);
 		}
+		if (node->args[size - 1][0] != '/')
+			throw std::runtime_error("(Error page URI must start with a '/'] : " + node->type + " : line " + node->line_num);
 	}
 	else
 		throw std::runtime_error("invalid error number format : " + node->args[size - 1] + " : line " + node->line_num);
@@ -788,12 +795,14 @@ bool	CParser::setPorts(node_t* node, std::vector<listen_s>& ports){
 	return true;
 }
 
-bool	CParser::setPath(node_t* node, std::string& path){
+bool	CParser::setPath(node_t* node, std::string& path, bool is_redir){
 
 	if (!isOnlyArg(node->args))
 		throw std::runtime_error("multiple arguments when only one permitted : " + node->type + " " + createArgsString(node->args) + " : line " + node->line_num);
 	if (node->args.size() == 0 || (node->args.size() == 1 && node->args[0].empty()))
 		throw std::runtime_error("no value provided for directive : " + node->type + " : line " + node->line_num);
+	if (!is_redir && node->args[0][0] != '/')
+		throw std::runtime_error("[path must start with a '/'] : " + node->type + " : line " + node->line_num);
 	path = node->args[0];
 	return true;
 }
@@ -802,12 +811,15 @@ bool	CParser::setTryFiles(node_t* node, tryFiles_s& try_files){
 
 	size_t size = node->args.size();
 
-	if (size == 0)
-		return false;
+	if (size <= 1)
+		throw std::runtime_error("Incorrect syntax : 'try_files' filename [filename] error_number : " + node->type + " : line " + node->line_num);
 
 	for (size_t i = 0; i < size; i++){
-		if (i < size - 1)
+		if (i < size - 1){
+			if (node->args[i][0] != '/')
+				throw std::runtime_error("[path must start with a '/'] : " + node->type + " : line " + node->line_num);
 			try_files.try_paths.push_back(node->args[i]);
+		}
 		else if (!convertToType(try_files.default_error, node->args[i]))
 			throw std::runtime_error("invalid error_page number in 'try file' directive : " + node->type + " " + createArgsString(node->args) + " : line " + node->line_num);
 	}

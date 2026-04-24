@@ -174,7 +174,7 @@ class CParser : public Parser
 		bool			setMime(node_t* node, std::map<std::string, std::vector<std::string> >& mime);
 		bool			setMimeBlock(node_t* mime_node, std::map<std::string, std::vector<std::string> >& mime);
 		bool			setModifier(std::string& str, LocationMatchType_e& modifier);
-		bool			setPath(node_t* node, std::string& path);
+		bool			setPath(node_t* node, std::string& path, bool is_redir);
 		bool			setPorts(node_t* node, std::vector<listen_s>& ports);
 		bool			setServer(node_t* node, std::vector<CServer>& servers);
 		bool			setServerName(node_t* node, std::vector<std::string>& server_names);
@@ -221,9 +221,5 @@ class CParser : public Parser
 
 		bool			checkDuplicatePorts(const std::vector<listen_s>& ports);
 		bool			checkAliasRoot(const std::string& alias, const std::string& root);
-
-		void 			validateConfig(Config& config);
-		void 			validateServer(const CServer& server);
-		void 			validateLocation(const CLocation& location);
 	
 };

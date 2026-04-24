@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/14 09:52:13 by kmooney           #+#    #+#             */
-/*   Updated: 2026/04/24 12:58:55 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/04/24 16:25:38 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,8 @@ Config::Config() : _max_body(DEFAULT_MAX_BODY), _max_connections(DEFAULT_MAX_CON
 					_timeout_rw(DEFAULT_TM_RW), _autoindex_set(false), _charset_set(false),
 					_error_page_set(false), _index_set(false), _max_body_set(false),
 					_max_connections_set(false), _max_header_set(false), _method_set(false), _mime_set(false),
-					 _root_set(false), _servers_set(false), _timeout_ka_set(false), _timeout_rw_set(false){}
+					 _root_set(false), _servers_set(false), _timeout_ka_set(false), _timeout_rw_set(false), _port_count(0){				
+}
 
 Config::Config(const Config &other) { (void)other;}
 
@@ -174,9 +175,8 @@ void Config::checkForOverlappingPorts() const {
         for (compare = _port_server_map.begin(); compare != it; compare++) {
             const listen_s& other = compare->first;
 
-            if (current.ip == other.ip && current.port == other.port) {
+            if (current.ip == other.ip && current.port == other.port)
                 throw std::runtime_error("Overlapping ip:port combination found between servers");
-            }
         }
     }
 }

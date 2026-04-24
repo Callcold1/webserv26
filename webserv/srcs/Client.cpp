@@ -233,7 +233,7 @@ int Client::if_file_upload(Request &request)
 void Client::handle_request()
 {
 	Log::instance().log(Log::INFO, Log::TYPE_RESPONSE,	"Client [" + toString(_fd) + "] : response instantiated" , false);
-	Log::instance().log(Log::INFO, Log::TYPE_RESPONSE,	"Client [" + toString(_fd) + "] : " + getStatusString(), false);
+	Log::instance().log(Log::ERROR, Log::TYPE_RESPONSE,	"Client [" + toString(_fd) + "] : " + getStatusString(), false);
 
 	int error_catch = 0;
 	
@@ -299,7 +299,6 @@ void Client::handle_request()
 		std::cout << "nothing found" << std::endl;
 		_response =  new ErrorResponse(NOT_FOUND_ERROR, _request); //defaults to 404 not found
 	}
-	Log::instance().log(Log::INFO, Log::TYPE_RESPONSE,_response->serialize() , false);
 	append_write(_response->serialize());
 	delete _response;
 	if (_request._re.keep_alive == true && _request._p_state == P_DONE){
@@ -375,7 +374,7 @@ void Client::append_write(std::string str){
 void	Client::generateLogMessage(void){
 
 	std::string message = _log_msg + getStatusString();
-	//Log::instance().log(Log::INFO, Log::TYPE_REQUEST_PARSING, message, false);
+	Log::instance().log(Log::INFO, Log::TYPE_PARSING, message, false);
 	//Log::instance().log(Log::INFO, Log::TYPE_REQUEST_PARSING, printstream(_request), false);
 	//if (_request._p_state != P_ERROR)
 		//Log::instance().log(Log::INFO, Log::TYPE_REQUESTS, printReqStatus(_request, _fd), false);

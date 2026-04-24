@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/14 09:52:22 by kmooney           #+#    #+#             */
-/*   Updated: 2026/04/24 12:06:32 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/04/24 16:22:44 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -131,6 +131,7 @@ class Config {
 	
 		template <typename T>
 		std::map<int, std::string>							mergeErrorPage(T&, std::map<int, std::string> error_pages);
+		bool 												validateConfig();
 };
 
 bool operator<(const listen_s& a, const listen_s& b);
