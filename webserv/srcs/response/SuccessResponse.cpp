@@ -158,12 +158,9 @@ int SuccessResponse::get_index_file()
 	index_pages = _request._matched_location->getIndex();
 	root = _path;
 
-	
-	std::cout << "vec size: " << index_pages.size() << std::endl;
 	for (std::vector<std::string>::iterator it = index_pages.begin() ; it != index_pages.end(); ++it)
 	{
 		target = *it;
-		std::cout << "lookiingn for: " << target << std::endl;
 		std::string	index = appendPathToRoot(target, root);
 		getFileInfo(index, info);
 		if (info.is_file)
@@ -187,7 +184,6 @@ int SuccessResponse::get_index_file()
 
 void SuccessResponse::serve_file()
 {
-	std::cout << "serving: " << _path << std::endl;
 	std::ifstream in(_path.c_str(), std::ios::binary);
 	std::string s((std::istreambuf_iterator<char>(in)), \
 		std::istreambuf_iterator<char>());
@@ -197,12 +193,10 @@ void SuccessResponse::serve_file()
 int SuccessResponse::get_file()
 {
 	fileInfo_s	info;
-	std::cout << "get file entered: " << _path << std::endl;
 	getFileInfo(_path, info);
 	
 	if (info.is_dir)
 	{
-		std::cout << "dir " << _request._re.paths.upload_base << std::endl;
 		if (_request._matched_location->isUploadPathSet() && _path.find(_request._re.paths.upload_base) != std::string::npos)
 			gen_index_page(true);
 		else
@@ -215,7 +209,6 @@ int SuccessResponse::get_file()
 	}
 	else if (info.is_file)
 	{
-		std::cout << "file found" << std::endl;
 		serve_file();
 	}
 	else if (info.inaccessible)

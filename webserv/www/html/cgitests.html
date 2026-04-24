@@ -12,12 +12,22 @@
 				<button type="submit">Say Hello</button>
 			</form>
 			<p></p>
+			<h2>Very large output test</h2>
+			<form action="/cgi-bin/php/largeoutput.php" method="POST">
+				<button type="submit">give very large output</button>
+			</form>
+			<p></p>
+			<h2>invalid cgi</h2>
+			<form action="/cgi-bin/php/test.ph" method="POST">
+				<button type="submit">test</button>
+			</form>
+			<p></p>
 			<h2>Meme generator (python cgi test)</h2>
 			<img src="/assets/officememe.png" alt="could not find the office meme template" style="width:400px;height:500px;">
 			<form action="/cgi-bin/python/meme.py" method="POST">
 				<div>
 					<label for="jimtext">Jim(left):</label><br>
-					<input type="text" id="jimtext" name="jimtext" maxlength="200" size="50"><br>
+					<input type="text" id="jimtext" name="jimtext" maxlength="100000000000" size="50"><br>
 					<label for="dwighttext">dwight(middle):</label><br>
 					<input type="text" id="dwighttext" name="dwighttext" maxlength="200" size="50"><br>
 					<label for="michaeltext">michael(right):</label><br>

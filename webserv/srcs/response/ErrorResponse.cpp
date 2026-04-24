@@ -32,12 +32,8 @@ ErrorResponse::~ErrorResponse()
 int ErrorResponse::generate()
 {
 	_request.updateErrorPagePath(_status);
-	std::cout << _request._re.paths.error_path.is_file << std::endl;
-	std::cout << _request._re.paths.error_path.inaccessible << std::endl;
-	std::cout << _request._re.paths.error_path.path << std::endl;
 	if (_request._re.paths.error_path.is_file && !_request._re.paths.error_path.inaccessible)
 	{
-		std::cout << "error page found" << std::endl;
 		get_file(_request._re.paths.error_path.path);
 	}
 	else 

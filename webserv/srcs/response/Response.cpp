@@ -144,6 +144,10 @@ std::string Response::get_content_type()
     {
         return("image/png");
     }
+	else if (!is_binary(_body))
+	{
+		return("text/plain");
+	}
 	else
 	{
 		return("application/octet-stream");

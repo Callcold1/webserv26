@@ -2,6 +2,8 @@
 
 #include "Response.hpp"
 
+#define MAX_CGI_SIZE 100000000
+
 class CgiResponse : public Response
 {
 public:
