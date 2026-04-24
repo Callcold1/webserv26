@@ -32,10 +32,7 @@ int	CgiResponse::generate()
 	_path = _request._re.paths.resource_path.path;
 	int i = 0;
 	if ((i = execute()) != 0)
-	{
-		std::cout << i << std::endl;
 		return (i);
-	}
 	defaultHeaders();
 	cgi_headers();
 	return(0);
@@ -133,6 +130,7 @@ int CgiResponse::execute()
 		if ((!_request._body.empty())) {
 			if (write(toCgi[1], _request._body.c_str(), _request._body.length()) < 0)
 			{
+				alarm(0);
 				close(toCgi[1]); close(toServer[0]);
 				waitpid(pid, &status, 0);
 				return(502);
@@ -153,12 +151,20 @@ int CgiResponse::execute()
 						break;
 					continue; // it was interrupted by different signal, keep reading
 				}
-				close(toCgi[1]); close(toServer[0]);
+				alarm(0);
+				close(toServer[0]);
 				waitpid(pid, &status, 0);
 				return(502);
 			}
 			res.append(buf, bytes_read);
 			total_bytes += bytes_read;
+			if (total_bytes > MAX_CGI_SIZE)
+			{
+				alarm(0);
+				close(toServer[0]);
+				waitpid(pid, &status, 0);
+				return(502);
+			}
 		}
 		alarm(0);
 
@@ -166,11 +172,11 @@ int CgiResponse::execute()
 			return(504); //gateway timeout
 		if (total_bytes <= 0)
 		{
-			close(toCgi[1]); close(toServer[0]);
+			close(toServer[0]);
 			waitpid(pid, &status, 0);
 			return(502);
 		}
-		if (!_is_py)
+		if (!is_binary(res))
 		{
 			size_t pos;
 			if ((pos = res.rfind("\r\n\r\n")) != std::string::npos)
@@ -189,14 +195,11 @@ int CgiResponse::execute()
 			int exit_code = WEXITSTATUS(status);
 			if (exit_code != 0)
 			{
-				std::cerr << "CGI exited with code: " << exit_code << std::endl;
 				return 502;
 			}
 		}
 		else if (WIFSIGNALED(status))
 		{
-			int signal = WTERMSIG(status);
-			std::cerr << "CGI killed by signal: " << signal << std::endl;
 			return 502;
 		}
 		return (0);

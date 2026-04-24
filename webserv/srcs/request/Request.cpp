@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
+/*   By: junruh <junruh@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/30 11:28:22 by kmooney           #+#    #+#             */
-/*   Updated: 2026/04/24 11:41:23 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/04/24 11:57:21 by junruh           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -320,8 +320,8 @@ void	Request::setBodyType( bool hasBody, bool isChunked ){
 		_body_type = BODY_EOF;
 }
 
-void	Request::setBodyEncoding( const std::string& encoding ){ // CAN ALTER FUNCTION TO UPDATE ENUM IF WE SUPPORT MORE ENCODINGS
-																// JUST NOW ASSUME UTF-8 or OCTET
+void	Request::setBodyEncoding( const std::string& encoding ){
+
 	if (encoding.compare("utf-8") == 0)
 		_bodyUTF8 = true;
 }

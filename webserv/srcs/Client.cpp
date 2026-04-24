@@ -237,32 +237,25 @@ void Client::handle_request()
 
 	int error_catch = 0;
 	
-	std::cout << _request._uri.path << std::endl;
-	std::string path = _request._re.paths.resource_path.path;//_request.get_root_dir() + _request._uri.path;
-
-	
-	std::cout << "path hr: " << path << std::endl;
+	std::string path = _request._re.paths.resource_path.path;
 
 	if (_request._re.type == RESPOND_ERROR)
 		_response = new ErrorResponse(_request._errNum, _request);
 	
 	else if (!_request._re.paths.redirect_url.empty())
 	{
-		std::cout << "redirect found : " <<  _request._re.paths.redirect_url << std::endl;
-		_response = new RediResponse(_request, _request._re.paths.redirect_url); //TODO is this url validated??
+		_response = new RediResponse(_request, _request._re.paths.redirect_url);
 		_response->generate();
 	}
 
 	else if ((error_catch = if_file_upload(_request)) != 1)
 	{
-		std::cout << "file upload found" << std::endl;
 		if (error_catch >= 400)
 			_response = new ErrorResponse(error_catch, _request);
 	}
 
-	else if (_request._isCGI)//_request.isCGI
+	else if (_request._isCGI)
 	{
-		std::cout << "cgi found" << std::endl;
 		fileInfo_s info;
 		getFileInfo(path, info);
 		if (info.is_exec || info.is_file)
@@ -271,7 +264,8 @@ void Client::handle_request()
 				_response =  new CgiResponse(_request, true);
 			else if (ends_with(path, ".php"))
 				_response =  new CgiResponse(_request, false);
-
+			else
+				_response = new ErrorResponse(403, _request);
 			error_catch = _response->generate();
 			if (error_catch != 0)
 			{
@@ -286,7 +280,6 @@ void Client::handle_request()
 	}
 	else if (_request._re.type == RESPOND_STATIC) 
 	{
-		std::cout << "static page found" << std::endl;
 		_response = new SuccessResponse(_request);
 		if ((error_catch = _response->generate()) != 0)
 		{
@@ -296,8 +289,7 @@ void Client::handle_request()
 	}
 	else
 	{
-		std::cout << "nothing found" << std::endl;
-		_response =  new ErrorResponse(NOT_FOUND_ERROR, _request); //defaults to 404 not found
+		_response =  new ErrorResponse(NOT_FOUND_ERROR, _request);
 	}
 	Log::instance().log(Log::INFO, Log::TYPE_RESPONSE,_response->serialize() , false);
 	append_write(_response->serialize());
@@ -344,11 +336,6 @@ std::string	Client::getStatusString(void){
 		case 12	:{str += "REQ_DONE"; break;}
 		default	:{str += "UNKNOWN"; break;}
 	}
-	// str += "\nRequest Buffer : ";
-
-	// for (size_t i=0; i < _request._buffer.size(); i++){
-	// 	str += _request._buffer[i];
-	// }
 	
 	str += "Initial Response Type : ";
 
@@ -375,10 +362,6 @@ void Client::append_write(std::string str){
 void	Client::generateLogMessage(void){
 
 	std::string message = _log_msg + getStatusString();
-	//Log::instance().log(Log::INFO, Log::TYPE_REQUEST_PARSING, message, false);
-	//Log::instance().log(Log::INFO, Log::TYPE_REQUEST_PARSING, printstream(_request), false);
-	//if (_request._p_state != P_ERROR)
-		//Log::instance().log(Log::INFO, Log::TYPE_REQUESTS, printReqStatus(_request, _fd), false);
 }
 
 /*

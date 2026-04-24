@@ -212,7 +212,6 @@ void	Server::addListeningSocketsToPoll(void){
 >>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<
 */
 
-//KM - https://chatgpt.com/share/69e5331b-33c0-832b-a3ff-5db1e5cdb0dc - need to alter server code
 void	Server::loop(){
 
 	Log::instance().log(Log::INFO, Log::TYPE_CLASS, "Server listening....", false);

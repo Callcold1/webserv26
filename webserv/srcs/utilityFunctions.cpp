@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   utilityFunctions.cpp                               :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
+/*   By: junruh <junruh@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/16 15:33:48 by kmooney           #+#    #+#             */
-/*   Updated: 2026/04/23 11:44:32 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/04/24 14:37:49 by junruh           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -485,6 +485,19 @@ bool	assignTempfile(std::string& tmp_path, std::string* final_path, const std::s
 	return true;
 }
 
+bool is_binary(const std::string& data)
+{
+    for (std::string::const_iterator it = data.begin(); it != data.end(); ++it)
+    {
+        unsigned char c = static_cast<unsigned char>(*it);
+        if (c == 0)
+            return true;
+        if (c < 7 || (c > 14 && c < 32))
+            return true;
+    }
+    return false;
+}
+
 /*
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<
 >>>>>>	  FILEPATH MANIPULATION		<<<<<<
@@ -738,128 +751,9 @@ std::ostream&	printFileInfo(std::ostream &os, fileInfo_s* fileinfo)
 	os << "File Is File: " << fileinfo->is_file << std::endl;
 	os << "File Not Found: " << fileinfo->not_found << std::endl;
 	os << "File Appended Path: " << fileinfo->path << std::endl;
-	os << "File Permissions: "
-	//<< std::oct << std::setfill('0') << std::setw(4) << (fileinfo->permissions & 0777)
-	<< std::dec << std::setfill(' ') << std::setw(0) << std::endl;
+	os << "File Permissions: " << std::dec << std::setfill(' ') << std::setw(0) << std::endl;
 	return os;
 }
-
-// void printStrMap(const std::map<std::string, std::string> &data)
-// {
-
-// 	std::cout << "PARSED HEADER MAP \n===================" << std::endl;
-// 	for (std::map<std::string, std::string>::const_iterator it = data.begin(); it != data.end(); it++)
-// 	{
-// 		int i = 0;
-// 		std::cout << "Key : " + it->first << std::endl;
-// 		if (it->second == "\r")
-// 		{
-// 			std::cout << "[CR]" << std::endl
-// 					  << std::endl;
-// 		}
-// 		else
-// 		{
-// 			std::cout << "Val " << i << " : " + it->second << std::endl;
-// 			i++;
-// 		}
-// 		std::cout << std::endl;
-// 	}
-// 	std::cout << "END OF HEADER MAP \n===================" << std::endl
-// 			  << std::endl;
-// }
-
-// void printStrVecStrMap(const std::map<std::string, std::vector<std::string> > &data) // NEED TO CONSIDER HOW VECTOR FIELDS ARE POPULATED
-// {
-// 	std::cout << "PARSED HEADER MAP VECTOR \n==========================" << std::endl;
-// 	for (std::map<std::string, std::vector<std::string> >::const_iterator it = data.begin(); it != data.end(); it++)
-// 	{
-// 		int i = 0;
-// 		std::cout << "Key : " + it->first << std::endl;
-// 		for (std::vector<std::string>::const_iterator itVec = it->second.begin(); itVec != it->second.end(); itVec++){
-// 			if (*itVec == "\r")
-// 			{
-// 				std::cout << "[CR]" << std::endl
-// 						  << std::endl;
-// 			}
-// 			else
-// 			{
-// 				std::cout << "Val " << i << " : " + *itVec << std::endl;
-// 			}
-// 			i++;
-// 		}
-// 		std::cout << std::endl;
-// 	}
-// }
-
-// /*
-// >>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<
-// >>>>>>		PARSING OPERATIONS			<<<<<<
-// >>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<
-// */
-
-// void parseStreamToStrVecStrMap(std::istringstream &iss, std::map<std::string, std::vector<std::string> > &result, char pair_delim, char kv_delim, char vec_delim)
-// {
-// 	std::string line;
-// 	std::string key;
-// 	std::string value;
-
-// 	while (std::getline(iss, line, pair_delim))
-// 	{
-// 		std::size_t pos = line.find(kv_delim);
-
-// 		if (pos == std::string::npos)
-// 			break;
-// 		key = to_lower(line.substr(0, pos));
-// 		value = line.substr(pos + 1);
-
-// 		std::istringstream vec_stream(value);
-
-// 		while (std::getline(vec_stream, line, vec_delim)){
-// 			result[key].push_back(line);
-// 		}
-// 	}
-// 	result["mapLastLine"].push_back(line);
-// }
-
-// void parseStreamToStrStrMap(std::istringstream &iss, std::map<std::string, std::string> &result, char pair_delim, char kv_delim)
-// {
-// 	std::string line;
-// 	std::string key;
-// 	std::string value;
-
-// 	while (std::getline(iss, line, pair_delim))
-// 	{
-// 		std::size_t pos = line.find(kv_delim);
-// 		if (pos == std::string::npos)
-// 			break;
-// 		key = line.substr(0, pos);
-// 		value = line.substr(pos + 1);
-// 		result[key] = value;
-// 	}
-// 	result["mapLastLine"] = line;
-// 	printStrMap(result);
-// }
-
-// const std::set<std::string> &getHeaderTransferEncodings()
-// {
-
-// 	static std::set<std::string> supportedEndodings;
-// 	static int i;
-
-// 	if (i == 0)
-// 	{
-// 		supportedEndodings.insert(std::string("chunked"));
-// 		// supportedEndodings.insert(std::string("compress"));
-// 		// supportedEndodings.insert(std::string("deflate"));
-// 		// supportedEndodings.insert(std::string("gzip"));
-// 		// supportedEndodings.insert(std::string("identity"));
-// 		// supportedEndodings.insert(std::string("trailers"));
-// 		// supportedEndodings.insert(std::string("x-compress"));
-// 		// supportedEndodings.insert(std::string("x-gzip"));
-// 		i++;
-// 	}
-// 	return supportedEndodings;
-// }
 
 /*
 >>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<

@@ -750,8 +750,6 @@ bool	CParser::setErrorPage(node_t* node, std::map<int, std::string>& error_pages
 	std::string path;
 
 	if (convertToType(path, node->args[size - 1])){
-
-		// possibly create an array/vector of valid/supported error numbers to use for validation
 		for (size_t i = 0; i < size - 1; i++){
 			if (convertToType(error_num, node->args[i]) && error_num >= 400 && error_num < 600)
 				error_pages[error_num] = path;
