@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/16 15:33:48 by kmooney           #+#    #+#             */
-/*   Updated: 2026/04/24 17:46:35 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/04/24 19:51:35 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -795,7 +795,7 @@ void	resolveAddress(const std::string& ip_str, const std::string& port_str, uint
 
 	int status = getaddrinfo(node, port_str.c_str(), &hints, &res);
 	if (status != 0)
-		throw std::runtime_error(gai_strerror(status));
+		throw std::runtime_error("Error getting address info");
 
 	if (!res)
 		throw std::runtime_error("getaddrinfo returned no result");
@@ -939,14 +939,12 @@ int	copyFile(const std::string& src, std::string& dest)
     int in_fd = open(src.c_str(), O_RDONLY);
     
 	if (in_fd < 0) {
-        std::cerr << "open src failed: " << strerror(errno) << std::endl;
 		return -1;
     }
 	uniqueFilename(dest);
     int out_fd = open(dest.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
 
     if (out_fd < 0) {
-        std::cerr << "open dest failed: " << strerror(errno) << std::endl;
         close(in_fd);
         return -2;
     }
@@ -962,7 +960,6 @@ int	copyFile(const std::string& src, std::string& dest)
             ssize_t bytes_written = write(out_fd, buffer + total_written, bytes_read - total_written);
 
 			if (bytes_written < 0) {
-                std::cerr << "write failed: " << strerror(errno) << std::endl;
                 close(in_fd);
                 close(out_fd);
                 return -3;
@@ -972,7 +969,6 @@ int	copyFile(const std::string& src, std::string& dest)
     }
 
     if (bytes_read < 0)
-        std::cerr << "read failed: " << strerror(errno) << std::endl;
 
     close(in_fd);
     close(out_fd);
