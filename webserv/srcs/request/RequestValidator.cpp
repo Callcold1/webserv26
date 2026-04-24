@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/30 11:26:19 by kmooney           #+#    #+#             */
-/*   Updated: 2026/04/24 18:17:19 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/04/24 19:36:45 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -829,9 +829,21 @@ bool	RequestValidator::isValidMediaType(const std::string& value){
 			return _req->setState(P_ERROR, V_HEADERS, "Header Validation Error : invalid media type", 400);
 		if (!(sub_type == "*" || (sub_type.length() > 0 && isValidToken(sub_type))))
 			return _req->setState(P_ERROR, V_HEADERS, "Header Validation Error : invalid media sub-type", 400);
+		if (!(value == "multipart/form-data" || isSupportedMediaType(value)))
+			return false;
 		return true;
 	}
 	return _req->setState(P_ERROR, V_HEADERS, "Header Validation Error : invalid media type ", 400);
+}
+
+bool	RequestValidator::isSupportedMediaType(const std::string& value){
+	if (_req->_matched_server){
+		std::map<std::string, std::vector<std::string> > supported_types = _req->_matched_server->getMime();
+		if (supported_types.find(value) != supported_types.end()){
+			return true;
+		}
+	}
+	return false;
 }
 
 bool	RequestValidator::isValidCharset(std::string& value){
