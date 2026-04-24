@@ -179,7 +179,7 @@ int SuccessResponse::get_index_file()
 		gen_index_page(false);
 		return (0);
 	}
-	return (NOT_FOUND_ERROR);
+	return (403);
 }
 
 void SuccessResponse::serve_file()

@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/23 01:37:52 by kmooney           #+#    #+#             */
-/*   Updated: 2026/04/22 17:51:26 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/04/24 17:51:11 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -69,57 +69,18 @@ void	RequestParser::parse(const char* data, size_t length){
 >>>>>>				 ADDING DATA AND SETTING ITERATORS					   <<<<<<
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 																				*/
-/**
- * @brief Appends raw data bytes to the internal parsing buffer.
- *
- * This function takes a pointer to a buffer and appends each byte to the internal `_buffer`
- * used by the parser. This buffer accumulates data across multiple calls until a full request
- * can be parsed.
- *
- * @param data Pointer to the raw input data buffer.
- * @param length Number of bytes to append from the input buffer.
- *
- * @note This function does not perform any parsing or validation — it only stores data.
- */
 void	RequestParser::addData(const char* data, size_t length){
 	for (std::size_t i = 0; i < length; i++)
 		_req->_buffer.push_back(data[i]);
 }
 
-/**
- * @brief Initializes internal parsing iterators for processing the request buffer.
- *
- * This function sets the beginning and end positions of the `_p_it` token range,
- * which is used to track the portion of the buffer currently being parsed.
- *
- * If the request is in the `P_REQLINE` state, it resets the beginning of the parse range
- * to the start of the buffer. The end iterator is always set to the current end of the buffer.
- *
- * @note This function must be called after new data is added to the buffer via `addData()`.
- *
- * @see _p_it
- * @see _req
- */
 void	RequestParser::setIterators(){
 	if (_req->_r_state == P_REQLINE)
 		_p_it.begin = 0;
 	_p_it.end = _req->_buffer.size();
 }
 
-/**
- * @brief Sets the begin and end iterators of a token.
- *
- * This templated utility function assigns the provided `begin` and `end` iterators
- * to the corresponding fields of the given `token_s` object.
- *
- * @tparam T The iterator type (e.g., std::string::iterator or std::vector<char>::iterator).
- * @param t The token object whose iterator boundaries will be set.
- * @param begin The iterator pointing to the start of the token's range.
- * @param end The iterator pointing to the end of the token's range.
- *
- * @note This function is commonly used to isolate and define specific ranges within
- * the request buffer for parsing.
- */
+
 template <class T>
 void	RequestParser::setIterators(token_s& t, T& begin, T& end){
 	t.begin = begin;
@@ -131,55 +92,10 @@ void	RequestParser::setIterators(token_s& t, T& begin, T& end){
 >>>>>>					 SPLITING FUNCTIONS								   <<<<<<
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 																				*/
-/**
- * @brief Extracts the next line from the input token stream.
- *
- * This function attempts to split the given token `it` at the next line delimiter (typically CRLF or LF),
- * storing the result in `line`. It is used during HTTP request parsing to extract individual lines
- * (such as the request line or header lines) from the raw input buffer.
- *
- * Internally, it delegates to `splitToToken()` to perform the actual line splitting.
- *
- * @param it The input token stream to split.
- * @param line A token that will receive the next line extracted from the input.
- * @return true if a line was successfully extracted; false if no full line is currently available.
- *
- * @see splitToToken()
- */
+
 bool	RequestParser::parseNextLine(token_s& it, token_s& line) {
 	return splitToToken(it, false, line, "\r\n");
 }
-
-/**
- * @brief Parses a single token from the input stream, splitting at a specified delimiter.
- *
- * This function extracts a single token from the input token stream `it` and stores it in
- * the `dest` string. The function splits the input based on the specified delimiter `delim` (e.g., a space, colon, etc.).
- * If the delimiter is not found or if the token cannot be parsed, it returns false, and if `delim_req` is true,
- * it sets the parser state to an error.
- *
- * @param it The input token stream to parse.
- * @param last_val Indicates whether this is the last token in the stream.
- * @param dest A reference to a string where the parsed token will be stored.
- * @param delim The delimiter to split the token at.
- * @param delim_req If true, an error state will be set if the delimiter is not found.
- * @return true if the token was successfully parsed and stored in `dest`, false if parsing failed.
- *
- * @see splitToToken()
- * @see tokenToString()
- * @see RequestParser::setPstate()
- */
-// bool	RequestParser::parseSingleToken( token_s& it, bool last_val, std::string& dest, const std::string& delim, bool delim_req ){
-// 	token_s tkn;
-// 		//DOES THIS CAUSE A PROBLEM WITH CHARACTER CHECKING
-// 	if (splitToToken(it, last_val, tkn, delim)){
-// 		tokenToString(tkn, dest);
-// 		return true;
-// 	}
-// 	if (delim_req == true)
-// 		_req->setPstate(P_ERROR);
-// 	return false;
-// }
 
 bool	RequestParser::parseSingleToken( token_s& it, eParseContext contextNum, std::string& dest){
 
@@ -199,29 +115,11 @@ bool	RequestParser::parseSingleToken( token_s& it, eParseContext contextNum, std
 	return false;
 }
 
-/**
- * @brief Splits a token into a vector of tokens based on a string delimiter.
- * 			The delimiter is discarded.
- *
- * This function splits a token at the occurrence of a sequence of characters defined by the `delim` string.
- * The resulting tokens are stored in the `tkns` vector.
- *
- * If `last_val` is true, the remainder of the token is included as the last token.
- *
- * @param it The token to be split, represented by the `token_s` object.
- * @param last_val If true, the final portion of the token is included even if it is not followed by a delimiter.
- * @param tkns A vector to store the resulting tokens.
- * @param delim The string used as the delimiter for splitting.
- * @return The number of tokens generated.
-
- */
-
 size_t	RequestParser::splitToToken( token_s& it, bool last_val, std::vector<token_s>& tkns, const std::string& delim)
 {
-	// NEED TO ADD DQUOTE CHECK AND ESCAPE CHAR
 	size_t	parse_pos = it.begin;
 	size_t	delim_end = delim.length();
-	
+
 	while (parse_pos < it.end)
 	{
 		size_t	compare = parse_pos;
@@ -246,20 +144,6 @@ size_t	RequestParser::splitToToken( token_s& it, bool last_val, std::vector<toke
 	return tkns.size();
 }
 
-/**
- * @brief Finds and extracts a token before a string delimiter (delimiter is discarded)
- *
- * This function looks for the occurrence of a string delimiter in the token and extracts the portion
- * of the token that precedes it. The result is stored in `tkn`.
- *
- * If the delimiter is found, the iterator `it` is advanced to the character following the delimiter.
- *
- * @param it The token to search within, represented by the `token_s` object.
- * @param last_val If true, the last portion of the token is included even if it is not followed by a delimiter.
- * @param tkn A reference to the `token_s` object where the extracted token will be stored.
- * @param delim The string delimiter to search for.
- * @return true if a token was successfully extracted; false if no delimiter was found.
- */
 bool	RequestParser::splitToToken( token_s& it, bool last_val, token_s& tkn, const std::string& delim ) {
 
 	size_t	parse_pos = it.begin;
@@ -321,15 +205,6 @@ bool	RequestParser::splitToTokenMultiDelims(token_s& it, bool last_val, token_s&
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 */
 
-/**
- * @brief Converts a token into a string.
- *
- * This function converts a `token_s` object, which contains a range defined by iterators (`begin` and `end`),
- * into a `std::string` by constructing the string from the characters between the `begin` and `end` iterators.
- *
- * @param token The token object to be converted to a string.
- * @return A `std::string` representing the characters between the `begin` and `end` iterators of the token.
- */
 void	RequestParser::tokenToString(const token_s& token, std::string& dest) {
 	dest = std::string(_req->_buffer.begin() + token.begin, _req->_buffer.begin() + token.end);
 }
@@ -345,24 +220,8 @@ std::string	RequestParser::tokenToString(const token_s& token) {
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 */
 
-/**
- * @brief Parses an HTTP request by processing its various components: request line, headers, and body.
- *
- * This function checks the current state of the request (`_r_state`) and invokes the appropriate parsing
- * function based on the state. The eURIstates& include:
- * - `P_REQLINE`: Parses the request line (method, URI, and protocol).
- * - `P_HEADERS`: Parses the HTTP headers.
- * - `P_BODY	: Parses the body of the HTTP request.
- * - `P_TRAILERS: Parses the HTTP trailers (if transfer encoding is chunked).
- *
- *
- * The `_p_state` is set to `P_PARSE` to indicate that parsing is in progress.
- *
- * @note The function works by calling the specific parsing functions like `parseReqLine`, `parseHeaders`,
- * and `parseBody` depending on the state of the request.
- */
 void	RequestParser::parseRequest(){
-	
+
 	size_t start = _p_it.begin;
 
 	_req->_p_state = P_PARSE;
@@ -390,25 +249,6 @@ void	RequestParser::parseRequest(){
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 */
 
-/**
- * @brief Parses the HTTP request line.
- *
- * This function processes the request line (which includes the HTTP method, URI, and version) of
- * the incoming HTTP request. It uses the `getRequestLine` function to retrieve the request line
- * and then calls splitToToken which then splits the request line using space to delimit.
- * If there are not exactly 2 spaces ( 3 rl arguments ), an error is returned indicating malformed request line.
- * - `RL_COMPLETE`: Indicates that the request line has been fully parsed.
- *
- * The function checks for any parsing errors, and if an error is detected, it sets the appropriate
- * error state and message.
- *
- * @param it The token iterator pointing to the current position in the input data.
- *
- * @return This function does not return any value but modifies the state of the request and
- *         the `_rl_state` during parsing.
- *
- * @note If the request line format is incorrect, the state is set to `P_ERROR` and an error message is logged.
- */
 void	RequestParser::parseReqLine(token_s& it){
 
 	token_s	rl;
@@ -434,18 +274,6 @@ void	RequestParser::parseReqLine(token_s& it){
 	return;
 }
 
-/**
- * @brief Retrieves the request line from the HTTP request.
- *
- * This function attempts to parse the next line from the input iterator and assigns it to the
- * `rl` token. If the line is successfully parsed, it sets the request line state to `RL_METHOD`.
- * If the line cannot be parsed, the function sets the request parsing state to `P_AWAIT`.
- *
- * @param rl The token where the parsed request line will be stored.
- * @param it The iterator pointing to the current position in the input data.
- *
- * @return `true` if the request line was successfully parsed, `false` otherwise.
- */
 bool	RequestParser::getRequestLine(token_s& rl, token_s &it){
 
 	if (parseNextLine(it, rl))
@@ -710,24 +538,6 @@ bool	RequestParser::parseFieldParams(std::vector<token_s>& params, field_t* fiel
 	return true;
 }
 
-/**
- * @brief Parses the value of an HTTP header field, extracting the main value and its parameters.
- *
- * This function takes a header field value token (e.g., `"text/html; charset=UTF-8"`),
- * splits it by semicolons, and stores the first token as the main value.
- * Remaining tokens are treated as optional key-value parameters and stored in the `params` list
- * of the `field_t` object.
- *
- * parseFieldParams() is called if the size of the param_vector is greater than 1 where
- * each optional parameter is parsed as a key-value pair (e.g., `"charset=UTF-8"`).
- * @param line_tkn The token representing the raw value of the header field (possibly with parameters).
- * @param new_field A pointer to a `field_t` struct that will be populated with the parsed data.
- * @return true Always returns true (parsing is assumed successful).
- *
- * @see splitToToken()
- * @see parseFieldValue()
- * @see parseFieldParams()
- */
 bool	RequestParser::splitFieldLine(token_s& line_tkn, field_t* field) {
 
 	std::vector<token_s>	param_vector;
@@ -740,25 +550,6 @@ bool	RequestParser::splitFieldLine(token_s& line_tkn, field_t* field) {
 	std::vector<token_s> params(param_vector.begin() + 1, param_vector.end());
 	return parseFieldParams(params, field);
 }
-
-/**
- * @brief Parses a single HTTP field line and stores the result in the request object.
- *
- * This method processes a token representing an HTTP field line (e.g., "Content-Type: text/html").
- * It extracts the field name and associated values, normalizes the name to lowercase,
- * splits comma-separated values if present, and stores them as a vector of `field_t*`
- * in the `_req->_headers or _req->_trailers map.
- *
- * If the line is malformed (e.g., missing a colon delimiter), the method sets the request state
- * to an error with HTTP status code 400.
- *
- * @param line The tokenized line representing one HTTP field line.
- * @return true if the field line was successfully parsed and stored; false if the line is malformed.
- *
- * @see parseSingleToken()
- * @see parsefield_values()
- * @see RequestParser::setState()
- */
 
 bool	RequestParser::parseFieldLine(token_s& line) {
 	std::string					field_name;
@@ -776,12 +567,7 @@ bool	RequestParser::parseFieldLine(token_s& line) {
 		to_lower_ref(field_name);
 
 		std::vector<token_s> values;
-		// if (field_name == "user-agent"){
-			// std::vector< std::pair <char, char > > delim_pairs;
-			// delim_pairs.push_back(std::pair<char,char> ('(', ')'));
-			// parseDelimiterPairs(line, values, delim_pairs, ' ');
-		// }
-		// else
+
 		if (field_name == "user-agent")
 			splitToToken(line, true, values, "\r\n");
 		else
@@ -801,27 +587,6 @@ bool	RequestParser::parseFieldLine(token_s& line) {
 	else
 		return false;
 }
-
-/**
- * @brief Parses all HTTP field lines from the input token stream.
- *
- * This function iteratively extracts and parses field lines from the provided token stream `it`.
- * For each line:
- * - If the line is empty, it signals the end of the field (headers or trailers) section and transitions the request
- *   to the next state (V_HEADERS OR V_TRAILERS) as appropriate.
- * - If the line cannot be read (e.g., due to incomplete input), it sets the parser state to `P_AWAIT`
- *   to await more data.
- * - If a field line is malformed, parsing is aborted (the error is set by `parseFieldLine()`).
- *
- * On successful parsing of all headers, the parser state is set to `P_AWAIT`.
- *
- * @param it The token stream representing the raw HTTP field section to be parsed.
- *
- * @see parseNextLine()
- * @see parseFieldLine()
- * @see RequestParser::setPstate()
- * @see RequestParser::setRstate()
- */
 
 void	RequestParser::parseField(token_s& it) {
 	token_s line;
@@ -861,7 +626,7 @@ void	RequestParser::parseField(token_s& it) {
 void	RequestParser::parseBody(token_s& it) {
 
 	size_t start = it.begin;
-	
+
 	while (it.begin != it.end){
 		if (_req->_isChunked){
 			parseChunked(it);
@@ -888,7 +653,7 @@ void	RequestParser::parseBody(token_s& it) {
 /*
 >>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<
 >>>>>>		CHECK BODY SIZE		<<<<<<
->>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<		
+>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<
 */
 
 bool	RequestParser::checkBodySize(void){ // Need to move buffer if parsing is complete and tmpfile
@@ -896,7 +661,7 @@ bool	RequestParser::checkBodySize(void){ // Need to move buffer if parsing is co
 	_req->_sizes.body_local_size = _req->_body.size();
 	if ((long long)_req->_sizes.body_bytes_read > _req->_matched_location->getMaxBodySize())
 		_req->setState(P_ERROR, P_REQLINE, "Bad Request : Malformed Body : maximum size exceeded", 400);
-	
+
 	if (_req->_sizes.body_local_size > MAX_LOCAL_BODY || (_req->_bodyInFile && _req->_sizes.body_bytes_read == _req->_sizes.body_bytes_expected && _req->_sizes.body_local_size > 0)){
 
 		if (!_req->_bodyInFile){
@@ -944,7 +709,7 @@ void	RequestParser::parsePlain(token_s& it) {
 
 	if (it.end < it.begin)
 		_req->setState(P_ERROR, "Parsing Error : invalid index", 500);
-	
+
 	size_t available = it.end - it.begin;
 	size_t to_copy   = std::min(remaining, available);
 
@@ -952,7 +717,7 @@ void	RequestParser::parsePlain(token_s& it) {
 		_req->_body.append(_req->_buffer.begin() + it.begin, _req->_buffer.begin() + it.begin + to_copy);
 		_req->_sizes.body_size += to_copy;
 		it.begin += to_copy;
-		
+
 		if (_req->_sizes.body_size < _req->_sizes.body_bytes_expected) {
 			_req->setPstate(P_AWAIT);
 			return;
@@ -1025,9 +790,9 @@ void	RequestParser::finalChunkChecks(token_s& it){
 		_req->setPstate(P_AWAIT);
 		return;
 	}
-	
+
 	_req->_body_complete = true;
-	
+
 	if (line.begin != line.end)
 		_req->setRstate(P_TRAILERS);
 	else{
@@ -1097,15 +862,15 @@ void	RequestParser::parseBoundaryMP(token_s& it){
 		if (!parseNextLine(it, line))
 			_req->setPstate(P_AWAIT);
 		else {
-			_req->setState(P_ERROR, P_BODY, "Malformed Body : invalid multipart boundary", 400); 		// CODE CHECK REQUIRED
-			_mp_p.state = MP_ERROR;	
+			_req->setState(P_ERROR, P_BODY, "Malformed Body : invalid multipart boundary", 400);
+			_mp_p.state = MP_ERROR;
 		}
 	}
 	else if (matchBoundaryMP(it.begin, it.end, final)){
 		if (final)
 			parseFinalMP(it, token_size);
 		else if (!parseNextLine(it, line) || (line.end - line.begin) > size){
-				_req->setState(P_ERROR, P_BODY, "Malformed Body : invalid multipart boundary", 400); 	// CODE CHECK REQUIRED
+				_req->setState(P_ERROR, P_BODY, "Malformed Body : invalid multipart boundary", 400);
 				_mp_p.state = MP_ERROR;
 		}
 		else {
@@ -1148,39 +913,29 @@ bool	RequestParser::matchBoundaryMP(size_t begin, size_t end, bool& final){
 	return true;
 }
 
-/* 
-	parseFinalMP called in 2 places: 
-		1)  parseBoundary MP : Final Boundary has been encountered but the line hasn't been parsed yet
-		
-		2)  parseMultiPart   : This function was previously called and a possible \r\n is awaited (either --boundary-- or --boundary--\r received)
-							    Either way, only the \r\n is awaited. If this hasn't been received, then in the case of --boundary--\r we treat as error
-		
-	 	If parseNextLine works --boundary--\r\n has been encountered and parsing is set to complete, unless data follows (i.e. it.begin != it.end)
 
-		If we want to allow pipelining, we need to change this function.
-*/
 void	RequestParser::parseFinalMP(token_s& it, ptrdiff_t size) {
 
 	token_s		line;
 	ptrdiff_t	bm_size = (ptrdiff_t)_mp_p.boundary_marker.size();
-																													// final boundary received 
-	if (!parseNextLine(it, line) && _mp_p.state != MP_FINAL){														// no \r\n received	
+
+	if (!parseNextLine(it, line) && _mp_p.state != MP_FINAL){
 		_mp_p.state = MP_FINAL;
 		if (size == bm_size){
-			_req->setState(P_AWAIT, V_MPBODY, "Parsing Complete", 200);																					
+			_req->setState(P_AWAIT, V_MPBODY, "Parsing Complete", 200);
 			it.begin = it.end;
-		}																											// token contains exactly final boundary
-		else if (size == bm_size + 1 && (_req->_buffer[it.begin + bm_size] == '\r' && (it.begin + bm_size + 1 == it.end))){		// \r received and awaiting \n
+		}
+		else if (size == bm_size + 1 && (_req->_buffer[it.begin + bm_size] == '\r' && (it.begin + bm_size + 1 == it.end))){
 			_req->setState(P_AWAIT, V_MPBODY, "Parsing Complete", 200);
 			it.begin = it.end - 1;
 		}
 		else {
-			_req->setState(P_ERROR, P_BODY, "Invalid characters following final boundary", 400); 					// CODE?
+			_req->setState(P_ERROR, P_BODY, "Invalid characters following final boundary", 400);
 			_mp_p.state = MP_ERROR;
 		}
 		return;
 	}
-	if (it.begin == it.end){ 																						// Parsing is complete as final \r\n received 
+	if (it.begin == it.end){
 		_req->setState(P_DONE, V_MPBODY, "Parsing Complete", 200);
 		_mp_p.state = MP_COMPLETE;
 	}
@@ -1238,7 +993,7 @@ void	RequestParser::parseBodyMP(token_s& it) {
 }
 
 void	RequestParser::appendToTempfileMP(mpPart_t& part, size_t begin, size_t size) {
-	
+
 	if (part.tempFilePath.length() == 0){
 		if (!assignTempfile(part.tempFilePath, NULL, "Multipart_")){
 			_mp_p.state = MP_ERROR;
@@ -1380,16 +1135,6 @@ bool	RequestParser::parseQuotedString(token_s& it, std::string& out) {
 	return false;
 }
 
-/* 
-	If a delimiter is found, instead of splitting as normal, if the first of a subsequent delimiter pair is found,
-	then the first delimiter will be ignored.
-
-	To deal with 'User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:148.0) Gecko/20100101 Firefox/148.0'
-	Should parse to
-						Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:148.0)
-						Gecko/20100101
-						Firefox/148.0
-*/
 bool	RequestParser::parseDelimiterPairs(token_s& it, std::vector<token_s>& out, const std::vector<std::pair <char, char> >& delim_pairs, char primary_delim) {
 
 	bool					in_delim = false;
@@ -1399,27 +1144,27 @@ bool	RequestParser::parseDelimiterPairs(token_s& it, std::vector<token_s>& out, 
 	size_t					num_pairs = delim_pairs.size();
 	token_s					result;
 
-	if (_req->_buffer[pos] == primary_delim) // allow first char to be primary delim, and if so skip (don't)
+	if (_req->_buffer[pos] == primary_delim)
 		pos++;
 
 	while (pos != end) {
-				
+
 		result.begin = pos;
 		result.end = pos;
 
 		while (pos != end) {
 
 			char c = _req->_buffer[pos];
-			
+
 			if (c == primary_delim) {
-				
-				pos++;										// move to char following primary_delim
+
+				pos++;
 				c = _req->_buffer[pos];
-				
+
 				for (size_t i = 0; i < num_pairs; i++){
 
-					if (c == delim_pairs[i].first) {		// check if current char is one of the delim pairs.
-						active_pair = delim_pairs[i];	
+					if (c == delim_pairs[i].first) {
+						active_pair = delim_pairs[i];
 						in_delim = true;
 						pos++;
 						break;
@@ -1431,14 +1176,14 @@ bool	RequestParser::parseDelimiterPairs(token_s& it, std::vector<token_s>& out, 
 						out.push_back(result);
 					break;
 				}
-				while (in_delim && pos < end){				// char is one a delim_pair - skip chars until partner is found  
+				while (in_delim && pos < end){
 					if (_req->_buffer[pos] != active_pair.second){
 						pos++;
 					}
 					else
-						in_delim = false; // active pair.second matches
+						in_delim = false;
 				}
-				if (in_delim)			  // pos == end and active_pair.second not found
+				if (in_delim)
 					return false;
 				pos++;
 			}

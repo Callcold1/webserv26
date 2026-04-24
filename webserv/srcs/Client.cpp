@@ -163,7 +163,7 @@ void	Client::handleZeroRead(){
 	eParse parse_state = _request.getParseStatus();
 	eBodyType body_type = _request._body_type;
 
-	if (parse_state == P_AWAIT) {		// KM - Check if this could lead to segfault (e.g. no matched server, or no matched location, or other problems)
+	if (parse_state == P_AWAIT) {
 		if (request_state < P_BODY){
 			_request.setState(P_ERROR, "Malformed Request : Client closed connection before full request received", 400);
 			handle_request();
@@ -196,9 +196,9 @@ void	Client::handleZeroRead(){
 		return;
 	else if (parse_state == P_PARSE){
 	
-		if (_request._sizes.bytes_unread > 0){ // Still unparsed data in _request._buffer
-			if (_request._re.keep_alive)	  // Connection is set to keep alive
-				handleClientRead(NULL, 0); 	  // Handle new request
+		if (_request._sizes.bytes_unread > 0){
+			if (_request._re.keep_alive)
+				handleClientRead(NULL, 0);
 			else if (_request._version == "HTTP/1.0")
 				return;
 		}
@@ -530,8 +530,6 @@ std::string	printReqStatus(Request& _request, int fd){
 	std::string result = os.str();
 	return result;
 }
-
-//setters
 
 void				Client::setLastActivity()
 {

@@ -28,17 +28,17 @@ class Server {
 
 	/* Constructors and destructor */
 		Server(Config &config);
-		//Server();
-		Server(const Server& other);
-		//Server&	operator=( const Server& other);
 		~Server(void);
 
 		static void	setupSignals(void);
 		void 	loop();
 		
-		std::map<int, Client> _clients;				// Map of client file descriptors to Client objects, used for managing client connections and their associated data
+		std::map<int, Client> _clients;
 		
 	private:
+		Server();
+		Server(const Server& other);
+		Server&	operator=( const Server& other);
 
 		static void	signalHandler(int);
 		void	addSignalPipeToPoll(void);

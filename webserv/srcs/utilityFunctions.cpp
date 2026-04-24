@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   utilityFunctions.cpp                               :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: junruh <junruh@student.42.fr>              +#+  +:+       +#+        */
+/*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/16 15:33:48 by kmooney           #+#    #+#             */
-/*   Updated: 2026/04/24 14:37:49 by junruh           ###   ########.fr       */
+/*   Updated: 2026/04/24 17:46:35 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -260,45 +260,6 @@ bool isValidUTF8(const std::string &str)
 }
 
 /*
-0000	0
-0001	1
-0010	2
-0011	3
-0100	4
-0101	5
-0110	6
-0111	7
-1000	8
-1001	9
-1010	10	A
-1011	11	B
-1100	12	C
-1101	13	D
-1110	14	E
-1111	15	F
-
-(c & 0x80) == 0x00			 c 		 0xxx xxxx	c must start 0
-0xxx 0000
-+	 1000 0000
-
-(c & 0xE0) == 0xC0			 c		 110x xxxx	c must start 110
-+	 1110 0000
-1100 0000
-
-(c & 0xF0) == 0xE0			c		 1110 xxxx	c must start 1110
-+	 1111 0000
-1110 0000
-
-(c & 0xF8) == 0xF0			c		 1111 0xxx	c must start 1111 0
-+	 1111 1000
-1111 0000
-
-(c & 0xC0) != 0x80			c		 10xx xxxx	if the condition is true, the byte doesn't begin 11, and isn't a valid continuation byte
-+	 1100 0000
-!=		 1000 0000
-*/
-
-/*
 >>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<
 >>>>>>		CHARACTER TYPE CONVERSION		<<<<<<
 >>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<
@@ -306,7 +267,7 @@ bool isValidUTF8(const std::string &str)
 
 
 // CONVERT UTF-8 TO ISO8859_1 FORMAT
-std::string	UTF8ToISO8859_1(const std::string& utf8_str) { // PROBABLY WON'T BE REQUIRED BUT THIS TRANSLATES FROM UTF8 TO ISO8859.1
+std::string	UTF8ToISO8859_1(const std::string& utf8_str) { 
 
 	std::string	iso_str;
 

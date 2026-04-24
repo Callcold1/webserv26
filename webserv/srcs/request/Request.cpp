@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/30 11:28:22 by kmooney           #+#    #+#             */
-/*   Updated: 2026/04/24 17:25:39 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/04/24 18:34:00 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -309,9 +309,8 @@ void	Request::setBodyType( bool hasBody, bool isChunked ){
 	_hasBody = hasBody;
 	_isChunked = isChunked;
 
-	if (hasBody == false) // BODY IS NOT EXPECTED
+	if (hasBody == false)
 		_body_type = BODY_NONE;
-	// BODY IS EXPECTED
 	else if (isChunked)
 		_body_type = BODY_CHUNKED;
 	else if (_sizes.body_bytes_expected > 0)
@@ -425,9 +424,14 @@ bool	Request::matchServerToHostHeader(void){
 	return true;
 }
 
-bool	Request::matchLocationToURIPath(void){
+bool	Request::matchLocationToURIPath(std::string& str){
 
-	_matched_location = _matched_server->getLocationForPath(_uri.path, _leftover, _isRedirect);
+	std::string uri_path;
+	if (str.empty())
+		uri_path = _uri.path;
+	else
+		uri_path = str;
+	_matched_location = _matched_server->getLocationForPath(uri_path, _leftover, _isRedirect);
 	if (_isRedirect)
 		this->setState(P_DONE, "Redirect : missing trailing '/'", 301);
 	if (_matched_location->getRedirectStatus() || _isRedirect){
@@ -442,7 +446,7 @@ bool	Request::matchLocationToURIPath(void){
 		_isCGI = true;
 
 	else if ((_matched_location->isCGIMapSet() || _matched_server->getCGIEnabled()) && _method == "POST"){
-		std::string ext = getExtension(_uri.path);
+		std::string ext = getExtension(uri_path);
 		std::map<std::string, std::string> cgi_map = _matched_server->getCGIMap();
 		std::map<std::string, std::string>::iterator it;
 		std::string second;
@@ -489,6 +493,8 @@ void	Request::updateErrorPagePath(int errnum){
 
 	if (_matched_location){
 		target = _matched_location->getErrorPage(errnum);
+		if (!matchLocationToURIPath(target))
+			Log::instance().log(Log::INFO, Log::TYPE_CLASS, "No default error page found", true);
 		root = _matched_location->getRootDir();
 	}
 	else if (_matched_server){
@@ -520,10 +526,10 @@ void	Request::updateRe(void){
 			_re.type = RESPOND_MP_UP;
 		else if (!_isMultiPart && _method == "POST"){
 			for (size_t i = 0; i < _re.query_pairs.size(); i++){
-				if (_re.query_pairs[i].first == "importfile" || _bodyInFile ){ 			//KM -  ADD || _isCGI?, or what if no filename?, or what if no importfile?
+				if (_re.query_pairs[i].first == "importfile" || _bodyInFile ){
 					if (_matched_location->isUploadPathSet()){
 						std::string tmp_path = appendPathToRoot(_re.leftover_path, _re.paths.upload_base);
-						std::string upload_path = appendPathToRoot(_re.query_pairs[i].second, tmp_path); //possibly need to normalise/decode if URL encoded?
+						std::string upload_path = appendPathToRoot(_re.query_pairs[i].second, tmp_path);
 						fileInfo_s upload_finfo;
 						getFileInfo(upload_path, upload_finfo);
 						_re.paths.upload_paths.push_back(std::pair<fileInfo_s, std::string>(upload_finfo, _body_filename));
@@ -533,7 +539,7 @@ void	Request::updateRe(void){
 		}
 		else if (_isRedirect){
 			_re.type = RESPOND_REDIR;
-			_re.status = _matched_location->getRedirectStatus(); // duplication?
+			_re.status = _matched_location->getRedirectStatus();
 			if (_matched_location->isRedirectSet())
 				_re.paths.redirect_url = _matched_location->getRedirect().url;
 		}

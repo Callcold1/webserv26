@@ -10,6 +10,8 @@ Server* Server::_instance = 0;
 >>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<
 */
 
+Server::Server(){}
+		
 Server::Server(Config &config) : _config(&config), _running(false), _max_conn(config.getMaxConnections()), _port_count(config.getServerPortCount()){
 
 	_instance = this;
@@ -27,6 +29,16 @@ Server::Server(Config &config) : _config(&config), _running(false), _max_conn(co
 	addSignalPipeToPoll();
 	Log::instance().log(Log::INFO, Log::TYPE_CLASS, "Server successfully started", true);
 }
+
+Server::Server(const Server& other): _config(other._config), _running(false), _max_conn(other._max_conn), _port_count(other._port_count){}
+
+Server&	Server::operator=( const Server& other){
+	if (this != &other){
+		*this = other;
+	}
+	return *this;
+}
+
 
 /* >>>>>>	DESTRUCTOR	<<<<<<*/
 
@@ -429,34 +441,6 @@ void Server::checkTimeouts()
         disconnectClient(timedOutFds[i], "Timeout");
     }
 }
-
-// void Server::checkTimeouts()
-// {
-//     std::time_t now = std::time(0);
-//     int	timeout_limit = 10;
-// 	std::map<int, Client>::iterator current;
-
-//     std::map<int, Client>::iterator it = _clients.begin();
-//     while (it != _clients.end())
-// 	{
-//         current = it++;  // increment the iterator before potentially erasing
-// 		if ((timeout_limit = (*current).second.getServerTimeout()) < 0)
-// 		{
-// 			if (_config->isTimeoutKASet())
-// 				timeout_limit = _config->getTimeoutKA();
-// 			else
-// 				timeout_limit = 10;
-// 		}
-//         if (difftime(now, current->second.getLastActivity()) > timeout_limit) {
-//             Log::instance().log(Log::INFO, Log::TYPE_ACCESS, 
-//                 "Closing connection: Timeout on fd [" + toString(current->first) + "]", true);
-            
-//             // Re-use your existing disconnect logic
-//             int fd_to_close = current->first;
-//             disconnectClient(fd_to_close, "Timeout");
-//         }
-//     }
-// }
 
 /*
 >>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<

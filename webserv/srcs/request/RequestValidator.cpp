@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/30 11:26:19 by kmooney           #+#    #+#             */
-/*   Updated: 2026/04/24 10:50:29 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/04/24 18:17:19 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -75,9 +75,9 @@ bool	RequestValidator::validateMethod(){
 	str_t method = _req->getMethod();
 
 	if (_req->_r_state != V_REQLINE) {
-		
+
 		if (!_req->_matched_location->isMethodSupported(method)){
-			
+
 			if (_req->_matched_location->isMethodSupported(to_upper(method)))
 				return _req->setState(P_ERROR, V_REQLINE, ERR_RL_METHOD_CASE, 400);
 			if(!_req->_matched_server->isMethodSupported(method))
@@ -91,7 +91,7 @@ bool	RequestValidator::validateMethod(){
 	}
 	else if (!isValidMethod(method))
 				return _req->setState(P_ERROR, V_REQLINE, ERR_RL_METHOD_NOT_SUPPORTED, 505);
-	
+
 	return true;
 }
 
@@ -166,26 +166,6 @@ bool	RequestValidator::validateHost() {
 		return _req->setState(P_ERROR, ERR_RL_PERCENT_ENCODING_HOST, 400);
 	if (!isValidUTF8( _req->_uri.host ))
 		return _req->setState(P_ERROR, ERR_RL_UTF8_ENCODING_HOST, 400);
-	/* INCOMPLETE */
-/*
-	1) IP literal in [],
-
-	2) IPv4 address in dotted decimal form
-		IPv4address = dec-octet "." dec-octet "." dec-octet "." dec-octet
-
-	  dec-octet   = DIGIT                 ; 0-9
-				  / %x31-39 DIGIT         ; 10-99
-				  / "1" 2DIGIT            ; 100-199
-				  / "2" %x30-34 DIGIT     ; 200-249
-				  / "25" %x30-35          ; 250-255
-
-	3) a registered name
-		https://www.rfc-editor.org/rfc/rfc1034#section-3.5 or https://www.rfc-editor.org/rfc/rfc1123#section-2
-		IP-literal = "[" ( IPv6address / IPvFuture  ) "]"
-		IPvFuture  = "v" 1*HEXDIG "." 1*( unreserved / sub-delims / ":" )
-	If a URI containing an IP-literal that starts with "v" return ""address mechanism not supported" - i.e. error 501 Not Implemented
-	IPv5
-	*/
 	return true;
 }
 
@@ -241,10 +221,6 @@ bool	RequestValidator::validateFrag(){
 
 bool	RequestValidator::percentDecode( str_t& encoded){
 
-	/* URI 7.3
-	Note, however, that the "%00" percent-encoding
-   (NUL) may require special handling and should be rejected if the
-   application is not expecting to receive raw data within a component. */
 	 str_t	decoded;
 	 size_t	len = encoded.length();
 	 size_t	i = 0;
@@ -283,7 +259,8 @@ void	RequestValidator::validateHeaders( void ){
 		_req->setState(P_ERROR, V_HEADERS, ERR_NO_MATCHING_SERVER, 404);
 		return;
 	}
-	if (!_req->matchLocationToURIPath()){
+	std::string empty;
+	if (!_req->matchLocationToURIPath(empty)){
 		_req->setState(P_ERROR, V_HEADERS, ERR_NO_MATCHING_LOCATION, 404);
 		return;
 	}
@@ -321,7 +298,7 @@ bool	RequestValidator::validateHostHeader() {
 		else if ( count > 1)
 			return _req->setState(P_ERROR, V_HEADERS, "Multiple 'Host' header values", 400);
 		else{
-			_req->setHostname(it->second[0]->val); // need to check syntax (valid port if present, doesn't start with port etc)
+			_req->setHostname(it->second[0]->val);
 			_req->_host_header = it->second[0]->val;
 		}
 	}
@@ -353,7 +330,6 @@ bool	RequestValidator::validateConnectionHeader() {
 	if (it == _req->_headers.end())
 		_req->_re.keep_alive = default_val;
 	else {
-		// Need to consider parameters or encodings? Is multiple values automatic rejection?
 		int count = it->second.size();
 
 		if (count == 1){
@@ -374,7 +350,7 @@ bool	RequestValidator::validateConnectionHeader() {
 bool	RequestValidator::validateAbsoluteForm(fieldMap_t::const_iterator& it){
 
 	if (_req->_uri.auth.compare(it->second[0]->val) == 0){
-		_req->setHostname(_req->_uri.auth); // need to check syntax (valid port if present, doesn't start with port etc)
+		_req->setHostname(_req->_uri.auth);
 		return true;
 	}
 	else
@@ -410,14 +386,13 @@ bool	RequestValidator::validateContentType(){ // CHECK SERVER SUPPORTS TYPE
 	fieldMap_t::iterator										header 			= _req->_headers.find("content-type");
 	const std::string& 											val 			= header->second[0]->val;
 	const std::vector< std::pair<std::string, std::string> >&	options 		= header->second[0]->params;
-	//int 														options_size 	= options.size();
 
 	if (!_req->_matched_server)
 		return _req->setState(P_ERROR, V_HEADERS, "Trying to validate content type but no matching server", 404);
 
-	std::map<std::string, std::vector<std::string> > server_content_types = _req->_matched_server->getMime(); // Do we even use this?
+	std::map<std::string, std::vector<std::string> > server_content_types = _req->_matched_server->getMime();
 
-	if (!isValidMediaType(val)) //KM - remove or just check syntax? Not really an error or not? Changed to isValidMediaType from isValidContentType 
+	if (!isValidMediaType(val))
 		return _req->setState(P_ERROR, V_HEADERS, "Invalid content-Type", 415);
 	if (val.find("multipart/") != std::string::npos)
 		return validateMultiPartHeader(val, options);
@@ -425,32 +400,6 @@ bool	RequestValidator::validateContentType(){ // CHECK SERVER SUPPORTS TYPE
 		return validateCharset(options);
 	return true;
 }
-
-// bool	isValidContentType(const std::string& name){ // THESE ARE TEST VALUES TO BE REPLACED WITH SERVER CHECK
-
-// 	static std::vector<std::string> validTypes;
-
-// 	if (validTypes.empty()){
-// 		validTypes.push_back("application/x-www-form-urlencoded");
-// 		validTypes.push_back("application/javascript");
-// 		validTypes.push_back("application/json");
-// 		validTypes.push_back("application/octet-stream");
-// 		validTypes.push_back("application/xml");
-// 		validTypes.push_back("multipart/form-data");
-// 		validTypes.push_back("image/gif");
-// 		validTypes.push_back("image/jpeg");
-// 		validTypes.push_back("image/png");
-// 		validTypes.push_back("image/svg+xml");
-// 		validTypes.push_back("image/webp");
-// 		validTypes.push_back("image/x-icon");
-// 		validTypes.push_back("text/css");
-// 		validTypes.push_back("text/html");
-// 		validTypes.push_back("text/plain");
-// 		validTypes.push_back("font/woff");
-// 		validTypes.push_back("font/woff2");
-// 	}
-// 	return (find(validTypes.begin(), validTypes.end(), name) != validTypes.end());
-// }
 
 bool	RequestValidator::validateMultiPartHeader(const std::string& val, const std::vector< std::pair<std::string, std::string> >& options){
 	size_t		size = options.size();
@@ -478,8 +427,6 @@ bool	RequestValidator::validateMultiPartHeader(const std::string& val, const std
 				charset = option_val;
 				if (!isValidMediaType(charset))
 					return _req->setState(P_ERROR, V_HEADERS, ERR_MP_BOUNDARY_LENGTH, 415);
-				if (!isSupportedMediaType(charset))
-					return _req->setState(P_ERROR, V_HEADERS, ERR_MP_BOUNDARY_LENGTH, 415);
 				has_charset = true;
 			}
 		}
@@ -490,12 +437,6 @@ bool	RequestValidator::validateMultiPartHeader(const std::string& val, const std
 	if (has_charset)
 		_req->setDefaultMultiPartType(charset);
 	_req->_isMultiPart = true;
-	return true;
-}
-
-bool	RequestValidator::isSupportedMediaType(const std::string& type){
-	//KM - finish
-	(void)type;
 	return true;
 }
 
@@ -520,32 +461,28 @@ bool	RequestValidator::validateMPheaders(){
 	return true;
 }
 
-/*
-	MULTIPART CONTENT DISPOSITION :
-		HEADER FORMAT CHECKS : MANDATORY FIELD, SINGLE VALUE, SINGLE INSTANCE (SHOULD BE FOUND DURING PARSING)
-*/
 bool	RequestValidator::validateMPContentDisposition(mpPart_t& part, const std::vector<field_t*>& header){
 
 	if (header.size() == 0)
-		return _req->setState(P_ERROR, P_BODY, ERR_MP_CONTENT_DISPOSITION_MISSING, 400); // CODE CHECK REQUIRED
+		return _req->setState(P_ERROR, P_BODY, ERR_MP_CONTENT_DISPOSITION_MISSING, 400);
 	if (header.size() > 1)
-		return _req->setState(P_ERROR, P_BODY, ERR_MP_CONTENT_DISPOSITION_MULTI_VALS, 400); // CODE CHECK REQUIRED
+		return _req->setState(P_ERROR, P_BODY, ERR_MP_CONTENT_DISPOSITION_MULTI_VALS, 400);
 
 	if (header[0]->val != "form-data")
-		_req->setState(P_ERROR, P_BODY, ERR_MP_CONTENT_DISPOSITION_UNEXPECTED_VALUE, 400); // CODE CHECK REQUIRED
+		_req->setState(P_ERROR, P_BODY, ERR_MP_CONTENT_DISPOSITION_UNEXPECTED_VALUE, 400);
 	part.disposition_type = header[0]->val;
 
 	if (duplicateOptionCheck(header[0]->params))
-		_req->setState(P_ERROR, P_BODY, ERR_MP_CONTENT_DISPOSITION_DUPLICATE_PARAMS, 400); // CODE CHECK REQUIRED
+		_req->setState(P_ERROR, P_BODY, ERR_MP_CONTENT_DISPOSITION_DUPLICATE_PARAMS, 400);
 
-	if (!updateMPparams(part, header[0]->params)) // populates name/filename/content-disposition params etc and sanitises filename
+	if (!updateMPparams(part, header[0]->params))
 		return false;
 
 	if (part.name.length() == 0)
-		return _req->setState(P_ERROR, P_BODY, ERR_MP_CONTENT_DISPOSITION_NO_NAME, 400); // CODE CHECK REQUIRED
+		return _req->setState(P_ERROR, P_BODY, ERR_MP_CONTENT_DISPOSITION_NO_NAME, 400);
 	else if ((part.name.find("file") != std::string::npos) || (part.name.find("File") != std::string::npos)){
 		if (part.filename.length() == 0)
-			return _req->setState(P_ERROR, P_BODY, ERR_MP_CONTENT_DISPOSITION_FILENAME_MISSING, 415); // CODE CHECK REQUIRED
+			return _req->setState(P_ERROR, P_BODY, ERR_MP_CONTENT_DISPOSITION_FILENAME_MISSING, 415);
 		else {
 			appendPathToRoot(&part.upload_dest, part.filename, _req->_re.paths.upload_base);
 			getFilePermissions(part.upload_dest);
@@ -616,37 +553,9 @@ bool	RequestValidator::validateMPContentType(mpPart_t& part, const std::vector<f
 
 bool	RequestValidator::validateMultiPartBody(){
 
-	// file signatures (magic bytes) - body check
-	// size limits - parser check?
-	// allowed types - map file type to content type?
-
 	mpPart_t&	part = _req->_parser->currentPart();
 	(void)part;
-	/* void
 
-			Multipart body rules :
-
-			Body 	:	length
-						:	Can be empty (but must be delimited properly)
-						:	Check max body size (whilst parsing)?
-						:	Check content-length
-
-			Body 	:	filetype
-						:	inspect file signature (magic bytes)
-
-			Size limit 		:	Total request size
-							:	Per-part size
-							:	Number of parts
-
-			Encoding   		: 	Proper handling of binary data
-							:  	No unintended UTF-8 decoding
-							:  	No truncation
-
-			Server rules	:	only one file allowed
-							:	size (e.g. max 5MB)
-							:	allowed MIME types
-
-	*/
 	mpState state = *_req->_mp_state;
 	if (state == MP_COMPLETE){
 		_req->setRstate(REQ_DONE);
@@ -667,7 +576,7 @@ bool	RequestValidator::validateCharset(const std::vector< std::pair<std::string,
 	const std::string& option_val = options[0].second;
 
 	if (option_key.compare("charset") == 0 && !option_val.empty()){
-		if (!isValidMediaType(option_val))	// KM - add check to see if supported on server
+		if (!isValidMediaType(option_val))
 			return _req->setState(P_ERROR, V_HEADERS, "Content-Type not supported", 415);
 		else
 			_req->setBodyEncoding(option_val);
@@ -677,7 +586,7 @@ bool	RequestValidator::validateCharset(const std::vector< std::pair<std::string,
 
 bool	RequestValidator::duplicateOptionCheck(const std::vector< std::pair<std::string, std::string> >& options){
 
-	size_t		size = options.size();  // ONLY COMPARING FIRST AT MOMENT - NEED TO HANDLE VALUE AND HAVE LOGIC FOR DIFFERENCES/DUPLICATES
+	size_t		size = options.size();
 
 	std::set<std::string> seen;
 
@@ -688,10 +597,6 @@ bool	RequestValidator::duplicateOptionCheck(const std::vector< std::pair<std::st
 	}
 	return false;
 }
-
-// bool	RequestValidator::duplicateValueCheck(const std::vector<field_t*>& values){
-// 	return true;
-// }
 
 bool	RequestValidator::identifyLengthHeader(){
 
@@ -705,7 +610,7 @@ bool	RequestValidator::identifyLengthHeader(){
 	}
 	else if (_req->_headers.find("transfer-encoding") != _req->_headers.end())
 		return validateTransferEncoding();
-	else if ((_req->_method == "POST" || _req->_method == "PUT") && _req->_version == "HTTP/1.1") // FOR 1.0, EOF can be used to indicate end of body if no TE or content-length
+	else if ((_req->_method == "POST" || _req->_method == "PUT") && _req->_version == "HTTP/1.1")
 		return _req->setState(P_ERROR, "Malformed Request : Headers : content-length or transfer-encoding required for request type", 400);
 	_req->_sizes.body_bytes_expected = 0;
 	_req->setBodyType(NO_BODY, NOT_CHUNKED);
@@ -742,20 +647,6 @@ bool	RequestValidator::convertContentLength( void ){
 	return true;
 }
 
-/*
-	All transfer-coding names are case-insensitive and ought to be registered within the HTTP Transfer Coding registry
-
-	The "TE" header field describes capabilities of the client with regard to transfer codings and trailer sections.
-	TE is also used within HTTP/1.1 to advise servers about which transfer codings the client is able to accept in a response
-
-	TE                 = #t-codings
-  	t-codings          = "trailers" / ( transfer-coding [ weight ] )
-  	transfer-coding    = token *( OWS ";" OWS transfer-parameter )
-  	transfer-parameter = token BWS "=" BWS ( token / quoted-string )
-
-	A sender of TE MUST also send a "TE" connection option within the Connection header field (Section 7.6.1) to inform intermediaries not to forward this field.
-
- */
 bool	RequestValidator::validateTransferEncoding() {
 
 	int count = countHeaderValues(_req->_headers, "transfer-encoding");
@@ -796,18 +687,13 @@ bool	RequestValidator::sanitiseFilename(std::string& name){
 
 	if (name.empty())
 		return false;
-	// strip ../ etc)
-	// normalise encoding
-	// reject control characters
-	// replace ' ' with _
-	// limit length
 	replaceChar(name, ' ','_');
 	return true;
 }
 
 bool	RequestValidator::sanitiseFilenameStar(std::string& name){
 
-	std::vector<std::string> split_name; // [0] = charset, [1] = 'Language : ignored!' [2] = filename
+	std::vector<std::string> split_name;
 
 	if (!splitFilename(name, split_name))
 		return false;
@@ -827,7 +713,7 @@ bool	RequestValidator::sanitiseFilenameStar(std::string& name){
 bool	RequestValidator::splitFilename(std::string& name, std::vector<std::string>& vec){
 
 	std::string::size_type pos = name.find("'");
-	std::string::size_type pos2 = name.find("'", pos); //pos + 1?
+	std::string::size_type pos2 = name.find("'", pos);
 
 	if (pos == std::string::npos || pos2 == std::string::npos)
 		return false;
@@ -869,7 +755,7 @@ const std::vector<field_t*>*	RequestValidator::getHeader(const fieldMap_t* heade
 */
 
 void	RequestValidator::validateBody() {
-	if (!_req->_isChunked && _req->_sizes.body_bytes_expected < _req->_sizes.body_bytes_read) { 
+	if (!_req->_isChunked && _req->_sizes.body_bytes_expected < _req->_sizes.body_bytes_read) {
 		_req->setState(P_ERROR, V_BODY, "Incomplete Body after connection closed", 400);
 		return;
 	}
@@ -890,8 +776,7 @@ void	RequestValidator::validateBody() {
 */
 
 void	RequestValidator::validateTrailers(){
-	
-	// TO_DO : Need to repeat header validation (but for trailers)
+
 	_req->setRstate(REQ_DONE);
 	_req->setState(P_DONE, "Parsing Complete", 200);
 }
@@ -907,7 +792,7 @@ bool RequestValidator::validateFileFormat(std::string& path) {
 
 	std::string mime_type = detectMimeFromFilename(path);
 
-	std::map<std::string, std::vector<std::string> > mime_map = _req->_matched_server->getMime(); // Change mimemap to str vec<str>
+	std::map<std::string, std::vector<std::string> > mime_map = _req->_matched_server->getMime();
 
 	size_t pos = path.find_last_of('.');
 	if (pos == std::string::npos || mime_type.empty())
@@ -939,7 +824,7 @@ bool	RequestValidator::isValidMediaType(const std::string& value){
 
 		std::string type = value.substr(0, pos);
 		std::string sub_type = value.substr(pos + 1);
-		
+
 		if (!(type == "*" || (type.length() > 0 && isValidToken(type))))
 			return _req->setState(P_ERROR, V_HEADERS, "Header Validation Error : invalid media type", 400);
 		if (!(sub_type == "*" || (sub_type.length() > 0 && isValidToken(sub_type))))

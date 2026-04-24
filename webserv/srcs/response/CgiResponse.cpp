@@ -81,14 +81,14 @@ int CgiResponse::execute()
 			NULL
 		};
 
-		char* system_path = getenv("PATH"); // current system PATH so we dont have to hardcode it
+		char* system_path = getenv("PATH");
 		std::string path_env = "PATH=" + std::string(system_path ? system_path : "/usr/bin:/bin");
 		std::string q = "QUERY_STRING=";
 		std::string len = "CONTENT_LENGTH=" + toString(_request._sizes.body_size);
-		std::string type = "CONTENT_TYPE=application/x-www-form-urlencoded"; // or from headers
+		std::string type = "CONTENT_TYPE=application/x-www-form-urlencoded";
 		std::string m = "REQUEST_METHOD=" + _request._method;
-		std::string script = "SCRIPT_FILENAME=" + _path; // system path to file
-		std::string script_name = "SCRIPT_NAME=" + _path;//_request._uri.path;
+		std::string script = "SCRIPT_FILENAME=" + _path;
+		std::string script_name = "SCRIPT_NAME=" + _path;
 		std::string redirect = "REDIRECT_STATUS=200";    // security handshake for PHP
 		std::string gateway = "GATEWAY_INTERFACE=CGI/1.1";
 		std::string protocol = "SERVER_PROTOCOL=HTTP/1.1";

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   core_def.hpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jake <jake@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/28 18:51:39 by kmooney           #+#    #+#             */
-/*   Updated: 2026/03/13 13:30:12 by jake             ###   ########.fr       */
+/*   Updated: 2026/04/24 17:40:57 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,41 +45,6 @@
 #define MAX_CONTENT_LENGTH 30000000
 #define CONNECTION_TIMEOUT 30 // Timeout time in seconds if client sends no data
 #define CHUNK_MAX_SIZE 4196
-
-/*
-enum serv_action{
-	//	SERVER TASKS
-	AWAIT_CHUNKS,		//	Transfer-encoding chunked and last chunk not received
-	CONTENT_READ,		//	If Content-Length is present, read the exact amount of data
-	
-	// SERVER FLAGS TO UPDATE
-	CLOSE_CONNECTION,	//	Header - Connection : close
-	KEEP_ALIVE,			//	Header - Connection : keep-alive
-	CLOSE_ERROR,		//	Closed due to error
-	
-	// HANDLER TASKS
-	// FURTHER PROCESSING
-	CHUNK_DECODE,		//	If the request body uses chunked encoding, decode it before processing.
-	DECOMPRESS_CONTENT,	//	If a Content-Encoding (gzip, deflate, etc.) is present, decompress the body before processing.
-	HANDLER_COOKIES,	//	Handle cookies if we're dealing with
-	HANDLER_RANGE,		//	Handle range request
-	SAVE_CONTENT,		//	If the request is a file upload (POST/PUT), store the file properly.
-	
-	HANDLER_CGI,		//	Request is for CGI Route
-	// RESONSE SIDE PROCESSING
-	COMPRESS_CONTENT,	//	Compress response content
-	RESPOND_CHUNKED,	//	IF response size is unknown, send chunked response
-	REDIRECT,			//	If a redirection status (301, 302, 307, 308) is needed, return a response with a Location header
-	
-	// STRAIGHT TO RESPONSE?
-	RESPOND_ERROR,		//	Generate simple HTML response - error
-	RESPOND_ERROR_AUTH,	//	If an Authorization header is required but missing or incorrect, return 401 Unauthorized
-	RESPOND_ERROR_PERM,	//	If the request is forbidden due to permissions (403) or an unsupported method (405), respond accordingly.
-	RESPOND_HTML,		//	Send HTML response
-	RESPOND_OTHER,		//	Send other format of response JSON?
-	RESPOND_STATIC,		//	Request is for a static file
-};
-*/
 
 typedef	int				fd_t;
 typedef	std::string		str_t;

@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 16:24:23 by kmooney           #+#    #+#             */
-/*   Updated: 2026/04/24 11:47:32 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/04/24 17:42:00 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -214,7 +214,7 @@ struct reqPaths_s {
 	std::string											 redirect_url;
     fileInfo_s											 resource_path;
 	std::string											 upload_base;
-    std::vector< std::pair < fileInfo_s, std::string > > upload_paths; //tmpfile path, upload path - can move from tmp to upload path
+    std::vector< std::pair < fileInfo_s, std::string > > upload_paths;
 };
 
 struct respond_t {

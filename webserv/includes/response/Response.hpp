@@ -44,5 +44,4 @@ protected:
 	int			_status;
 	Request&	_request;
 	std::string _body;
-	fileInfo_s	_path_km;
 };
