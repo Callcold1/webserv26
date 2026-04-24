@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/30 11:26:19 by kmooney           #+#    #+#             */
-/*   Updated: 2026/04/24 19:36:45 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/04/24 20:39:20 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -501,14 +501,19 @@ bool	RequestValidator::updateMPparams(mpPart_t& part, const std::vector<std::pai
 
 	for (size_t i = 0; i < params.size(); i++) {
 		if (params[i].first == "name"){
+			if (params[i].second.empty())
+				return _req->setState(P_ERROR, P_BODY, ERR_MP_CONTENT_DISPOSITION_NO_NAME, 400);
 			n++;
 			part.name = params[i].second;
 		}
 		if (params[i].first == "filename"){
 			std::string fname = params[i].second;
-			fn++;
-			if (sanitiseFilename(fname))
+			if (params[i].second.empty())
+				return _req->setState(P_ERROR, P_BODY, ERR_MP_CONTENT_DISPOSITION_FILENAME_MISSING, 400);
+			else if (sanitiseFilename(fname)){
 				part.filename = fname;
+				fn++;
+			}
 			else
 				return false;
 		}
@@ -521,11 +526,11 @@ bool	RequestValidator::updateMPparams(mpPart_t& part, const std::vector<std::pai
 				return false;
 		}
 		if (n > 1)
-			return _req->setState(P_ERROR, P_BODY, ERR_MP_CONTENT_DISPOSITION_NAME_MULTI, 400); // CODE CHECK REQUIRED
+			return _req->setState(P_ERROR, P_BODY, ERR_MP_CONTENT_DISPOSITION_NAME_MULTI, 400);
 		if (fn > 1)
-			return _req->setState(P_ERROR, P_BODY, ERR_MP_CONTENT_DISPOSITION_FILENAME_MULTI, 400); // CODE CHECK REQUIRED
+			return _req->setState(P_ERROR, P_BODY, ERR_MP_CONTENT_DISPOSITION_FILENAME_MULTI, 400);
 		if (fns > 1)
-			return _req->setState(P_ERROR, P_BODY, ERR_MP_CONTENT_DISPOSITION_FILENAME_STAR_MULTI, 400); // CODE CHECK REQUIRED
+			return _req->setState(P_ERROR, P_BODY, ERR_MP_CONTENT_DISPOSITION_FILENAME_STAR_MULTI, 400);
 		part.disposition_parameters.push_back(params[i]);
 	}
 	return true;
