@@ -29,10 +29,10 @@ struct node_t {
 	node_t(std::string s, std::vector<std::string> a, std::vector<node_t*> c, std::string l_num) : type(s), args(a), children(c), line_num(l_num){}
 
 	~node_t() {
-        for (size_t i = 0; i < children.size(); i++) {
-            delete children[i];
-        }
-    }
+		for (size_t i = 0; i < children.size(); i++) {
+        	delete children[i];
+	    }
+	}
 };
 
 class Parser {
@@ -40,6 +40,7 @@ class Parser {
 public:
 	Parser( void );
 	Parser(const std::vector<tokeniser_s>& tokens);
+	~Parser();
 
 	virtual node_t* parse() = 0;
 

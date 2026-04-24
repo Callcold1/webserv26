@@ -14,6 +14,7 @@
 
 Parser::Parser(void) : _pos(0) {}
 Parser::Parser(const std::vector<tokeniser_s>& tokens) : _tokens(tokens), _pos(0) {}
+Parser::~Parser(){}
 
 bool Parser::eof() const {
 	return peek().type == T_EOF;

@@ -39,7 +39,7 @@ struct tempConfig_s {
 	int									max_connections;	/*	GLOBAL/SERVER/LOCATION	*/
 	long long							max_header_size;	/*	GLOBAL/SERVER/LOCATION	*/
 	std::vector<std::string>			method;				/*	GLOBAL/SERVER/LOCATION	*/
-	std::map<std::string, std::vector<std::string> > mime;				/*	GLOBAL */
+	std::map<std::string, std::vector<std::string> > mime;	/*	GLOBAL */
 	LocationMatchType_e					modifier;			/*	LOCATION	*/
 	redirect_s							redirect;			/*	LOCATION	*/
 	bool								redirect_status;	/*	LOCATION	*/	
@@ -201,7 +201,6 @@ class CParser : public Parser
 		void			handleMaxConnections(node_t* node, tempConfig_s& tmp, HandlerContext_e context);
 		void			handleMaxHeader(node_t* node, tempConfig_s& tmp, HandlerContext_e context);
 		void			handleMethod(node_t* node, tempConfig_s& tmp);
-		//void			handleMime(node_t*, tempConfig_s& tmp, HandlerContext_e context);
 		void			handleMimeBlock(node_t* node, tempConfig_s& tmp, HandlerContext_e context);
 		void			handlePorts(node_t* node, tempConfig_s& tmp, HandlerContext_e context);
 		void			handleRedirectStatus(node_t* node, tempConfig_s& tmp, HandlerContext_e context); 
@@ -221,9 +220,8 @@ class CParser : public Parser
 		std::vector<std::string>	_mime_keywords;
 
 		bool			checkDuplicatePorts(const std::vector<listen_s>& ports);
-		bool			checkAliasRoot(const std::string& alias, const std::string& root); //Check that only one of the two is present
+		bool			checkAliasRoot(const std::string& alias, const std::string& root);
 
-		// To be written
 		void 			validateConfig(Config& config);
 		void 			validateServer(const CServer& server);
 		void 			validateLocation(const CLocation& location);

@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 16:24:23 by kmooney           #+#    #+#             */
-/*   Updated: 2026/04/23 19:21:01 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/04/24 11:47:32 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -148,6 +148,7 @@ struct mpPart_t {																// KM - are the headers being free'd?
 				it->second[i] = NULL;
 			}
 		}
+		delete headers;
 	}
 };
 

@@ -6,7 +6,7 @@
 /*   By: kmooney <kmooney@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/14 09:52:13 by kmooney           #+#    #+#             */
-/*   Updated: 2026/04/24 11:02:09 by kmooney          ###   ########.fr       */
+/*   Updated: 2026/04/24 12:58:55 by kmooney          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -160,8 +160,10 @@ void Config::checkForOverlappingPorts() const {
 	std::map<listen_s, std::vector<CServer*> >::const_iterator it;
 	std::map<listen_s, std::vector<CServer*> >::const_iterator compare;
 
-    if (_port_server_map.size() <= 1)
-        return;
+    if (_port_server_map.size() == 0)
+		throw std::runtime_error("Config must contain at least one server");
+	else if (_port_server_map.size() == 1)
+		return;
 
     for (it = _port_server_map.begin(); it != _port_server_map.end(); it++) {
         const listen_s& current = it->first;
@@ -334,29 +336,6 @@ std::map<int, std::string>	Config::mergeErrorPage(T& child, std::map<int, std::s
 	return _error_pages;
 }
 
-
-/* 
-	This function populates 'Config::_port_server_map'
-	
-	The map has key : listen_s (i.e. ip:port)
-				val : vector of CServer which have listen directive set to the key (ip:port)
-	
-	The function : iterates over the servers vector
-	
-		for each server
-		{
-			iterate over the vector of listen_s (i.e. ip/port info)
-			{
-				try to find the listen_s in the _port_server_map
-					if not found
-						- the listen_s is added to the map as a key).
-						- the CServer is added to the val (i.e. vector of servers matching this port info)
-					- if found
-						- the CServer is added to the val
-						- if new listen_s is default_server and there is an existing default_server, throw an error as there can only be one!
-		}
-							
-*/
 bool	Config::mapServersToPorts(void){
 
 	for (size_t i = 0; i < _servers.size(); i++) {
@@ -384,7 +363,6 @@ bool	Config::mapServersToPorts(void){
 	return true;
 }
 
-// Needed to compare listen_s structs as keys in map as map uses < operator to compare keys
 bool operator<(const listen_s& a, const listen_s& b){
     if (a.ip != b.ip)
         return a.ip < b.ip;
@@ -403,7 +381,6 @@ std::ostream& operator<<(std::ostream& os, const Config& config){
 
 	os << std::boolalpha;
 	PrintUtils::printHeader(os, 0, "Global");
-
 	PrintUtils::printField(os, 0, "autoindex", config.getAutoIndex(), config.isAutoIndexSet());
 	PrintUtils::printField(os, 0, "charset", config.getCharset(), config.isCharsetSet());
 	PrintUtils::printField(os, 0, "error_pages", config.getErrorPages(), config.isErrorPageSet());

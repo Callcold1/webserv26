@@ -30,7 +30,7 @@ class CServer {
 		long long							_max_body;			// Max acceptable body size in bytes
 		long long							_max_header_size;	// Max acceptable header size in bytes
 		std::vector<std::string>			_method;			// Method permitted for all locations on server (can be superceded by location_method)
-		std::map<std::string, std::vector<std::string> > _mime;				// Mime permitted for all locations on server 
+		std::map<std::string, std::vector<std::string> > _mime;	// Mime permitted for all locations on server 
 		std::string	 						_root_dir;			// Root directory for server - overrides global value
 		std::vector<std::string> 			_server_name;		// Server names
 		int									_timeout_ka;		// Length of time before keep-alive timeout (seconds)

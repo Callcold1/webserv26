@@ -13,7 +13,7 @@
 #include "Config.hpp"
 #include "CParser.hpp"
 
-CParser::CParser( const std::string& filename ) : Parser(){
+CParser::CParser( const std::string& filename ) : Parser(), _rawConfig(NULL){
 	openConfigFile(filename);
 	Log::instance().log(Log::INFO, Log::TYPE_CLASS, "Config file successfully opened : " + filename, false);
 }
@@ -40,31 +40,27 @@ void	CParser::openConfigFile(const std::string& filename)
 
 void	CParser::parseConfigFile(Config& config){
 	
-	//Log::instance().log(Log::INFO, Log::TYPE_CLASS, "Config parsing started....", false);
 	std::ostringstream oss;
 	try {
 		tokeniseStream();
 		initKeywords();
-
 		parseTokens();
-	//	Log::instance().log(Log::INFO, Log::TYPE_CONF, "Parsed to _raw_config", false);
-		
 		setConfig(config);
-	//	Log::instance().log(Log::DEBUG, Log::TYPE_CONF, "Config object created : initial parsing complete : \n\n" + printstream(config), false);
-
 		config.propagateVarsToChildren();
-		//Log::instance().log(Log::DEBUG, Log::TYPE_CONF, "Variables propagated from global -> server -> location : \n\n" + printstream(config), false);
-		
 		config.mapServersToPorts();
 		config.checkForOverlappingPorts();
-		delete _rawConfig;
 		Log::instance().log(Log::INFO, Log::TYPE_CLASS, "Config parsing successfully completed....", false);
 	}
 	catch (std::exception& e){
-		delete _rawConfig;
-		Log::instance().log(Log::ERROR, Log::TYPE_CONF, e.what(), true);
+		if (_rawConfig){
+			delete _rawConfig;
+			_rawConfig = NULL;
+		}
+		Log::instance().log(Log::ERROR, Log::TYPE_CONF, e.what(), false);
 		throw std::runtime_error(e.what());
 	}
+	delete _rawConfig;
+	_rawConfig = NULL;
 }
 
 void	CParser::tokeniseStream(void){
@@ -74,7 +70,7 @@ void	CParser::tokeniseStream(void){
 		_tokens = tokeniser.getTokens();
 	}
 	catch ( std::exception& e){
-		Log::instance().log(Log::ERROR, Log::TYPE_CONF, e.what(), true);
+		Log::instance().log(Log::ERROR, Log::TYPE_CONF, e.what(), false);
 		throw std::runtime_error(e.what());
 	} 
 }
@@ -84,7 +80,7 @@ void	CParser::parseTokens(void){
 		_rawConfig = parse();
 	}
 	catch (std::exception& e) {
-		Log::instance().log(Log::ERROR, Log::TYPE_CONF, e.what(), true);
+		Log::instance().log(Log::ERROR, Log::TYPE_CONF, e.what(), false);
 		throw std::runtime_error(e.what());
 	}
 }
@@ -99,13 +95,12 @@ node_t*	CParser::parse(void) {
 		if (_tokens[_pos].type == T_WORD)
 			parseNext(root, tokeniser_s(T_EOF, "", Tokeniser::getLineCount()));
 		else {
-			delete root;
 			throw std::runtime_error("Invalid config file structure");
 		}
 	}
 	catch (const std::exception& e){
 		delete root;
-		Log::instance().log(Log::ERROR, Log::TYPE_CONF, e.what(), true);
+		Log::instance().log(Log::ERROR, Log::TYPE_CONF, e.what(), false);
 		throw std::runtime_error(e.what());
 	}
 	return root;
@@ -256,27 +251,6 @@ void	CParser::initKeywords(void) {
 	_mime_keywords.push_back("image/x-icon");
 }
 
-/*	GLOBAL
-
-Directive			Args		Multi Allowed	Type					Duplicate Behavior	Inherited				Context(s)
-=========			====		=============	====					==================	=========				==========
-autoindex			1			no				bool					Overwrite			Replace if redefined	Global/CServer/CLocation
-charset				multi		yes				vector<string>			Append				Replace if redefined	Global/CServer/CLocation
-error_page			multi		yes				vector<errorPage_s>		Append 				Merge					Global/CServer/CLocation
-index				multi		yes				std::vector<string>		Append				Replace if redefined	Global/CServer/Location
-max_body			1			no				long long				Overwrite			Replace if redefined	Global/CServer/CLocation
-max_connections		1			no				int						Overwrite			n/a						Global only
-max_header_size		1			no				long long				Overwrite			Replace if redefined	Global/CServer
-method				multi		yes				vector<string>			Append				Replace if redefined	Global/CServer/CLocation
-root				1			no				std::string				Overwrite			Replace if redefined	Global/CServer/CLocation
-server				block		yes				vector<CServer>			Append				n/a						Global only
-timeout_ka			1			no				int						Overwrite			Replace if redefined	Global/CServer
-timeout_rw			1			no				int						Overwrite			Replace if redefined	Global/CServer
-
-mime_types			block		yes				map<ext, mime_type>		Append				n/a						Global only
-
-*/
-
 void	CParser::setConfig(Config& config){
 
 	tempConfig_s	tmp;
@@ -290,26 +264,6 @@ void	CParser::setConfig(Config& config){
 		throw std::runtime_error("Configuration file must contain at least one 'server' block");
 	pushToConfig(tmp, config);
 }
-
-/* SERVER
-
-Directive			Args		Multi Allowed	Type				Duplicate Behavior	Inherited from Global	Inherited to Location	Context(s)
-=========			====		=============	====				==================	=====================	=====================	===========
-autoindex			1			no				bool				Overwrite			Replace if redefined	Replace if redefined	Global/CServer/CLocation
-charset				multi		yes				vector<string>		Append				Replace if redefined	Replace if redefined	Global/CServer/CLocation
-error_page			multi		yes				vector<errorPage_s>	Append				Merge					Merge					Global/CServer/Location
-index				multi		yes				std::vector<string>	Append				Replace if redefined	Replace if redefined	Global/CServer/Location
-listen				multi		yes				vector<listen_s>	Append				No						No						CServer only
-locations			block		yes				vector<Clocation>	Append				No						No						CServer only
-max_body			1			no				long long			Overwrite			Replace if redefined	Replace if redefined	Global/CServer/CLocation
-max_header_size		1			no				long long			Overwrite			Replace if redefined	Replace if redefined	Global/CServer
-method				multi		yes				vector<string>		Append				Replace if redefined	Replace if redefined	Global/CServer/CLocation
-root				1			no				std::string			Overwrite			Replace if redefined	Replace if redefined	Global/CServer/CLocation
-server_names		multi		yes				vector<string>		Append				No						No						CServer only
-timeout_ka			1			no				int					Overwrite			Replace if redefined	No						Global/CServer
-timeout_rw			1			no				int					Overwrite			Replace if redefined	No						Global/CServer
-
-*/
 
 bool	CParser::setServer(node_t* server_node, std::vector<CServer>& servers){
 
@@ -331,29 +285,6 @@ bool	CParser::setServer(node_t* server_node, std::vector<CServer>& servers){
 
 	return true;
 }
-
-/* LOCATION
-
-Directive			Args		Multi Allowed	Type						Duplicate Behavior	Inherited				Context(s)						Notes
-=========			====		=============	====						==================	=========				===========						=====
-
-alias				1			no				string 						Overwrite			n/a						Location only					Overrides root
-autoindex			1			no				bool						Overwrite			Replace if redefined	Global/CServer/CLocation
-cgi_path			multi		yes				map<string, string>			Append				n/a						Location only
-charset				multi		yes				vector<string>				Append				Replace if redefined	Global/CServer/CLocation
-error_page			multi		yes				vector<errorPage_s>	Append	Merge				Merge					Global/CServer/Location
-index				multi		yes				vector<string>				Append				Replace if redefined	Global/CServer/CLocation
-max_body			1			no				long long					Overwrite			Replace if redefined	Global/CServer/CLocation
-method				multi		yes				vector<string>				Append				Replace if redefined	Global/CServer/CLocation
-modifier			1			no				LocationMatchType_e			Overwrite			n/a						Location only
-redirect_status		1			no				redirect_s					Overwrite			n/a						Location only					Combined into redirect_s
-redirect_url		1			no				redirect_s					Overwrite			n/a						Location only					Combined into redirect_s
-root				1			no				string						Overwrite			Replace if redefined	Global/CServer/CLocation
-try_files			multi		yes				TryFiles_s					Overwrite			n/a						Location only
-upload_path			1			no				string						Overwrite			n/a						Location only
-uri					1			no				string						Overwrite			n/a						Location only
-
-*/
 
 bool	CParser::setLocation(node_t* location_node, std::vector<CLocation>& locations){
 
@@ -380,10 +311,14 @@ bool	CParser::setLocation(node_t* location_node, std::vector<CLocation>& locatio
 	if (checkAliasRoot(temp.alias, temp.root))
 		throw std::runtime_error("Location contains both alias and root directives");
 
-	temp.redirect.status = temp.redirect_status;
-	temp.redirect.url = temp.redirect_url;
-	if (temp.redirect_status_set || temp.redirect_url_set )
+	
+	if (temp.redirect_status && temp.redirect_url.empty())
+		throw std::runtime_error("Redirect status set to 'true' but no redirect URL provided");
+	else {
 		temp.redirect_set = true;
+		temp.redirect.status = temp.redirect_status;
+		temp.redirect.url = temp.redirect_url;
+	}
 	CLocation	location;
 
 	pushToLocation(temp, location);
@@ -714,7 +649,7 @@ bool	CParser::setCGImap(node_t* node, std::map<std::string, std::string>& cgi_ma
 	if (size <= 1)
 		throw std::runtime_error("invalid cgi_path : must contain path and at least one extension type : " 
 			+ node->type + " " + createArgsString(node->args) + " : line " + node->line_num);
-	std::string path = node->args[0];
+	std::string path = node->args[1];
 	std::string ext;
 	if (node->args[0][0] == '.')
 		ext = node->args[0];
@@ -750,8 +685,6 @@ bool	CParser::setErrorPage(node_t* node, std::map<int, std::string>& error_pages
 	std::string path;
 
 	if (convertToType(path, node->args[size - 1])){
-
-		// possibly create an array/vector of valid/supported error numbers to use for validation
 		for (size_t i = 0; i < size - 1; i++){
 			if (convertToType(error_num, node->args[i]) && error_num >= 400 && error_num < 600)
 				error_pages[error_num] = path;
@@ -781,9 +714,9 @@ bool	CParser::setModifier(std::string& str, LocationMatchType_e& modifier){
 		throw std::runtime_error("invalid location modifier : " + str);
 
 	if (str[0] == '=')
-		modifier = EXACT;		// http uri must match location.uri exactly
+		modifier = EXACT;
 	else if (str[0] == '^')
-		modifier = PREFIX; 		// if uri matches, return straight away without checking other locations (https://chatgpt.com/share/6995da46-ff54-800f-b363-7aa166db7e2e)
+		modifier = PREFIX;
 	else
 		throw std::runtime_error("invalid location modifier : " + str);
 	return true;
